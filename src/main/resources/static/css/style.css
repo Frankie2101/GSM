@@ -1,0 +1,447 @@
+:root {
+    --main-bg-color: #F8F9FD;
+    --sidebar-width: 260px;
+}
+
+body {
+    background-color: var(--main-bg-color);
+    font-family: 'Poppins', sans-serif;
+    overflow-x: hidden;
+}
+
+#wrapper {
+    display: flex;
+    transition: all 0.3s ease;
+}
+
+#sidebar-wrapper {
+    background-color: #ffffff;
+    min-height: 100vh;
+    width: var(--sidebar-width);
+    margin-left: 0;
+    transition: margin 0.25s ease-out;
+    border-right: 1px solid #dee2e6;
+    flex-shrink: 0;
+}
+
+#page-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    flex-grow: 1;
+    width: calc(100% - var(--sidebar-width));
+    transition: margin 0.25s ease-out, width 0.25s ease-out;
+}
+
+main.container-fluid {
+    flex-grow: 1;
+}
+
+/* Toggled state for sidebar */
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: calc(-1 * var(--sidebar-width));
+}
+
+#wrapper.toggled #page-content-wrapper {
+    width: 100%;
+    margin-left: 0;
+}
+
+/* YÊU CẦU 1: Tăng kích thước và nâng vị trí logo */
+.sidebar-heading {
+    padding: 1rem 1rem 1.5rem 1rem; /* Giảm padding trên để logo cao lên */
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-bottom: 1px solid #dee2e6;
+    text-align: center;
+}
+
+.sidebar-heading img {
+    height: 130px; /* Tăng chiều cao logo gấp đôi (105px * 2) */
+}
+
+/* --- HẾT YÊU CẦU 1 --- */
+
+.list-group-item {
+    border: 0;
+    border-radius: 0;
+    padding: 1rem 1.5rem;
+    color: #5a6a85;
+    font-weight: 600;
+}
+
+/* Đảm bảo các mục bị vô hiệu hóa (disabled) có cùng màu */
+.list-group-item.disabled, .list-group-item:disabled {
+    color: #5a6a85; /* Ghi đè màu mặc định của Bootstrap */
+    opacity: 1; /* Bỏ hiệu ứng làm mờ để màu sắc đồng nhất */
+    background-color: transparent;
+}
+
+/* YÊU CẦU 2, 3, 4: Chỉnh sửa mục menu đang được chọn */
+.list-group-item.active {
+    background-color: #F2F7FF; /* Yêu cầu 2: Đổi màu nền */
+
+    /* Yêu cầu 4: Tăng width và đổi màu thanh bên trái */
+    border-left: 6px solid #5584CE;
+
+    font-weight: 700;
+
+    /* Yêu cầu 3: Đổi màu chữ thành dạng gradient */
+    background-image: linear-gradient(90deg, #0EADD6, #384295);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Áp dụng màu gradient cho cả icon trong menu */
+.list-group-item.active i {
+    background-image: linear-gradient(90deg, #0EADD6, #384295);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+/* --- HẾT YÊU CẦU 2, 3, 4 --- */
+
+.list-group-item-action:hover, .list-group-item-action:focus {
+    background-color: #f2f7ff;
+}
+
+/* Custom Card style to match Figma */
+.card {
+    border-radius: 20px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #f0f0f0;
+    font-weight: 700;
+    padding: 1.25rem;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
+/* Custom button styles to match Figma */
+.btn-create {
+    background: linear-gradient(90deg, #0EADD6, #384295);
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 10px;
+    padding: 0.5rem 1.5rem;
+}
+
+.btn-delete {
+    background-color: #FBE9E7;
+    border: 1px solid #FFAB91;
+    color: #D84315;
+    font-weight: bold;
+    border-radius: 10px;
+    padding: 0.5rem 1.5rem;
+}
+
+/* Custom style for "View" link in table */
+.action-link {
+    color: #3949AB;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.action-link:hover {
+    text-decoration: underline;
+}
+
+/* YÊU CẦU 5: Đổi màu icon trên header của trang */
+h1.h3 i {
+    background-image: linear-gradient(90deg, #0EADD6, #384295);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+/* --- HẾT YÊU CẦU 5 --- */
+
+.user-avatar-img {
+    height: 32px;
+    width: 32px;
+    border-radius: 50%; /* Đây là thuộc tính chính để tạo ảnh tròn */
+    object-fit: cover; /* Đảm bảo ảnh không bị méo */
+}
+
+/* Custom Button Styles */
+.btn-custom-gradient {
+    background-image: linear-gradient(to right, #14ADD6, #384295);
+    /*background-image: linear-gradient(to right, #384295, #384295); */
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-custom-gradient:hover {
+    color: white;
+    opacity: 0.9;
+}
+
+.btn-link-custom {
+    color: #384295;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.btn-link-custom:hover {
+    color: #14ADD6;
+}
+
+/* --- CSS cho màu chữ Gradient --- */
+.text-gradient-custom {
+    background-image: linear-gradient(to right, #14ADD6, #384295);
+    -webkit-background-clip: text; /* Dành cho các trình duyệt Webkit (Chrome, Safari) */
+    background-clip: text;
+    color: transparent; /* Làm cho màu chữ gốc trở nên trong suốt */
+}
+
+/* YÊU CẦU 4: Style cho nút Delete mới */
+.btn-delete-gradient {
+    background-image: linear-gradient(to right, #F57474, #FF0000);
+    border: none;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-delete-gradient:hover {
+    color: white;
+    box-shadow: 0 4px 12px rgba(255, 0, 0, 0.25);
+    opacity: 0.9;
+}
+
+.form-control,
+.form-select {
+    border: 1px solid #dee2e6; /* Màu viền nhạt hơn */
+    border-radius: 0.5rem; /* Bo góc mềm hơn một chút */
+    box-shadow: none; /* Bỏ shadow mặc định */
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #8ab5f1; /* Màu viền khi focus */
+    outline: 0;
+    /* Sử dụng box-shadow với màu gradient của theme */
+    box-shadow: 0 0 0 0.2rem rgba(56, 66, 149, 0.2);
+}
+
+/* Tùy chỉnh màu mũi tên của select box cho nhất quán */
+.form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23384295' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+
+/* YÊU CẦU 3: Áp dụng màu gradient cho cả icon trong card-header */
+.card-header.text-gradient-custom i {
+    /* Dùng lại biến hoặc định nghĩa màu gradient */
+    background-image: linear-gradient(to right, #14ADD6, #384295);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* YÊU CẦU 5 (MỚI): Bo tròn thanh trượt cho hiện đại hơn */
+/* Áp dụng cho các trình duyệt Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+    width: 10px; /* Chiều rộng thanh trượt */
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1; /* Màu của rãnh trượt */
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1; /* Màu của con trượt */
+    border-radius: 10px; /* Đây là thuộc tính bo tròn */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8; /* Màu con trượt khi hover */
+}
+
+.swal2-container-custom .swal2-popup {
+    max-height: 250px; /* Điều chỉnh giá trị này theo ý muốn /
+overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
+}
+
+.table-soft-bordered,
+.table-soft-bordered th,
+.table-soft-bordered td {
+    border-color: #dee2e6 !important; /* Màu viền mặc định của Bootstrap, rất dịu mắt */
+}
+
+/* --- CSS Cho Giao Diện Size Matrix Hiện Đại --- */
+
+/* Container chính của grid */
+.size-grid-container {
+    display: grid;
+    grid-template-columns: 100px repeat(auto-fill, minmax(65px, 1fr)); /* Cột đầu 80px, các cột size tự chia đều */
+    border: 1px solid #ced4da; /* Viền ngoài giống hệt input */
+    border-radius: 0.375rem; /* Bo góc giống hệt input */
+    overflow: hidden; /* Đảm bảo bo góc hoạt động */
+    background-color: #fff;
+}
+
+/* Định dạng chung cho tất cả các ô */
+.size-grid-container > div {
+    padding: 0.25rem 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Bỏ viền phải và viền dưới của các ô cuối cùng */
+.size-grid-container > div:last-child { border-right: none; }
+.size-grid-container > div.grid-row-end { border-bottom: none; }
+
+
+/* Header (XS, S, M...) */
+.grid-header {
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 0.8rem;
+    background-color: #f8f9fa;
+}
+
+/* Nhãn (Qty, Price...) */
+.grid-label {
+    font-weight: 600;
+    font-size: 0.8rem;
+    background-color: #f8f9fa;
+}
+
+/* Ô chứa input */
+.grid-input-cell {
+    padding: 0; /* Xóa padding để input chiếm toàn bộ ô */
+}
+
+/* Input bên trong grid */
+.grid-input-cell input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    text-align: center;
+    box-shadow: none !important; /* Xóa hết shadow mặc định */
+    outline: none !important; /* Xóa outline mặc định */
+    border-radius: 0;
+    padding: 0.25rem;
+    font-size: 0.7rem;
+    -moz-appearance: textfield;
+}
+.grid-input-cell input::-webkit-outer-spin-button,
+.grid-input-cell input::-webkit-inner-spin-button {
+    -webkit-appearance: none; /* Dành cho Chrome, Safari, Edge */
+    margin: 0;
+}
+
+/* Hiệu ứng focus giống hệt Bootstrap */
+.grid-input-cell input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* Thêm margin-top cho các ô input/select ở hàng thông tin chính */
+.detail-card .d-flex > div > .form-control,
+.detail-card .d-flex > div > .form-select {
+    margin-top: 5px;
+}
+
+/* --- Cải tiến cho bảng BOM Details --- */
+
+/* 1. Kích hoạt thanh trượt ngang */
+.table-responsive > .table {
+    min-width: 1000px; /* Đặt chiều rộng tối thiểu lớn để bảng không bị co lại */
+}
+
+/* Kích hoạt thanh trượt ngang cho bảng được bao bọc bởi .table-responsive */
+.table-responsive > .table-modern {
+    min-width: 2800px; /* Đặt chiều rộng tối thiểu lớn để bảng không bị co lại */
+}
+
+/* Áp dụng các style chung cho bảng .table-modern */
+.table-modern th,
+.table-modern td {
+    white-space: nowrap;
+    vertical-align: middle; /* Căn giữa nội dung theo chiều dọc */
+    padding: 0.5rem; /* Giảm padding cho gọn hơn */
+}
+
+
+.table-modern thead th {
+background-image: linear-gradient(to right, #384295, #384295);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent; /* Makes the text color transparent to show the gradient */
+    font-weight: 500; /* Adjusting font weight for a softer, more modern look */
+}
+
+
+
+.table-modern tbody tr:hover {
+    background-color: #f2f7ff;
+    cursor: pointer;
+}
+
+/* 5. Căn chỉnh input và select trong bảng */
+.table-modern td .form-control,
+.table-modern td .form-select {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    min-width: 80px; /* Đảm bảo các ô select/input không quá hẹp */
+}
+
+/* Các lớp tiện ích cho chiều rộng cột, chỉ áp dụng cho bảng .table-modern */
+.table-modern .col-wide { width: 250px; }
+.table-modern .col-medium { width: 150px; }
+.table-modern .col-normal { width: 120px; }
+
+/* Nút xóa trên từng dòng (giữ nguyên) */
+.delete-row-btn {
+    /* ... các style cũ ... */
+}
+
+/* 3. Làm cho giao diện bảng hiện đại hơn */
+.table-modern {
+    border-color: #dee2e6;
+}
+
+.table-modern td {
+    color: #212529;
+}
+
+/* Nút xóa trên từng dòng */
+.delete-row-btn {
+    background-color: #dc3545; /* Màu nền đỏ */
+    border-color: #dc3545;
+    color: white; /* Icon màu trắng */
+    border-radius: 50%; /* Bo tròn */
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.delete-row-btn:hover {
+    background-color: #bb2d3b;
+    border-color: #b02a37;
+    color: white;
+}
+
+.col-super { width: 700px !important; }
+.col-wide { width: 350px !important; }
+.col-medium { width: 300px !important; }
+.col-normal { width: 200px !important; }
+.col-narrow { width: 100px !important; }
+

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sale Order - Garment Simple MES</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="d-flex" id="wrapper">
+    {{> layout/sidebar}}
+    <div id="page-content-wrapper">
+        {{> layout/header}}
+        <main class="container-fluid p-4">
+            {{#successMessage}}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{successMessage}}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {{/successMessage}}
+            {{#errorMessage}}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{errorMessage}}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {{/errorMessage}}
+
+            {{#order}}
+                <div class="mb-2 d-flex align-items-center">
+                    <h1 class="h5 mb-0 text-gradient-custom">
+                        {{#saleOrderId}}Edit Sale Order{{/saleOrderId}}
+                        {{^saleOrderId}}Create New Sale Order{{/saleOrderId}}
+                    </h1>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <a href="/sale-orders" class="btn btn-link-custom"><i class="bi bi-arrow-left me-1"></i>Back</a>
+                    <div>
+                        {{#saleOrderId}}
+                            <a href="/order-boms/form?saleOrderId={{saleOrderId}}" class="btn btn-custom-gradient rounded-pill px-4 py-2 me-2">Generate BOM</a>
+                        {{/saleOrderId}}
+                        <button type="submit" form="saleOrderForm" class="btn btn-custom-gradient rounded-pill px-4 py-2">Save</button>
+                    </div>
+                </div>
+
+                <form action="/sale-orders/save" method="post" id="saleOrderForm">
+                    <input type="hidden" name="saleOrderId" value="{{#saleOrderId}}{{.}}{{/saleOrderId}}">
+
+                    <!-- ========== ORDER INFORMATION (HEADER) ========== -->
+                    <div class="card mb-4">
+                        <div class="card-header text-gradient-custom"><i class="bi bi-info-circle me-1"></i>Order Information</div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="customerId" class="form-label">Customer <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="customerId" name="customerId" required>
+                                        <option value="">-- Select Customer --</option>
+                                        {{#customers}}
+                                            <option value="{{id}}" data-code="{{code}}" data-currency="{{currency}}" {{#selected}}selected{{/selected}}>{{name}}</option>
+                                        {{/customers}}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="saleOrderNo" class="form-label">Order No <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="saleOrderNo" name="saleOrderNo" value="{{#saleOrderNo}}{{.}}{{/saleOrderNo}}" required readonly>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="customerPO" class="form-label">Customer PO</label>
+                                    <input type="text" class="form-control" id="customerPO" name="customerPO" value="{{#customerPO}}{{.}}{{/customerPO}}">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="shipDate" class="form-label">Ship Date</label>
+                                    <input type="date" class="form-control" id="shipDate" name="shipDate" value="{{#shipDate}}{{.}}{{/shipDate}}">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="productionStartDate" class="form-label">Production Start</label>
+                                    <input type="date" class="form-control" id="productionStartDate" name="productionStartDate" value="{{#productionStartDate}}{{.}}{{/productionStartDate}}">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="productionEndDate" class="form-label">Production End</label>
+                                    <input type="date" class="form-control" id="productionEndDate" name="productionEndDate" value="{{#productionEndDate}}{{.}}{{/productionEndDate}}">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="orderDate" class="form-label">Order Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="orderDate" name="orderDate" value="{{#orderDate}}{{.}}{{/orderDate}}" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="currencyCode" class="form-label">Currency</label>
+                                    {{! YÊU CẦU 2: Bỏ readonly để có thể sửa }}
+                                    <input type="text" class="form-control" id="currencyCode" name="currencyCode" value="{{#currencyCode}}{{.}}{{/currencyCode}}" maxlength="3">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="status" name="status" required>
+                                        {{#statuses}}
+                                            <option value="{{name}}" {{#selected}}selected{{/selected}}>{{name}}</option>
+                                        {{/statuses}}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========== ORDER DETAILS (DETAIL) ========== -->
+                    <div class="card mb-4">
+                        <div class="card-header text-gradient-custom"><i class="bi bi-list-ul me-1"></i> Order Details</div>
+                        <div class="card-body">
+                            <div id="detailsContainer">
+                                <!-- Details will be dynamically inserted here by JavaScript -->
+                            </div>
+                            <div class="mt-3">
+                                <button type="button" id="addDetailBtn" class="btn btn-custom-gradient rounded-pill px-3 py-2"><i class="bi bi-plus-circle me-1"></i> Add Product</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            {{/order}}
+        </main>
+        {{> layout/footer}}
+    </div>
+</div>
+{{> layout/scripts}}
+<script id="details-data" type="application/json">
+    {{{detailsJson}}}
+</script>
+<script src="/js/sale-order-form.js"></script>
+</body>
+</html>

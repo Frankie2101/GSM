@@ -1,0 +1,24 @@
+<div id="sidebar-wrapper">
+    <div class="sidebar-heading">
+        <img src="/images/GSM%20Logo.png" alt="GSM Logo">
+    </div>
+    <div class="list-group list-group-flush mt-3">
+        <a class="list-group-item list-group-item-action {{#isDashboardPage}}active{{/isDashboardPage}}" href="/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+        <a class="list-group-item list-group-item-action {{#isUserPage}}active{{/isUserPage}}" href="/users"><i class="bi bi-people me-2"></i>User</a>
+
+        {{! ----- CẬP NHẬT GIAO DIỆN MENU SẢN PHẨM ----- }}
+        <a class="list-group-item list-group-item-action {{#isProductPage}}active{{/isProductPage}}" href="/products"><i class="bi bi-box-seam me-2"></i>Product</a>
+        <a class="list-group-item list-group-item-action {{#isFabricPage}}active{{/isFabricPage}}" href="/fabrics"><i class="bi bi-stack me-2"></i>Fabric</a>
+        <a class="list-group-item list-group-item-action {{#isTrimPage}}active{{/isTrimPage}}" href="/trims"><i class="bi bi-threads me-2"></i>Trim</a>
+        {{! ----- KẾT THÚC CẬP NHẬT ----- }}
+
+        {{! ----- THÊM MỚI: Link cho BOM Template ----- }}
+        <a class="list-group-item list-group-item-action {{#isBomTemplatePage}}active{{/isBomTemplatePage}}" href="/bom-templates"><i class="bi bi-file-earmark-spreadsheet me-2"></i>BOM Template</a>
+
+        {{! ----- Transaction Menu ----- }}
+        <a class="list-group-item list-group-item-action {{#isSaleOrderPage}}active{{/isSaleOrderPage}}" href="/sale-orders"><i class="bi bi-cart me-2"></i>Sale Order</a>
+        <a class="list-group-item list-group-item-action {{#isBomPage}}active{{/isBomPage}}" href="/boms"><i class="bi bi-diagram-3 me-2"></i>BOM</a>
+        <a class="list-group-item list-group-item-action {{#isPurchaseOrderPage}}active{{/isPurchaseOrderPage}}" href="/purchase-orders"><i class="bi bi-receipt me-2"></i>Purchase Order</a>
+        <a class="list-group-item list-group-item-action {{#isProductionOutputPage}}active{{/isProductionOutputPage}}" href="/production-outputs"><i class="bi bi-graph-up-arrow me-2"></i>Production Output</a>
+    </div>
+</div>

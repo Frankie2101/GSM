@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trim - Garment Simple MES</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="d-flex" id="wrapper">
+    {{> layout/sidebar}}
+    <div id="page-content-wrapper">
+        {{> layout/header}}
+        <main class="container-fluid p-4">
+            <div class="d-flex align-items-center mb-4">
+                <h1 class="h3 m-0"><i class="bi bi-scissors me-2"></i>Trim</h1>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form action="/trims" method="get" id="searchForm">
+                        <div class="row align-items-end gy-3">
+                            <div class="col-md-7">
+                                <label for="keyword" class="form-label">Search</label>
+                                <input type="text" class="form-control" id="keyword" name="keyword" placeholder="Enter trim code or name..." value="{{#keyword}}{{.}}{{/keyword}}">
+                            </div>
+                            <div class="col-md-5 d-flex justify-content-start justify-content-md-end">
+                                <button type="submit" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-search me-1"></i> Search</button>
+                                <a href="/trims/form" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-plus-circle me-1"></i> Create</a>
+                                <button type="button" id="deleteBtn" class="btn btn-delete-gradient rounded-pill px-4"><i class="bi bi-trash me-1"></i> Delete</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Result</div>
+                <div class="card-body">
+                    <form action="/trims/delete" method="post" id="deleteForm">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                <tr>
+                                    <th style="width: 5%;" class="text-center"><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                    <th style="width: 5%;">Seq</th>
+                                    <th style="width: 20%;">Trim Code</th>
+                                    <th style="width: 30%;">Trim Name</th>
+                                    <th style="width: 20%;">Supplier</th>
+                                    <th style="width: 10%;">Unit</th>
+                                    <th style="width: 10%;">Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {{#trims}}
+                                    <tr>
+                                        <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox" name="selectedIds" value="{{trimId}}"></td>
+                                        <td class="p-3 align-middle">{{sequenceNumber}}</td>
+                                        <td class="p-3 align-middle">{{trimCode}}</td>
+                                        <td class="py-3 ps-2 align-middle">{{trimName}}</td>
+                                        <td class="py-3 ps-2 align-middle">{{supplierName}}</td>
+                                        <td class="py-3 ps-2 align-middle">{{unitName}}</td>
+                                        <td class="p-3 align-middle">
+                                            <a href="/trims/form?id={{trimId}}" class="action-link">View</a>
+                                        </td>
+                                    </tr>
+                                {{/trims}}
+                                {{^trims}}
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted p-4">No trims found. Click 'Create' to add one.</td>
+                                    </tr>
+                                {{/trims}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+        {{> layout/footer}}
+    </div>
+</div>
+{{> layout/scripts}}
+<script src="/js/trim-list.js"></script>
+</body>
+</html>
