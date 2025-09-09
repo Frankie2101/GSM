@@ -1,6 +1,7 @@
 package com.gsm.config;
 
 import com.gsm.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -16,8 +17,13 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Bean
-    public AuthenticationProvider authenticationProvider(UserService userService, PasswordEncoder passwordEncoder) {
+    public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userService);
         authProvider.setPasswordEncoder(passwordEncoder);
@@ -62,15 +68,15 @@ public class SecurityConfig {
      */
     @Bean
     @Order(2)
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider) throws Exception {
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        // THÊM authenticationProvider() VÀO ĐÂY ĐỂ KÍCH HOẠT
         http
-                .authenticationProvider(authenticationProvider)
+                .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
-                        // Cho phép truy cập tài nguyên tĩnh và trang login
-                        .antMatchers("/css/**", "/js/**", "/images/**", "/login").permitAll()
-                        // Tất cả các request khác phải xác thực
+                        .antMatchers("/css/**", "/js/**", "/images/**").permitAll()
                         .anyRequest().authenticated()
                 )
+                // ... (phần còn lại giữ nguyên)
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
@@ -83,7 +89,6 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login?logout=true")
                         .permitAll()
                 );
-
         return http.build();
     }
 }
