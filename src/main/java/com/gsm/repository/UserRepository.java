@@ -23,4 +23,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "u.phoneNumber LIKE CONCAT('%', :keyword, '%')")
     List<User> search(@Param("keyword") String keyword);
 
+    Optional<User> findByZaloUserId(String zaloUserId);
+
 }

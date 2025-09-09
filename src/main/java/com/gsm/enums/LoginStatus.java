@@ -1,4 +1,6 @@
-package com.gsm.enums;
+package com.gsm.dto; // Hoặc com.gsm.enums
 
-public class LoginStatus {
+public enum LoginStatus {
+    SUCCESS,
+    LINK_REQUIRED
 }

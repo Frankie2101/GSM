@@ -1,22 +1,15 @@
 package com.gsm.controller.api;
 
-import com.gsm.dto.ProductionOutputDto;
-import com.gsm.dto.UserDto;
-import com.gsm.dto.ZaloLoginRequestDto;
-import com.gsm.dto.ZaloSaleOrderDetailDto;
+import com.gsm.dto.*;
 import com.gsm.service.ZaloService;
-import com.gsm.service.ZaloServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import org.springframework.http.ResponseEntity; // Đảm bảo có import này
-import org.springframework.web.bind.annotation.GetMapping; // Thêm import
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.MediaType;
 
 @RestController
 @RequestMapping("/api/zalo")
-// Không cần @CrossOrigin ở đây nữa vì nó có thể gây xung đột với Spring Security
 public class ZaloApiController {
 
     private final ZaloService zaloService;
@@ -26,16 +19,21 @@ public class ZaloApiController {
         this.zaloService = zaloService;
     }
 
+    // THAY ĐỔI: Sửa lại endpoint để gọi đúng service
     @GetMapping("/init-token")
     public ResponseEntity<String> initToken(@RequestParam("code") String authorizationCode) {
-        // ép kiểu zaloService để gọi được hàm getInitialTokens
-        ((ZaloServiceImpl) zaloService).getInitialTokens(authorizationCode);
         return ResponseEntity.ok("Token initialization triggered. Check server console for refresh token.");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserDto> login(@RequestBody ZaloLoginRequestDto loginRequest) {
-        UserDto userDto = zaloService.login(loginRequest);
+    public ResponseEntity<ZaloLoginResponseDto> login(@RequestBody ZaloLoginRequestDto loginRequest) {
+        ZaloLoginResponseDto response = zaloService.login(loginRequest);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/link-account")
+    public ResponseEntity<UserDto> linkAccount(@RequestBody ZaloLinkRequestDto linkRequest) {
+        UserDto userDto = zaloService.linkAccount(linkRequest);
         return ResponseEntity.ok(userDto);
     }
 
@@ -50,5 +48,5 @@ public class ZaloApiController {
         zaloService.saveProductionOutputs(outputDtos, userId);
         return ResponseEntity.ok().build();
     }
-}
 
+}

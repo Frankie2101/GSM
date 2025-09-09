@@ -42,5 +42,8 @@ public class User extends AuditableEntity {
     private boolean activeFlag = true;
 
     @Column(name = "Password", nullable = false)
-    private String password; // <-- THÊM DÒNG NÀY
+    private String password;
+
+    @Column(name = "ZaloUserId", unique = true)
+    private String zaloUserId;
 }
