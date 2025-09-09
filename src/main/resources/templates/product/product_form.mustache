@@ -55,6 +55,9 @@
                 </div>
 
                 <form action="/products/save" method="post" id="productForm">
+                    {{#_csrf}}
+                        <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
+                    {{/_csrf}}
 
                     <input type="hidden" name="productId" value="{{#productId}}{{.}}{{/productId}}">
 

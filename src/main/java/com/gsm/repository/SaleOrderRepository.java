@@ -1,5 +1,6 @@
 package com.gsm.repository;
 
+import com.gsm.enums.SaleOrderStatus;
 import com.gsm.model.Customer;
 import com.gsm.model.SaleOrder;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,4 +21,6 @@ public interface SaleOrderRepository extends JpaRepository<SaleOrder, Long> {
             "(:keyword IS NULL OR LOWER(so.saleOrderNo) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
             "OR LOWER(so.customer.customerName) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     List<SaleOrder> search(@Param("keyword") String keyword);
+
+    List<SaleOrder> findByStatus(SaleOrderStatus status);
 }

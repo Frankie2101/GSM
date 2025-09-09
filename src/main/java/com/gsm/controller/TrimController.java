@@ -95,8 +95,11 @@ public class TrimController {
      * Xử lý lưu thông tin Trim.
      */
     @PostMapping("/save")
-    public String saveTrim(@ModelAttribute TrimDto trimDto, RedirectAttributes redirectAttributes) {
+    public String saveTrim(@ModelAttribute TrimDto trimDto,
+                           @RequestParam(name = "technicalReference", required = false) String technicalReference, // <-- THÊM DÒNG NÀY
+                           RedirectAttributes redirectAttributes) {
         try {
+            trimDto.setTechnicalReference(technicalReference); // <-- VÀ THÊM DÒNG NÀY
             TrimDto savedTrim = trimService.save(trimDto);
             redirectAttributes.addFlashAttribute("successMessage", "Saved Successfully!");
             return "redirect:/trims/form?id=" + savedTrim.getTrimId();

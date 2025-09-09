@@ -1,5 +1,6 @@
 package com.gsm.config;
 
+import com.gsm.security.CustomUserDetails; // THÊM IMPORT NÀY
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
@@ -10,25 +11,25 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Optional;
 
 @Configuration
-@EnableJpaAuditing(auditorAwareRef = "auditorProvider") // Active JPA Auditing
+@EnableJpaAuditing(auditorAwareRef = "auditorProvider")
 public class JpaAuditingConfiguration {
-
 
     @Bean
     public AuditorAware<Long> auditorProvider() {
-        // Tạm thời trả về 1L. Trong dự án thực tế, bạn sẽ lấy ID của user đã đăng nhập
-        // từ Spring Security Context.
         return () -> {
-            /*
+            // Lấy thông tin xác thực từ Spring Security
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return Optional.empty();
+
+            // Kiểm tra xem người dùng đã đăng nhập hay chưa
+            if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+                return Optional.empty(); // Trả về empty nếu chưa đăng nhập
             }
-            // Giả sử Principal của bạn là một đối tượng UserDetails có chứa ID
-            // YourUserDetailsClass userDetails = (YourUserDetailsClass) authentication.getPrincipal();
-            // return Optional.of(userDetails.getId());
-            */
-            return Optional.of(1L); // << TẠM THỜI HARDCODE, SẼ CẬP NHẬT KHI CÓ LOGIN
+
+            // Lấy principal và ép kiểu về CustomUserDetails
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+            // Trả về UserId
+            return Optional.of(userDetails.getUserId());
         };
     }
 }

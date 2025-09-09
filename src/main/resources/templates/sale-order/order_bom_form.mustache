@@ -28,14 +28,17 @@
 
             {{#orderBOM}}
                 <form action="/order-boms/save" method="post" id="orderBOMForm">
+                    {{#_csrf}}
+                        <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
+                    {{/_csrf}}
                     <input type="hidden" name="orderBOMId" value="{{#orderBOMId}}{{.}}{{/orderBOMId}}">
                     <input type="hidden" id="saleOrderId" name="saleOrderId" value="{{saleOrderId}}">
 
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h1 class="h5 mb-0 text-gradient-custom">Create BOM</h1>
                         <div>
-                            <a href="/sale-orders/form?id={{saleOrderId}}" class="btn btn-link-custom">Close</a>
-                            <button type="submit" class="btn btn-custom-gradient rounded-pill px-4 py-2">Generate PO</button>
+                            <a href="/sale-orders/form?id={{saleOrderId}}" class="btn btn-link-custom">Back to SO</a>
+                            <button type="button" id="generatePoBtn" class="btn btn-custom-gradient rounded-pill px-4 py-2">Generate PO</button>
                         </div>
                     </div>
 
@@ -67,26 +70,26 @@
                                 <table class="table table-bordered table-hover table-modern">
                                     <thead class="table-light">
                                     <tr>
-                                        <th style="width: 5%;" class="align-middle text-center"><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
-                                        <th>Seq</th>
-                                        <th>Material Group</th>
-                                        <th>Material Type</th>
-                                        <th>Material Code</th>
-                                        <th class="col-wide">Material Name</th>
+                                        <th style="width: 2%;" class="align-middle text-center"><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                        <th class="col-narrow">Seq</th>
+                                        <th class="col-wide">Material Group</th>
+                                        <th class="col-medium">Material Type</th>
+                                        <th class="col-wide">Material Code</th>
+                                        <th class="col-super">Material Name</th>
                                         <th class="col-medium">Color</th>
                                         <th class="col-wide">Color Name</th>
-                                        <th class="col-wide">Size</th>
-                                        <th class="col-wide">Unit</th>
-                                        <th class="col-super">Supplier</th>
-                                        <th class="col-normal">Price</th>
+                                        <th class="col-medium">Size</th>
+                                        <th class="col-medium">Unit</th>
+                                        <th class="col-max">Supplier</th>
+                                        <th class="col-wide">Price</th>
                                         <th class="col-normal">Currency</th>
                                         <th class="col-normal">Usage</th>
                                         <th class="col-normal">Waste %</th>
-                                        <th class="col-medium">SO Qty</th>
+                                        <th class="col-normal">SO Qty</th>
                                         <th class="col-medium">Demand Qty</th>
                                         <th class="col-medium">Inventory Qty</th>
                                         <th class="col-medium">Purchase Qty</th>
-                                        <th class="text-center">Action</th>
+                                        <th class="col-normal text-center">Action</th>
                                     </tr>
                                     </thead>
                                     <tbody id="bomDetailTableBody">
@@ -105,6 +108,51 @@
                     </div>
                 </form>
             {{/orderBOM}}
+
+            <div class="modal fade" id="generatePoModal" tabindex="-1" aria-labelledby="generatePoModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-fullscreen-xl-down">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title text-gradient-custom" id="generatePoModalLabel">
+                                <i class="bi bi-file-earmark-check me-2"></i>Generate PO
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover table-modern">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th class="col-midSmall">Material Group</th>
+                                        <th class="col-midSmall">Material Type</th>
+                                        <th class="col-midSmall">Material Code</th>
+                                        <th class="col-narrow">Material Name</th>
+                                        <th class="col-small">Color</th>
+                                        <th class="col-midSmall">Color Name</th>
+                                        <th class="col-small">Size</th>
+                                        <th class="col-small">Unit</th>
+                                        <th class="col-narrow">Supplier</th>
+                                        <th class="col-small">Price</th>
+                                        <th class="col-small">Currency</th>
+                                        <th class="col-midSmall">Purchase Qty</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="poPreviewTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" id="confirmPoGenerationBtn" class="btn btn-custom-gradient">
+                                <i class="bi bi-check-circle me-1"></i> Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
         {{> layout/footer}}
     </div>

@@ -42,6 +42,9 @@
                 </div>
 
                 <form action="/bom-templates/save" method="post" id="bomTemplateForm">
+                    {{#_csrf}}
+                        <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
+                    {{/_csrf}}
                     <input type="hidden" name="bomTemplateId" value="{{#bomTemplateId}}{{.}}{{/bomTemplateId}}">
 
                     <div class="card mb-4">

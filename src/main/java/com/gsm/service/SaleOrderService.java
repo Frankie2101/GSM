@@ -9,4 +9,6 @@ public interface SaleOrderService {
     SaleOrderDto save(SaleOrderDto dto);
     void deleteByIds(List<Long> ids);
     List<SaleOrderDto> search(String keyword);
+    SaleOrderDto findBySaleOrderNo(String saleOrderNo);
+
 }

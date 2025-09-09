@@ -8,7 +8,8 @@ import com.gsm.repository.ProductCategoryRepository;
 import com.gsm.repository.UnitRepository;
 import com.gsm.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.web.server.csrf.CsrfToken;
+import org.springframework.security.web.csrf.CsrfToken; // SỬA IMPORT NÀY
+import javax.servlet.http.HttpServletRequest; // THÊM IMPORT NÀY
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,7 @@ public class ProductController {
     @Autowired private UnitRepository unitRepository;
 
     @GetMapping("/form")
-    public String showProductForm(@RequestParam(required = false) Long id, Model model) {
+    public String showProductForm(@RequestParam(required = false) Long id, Model model, HttpServletRequest request) {
         ProductDto product;
         if (id != null) {
             product = productService.findById(id);
@@ -80,6 +81,8 @@ public class ProductController {
             }
             statusList.add(statusMap);
         }
+
+        model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));
 
         model.addAttribute("statuses", statusList);
         model.addAttribute("product", product);

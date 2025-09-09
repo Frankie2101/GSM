@@ -45,6 +45,9 @@
                 </div>
 
                 <form action="/trims/save" method="post" id="trimForm">
+                    {{#_csrf}}
+                        <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
+                    {{/_csrf}}
                     <input type="hidden" name="trimId" value="{{#trimId}}{{.}}{{/trimId}}">
 
                     <!-- ========== TRIM INFORMATION ========== -->

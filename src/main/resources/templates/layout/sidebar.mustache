@@ -17,8 +17,9 @@
 
         {{! ----- Transaction Menu ----- }}
         <a class="list-group-item list-group-item-action {{#isSaleOrderPage}}active{{/isSaleOrderPage}}" href="/sale-orders"><i class="bi bi-cart me-2"></i>Sale Order</a>
-        <a class="list-group-item list-group-item-action {{#isBomPage}}active{{/isBomPage}}" href="/boms"><i class="bi bi-diagram-3 me-2"></i>BOM</a>
-        <a class="list-group-item list-group-item-action {{#isPurchaseOrderPage}}active{{/isPurchaseOrderPage}}" href="/purchase-orders"><i class="bi bi-receipt me-2"></i>Purchase Order</a>
+        <a href="/order-boms" class="list-group-item list-group-item-action {{#isBomPage}}active{{/isBomPage}}"><i class="bi bi-list-ul me-2"></i>BOM</a>
+        <a href="/purchase_orders" class="list-group-item list-group-item-action {{#isPurchaseOrderPage}}active{{/isPurchaseOrderPage}}"><i class="bi bi-receipt me-2"></i>Purchase Order</a>
+        <a href="/purchase_orders/pending-approval" class="list-group-item list-group-item-action ps-5"><i class="bi bi-hourglass-split me-2"></i>Pending Approval</a>
         <a class="list-group-item list-group-item-action {{#isProductionOutputPage}}active{{/isProductionOutputPage}}" href="/production-outputs"><i class="bi bi-graph-up-arrow me-2"></i>Production Output</a>
     </div>
 </div>

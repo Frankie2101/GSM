@@ -4,5 +4,5 @@ public enum SaleOrderStatus {
     New,
     InProgress,
     Shipped,
-    CANCELLED
+    Cancelled
 }

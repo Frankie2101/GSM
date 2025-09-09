@@ -1,9 +1,14 @@
 package com.gsm.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -11,64 +16,75 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import com.gsm.service.UserService; // SỬA IMPORT NÀY
 
-/**
- * Lớp cấu hình chính cho Spring Security.
- * Nơi định nghĩa các quy tắc bảo mật, trang đăng nhập, mã hóa mật khẩu...
- */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    @Autowired
+    private UserService userService; // SỬ DỤNG UserService
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-    /**
-     * Bean này định nghĩa một bộ mã hóa mật khẩu.
-     * BCrypt là thuật toán mã hóa một chiều mạnh mẽ và là tiêu chuẩn hiện nay.
-     */
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userService); // SỬ DỤNG userService ở đây
+        authProvider.setPasswordEncoder(passwordEncoder);
+        return authProvider;
     }
 
     /**
-     * Bean này định nghĩa cách Spring Security sẽ tìm kiếm thông tin người dùng.
-     * TẠM THỜI: Chúng ta đang tạo một người dùng "in-memory" (chỉ tồn tại khi ứng dụng chạy).
-     * SAU NÀY: Chúng ta sẽ thay thế nó bằng một dịch vụ kết nối vào database để lấy người dùng thật.
+     * SỬA LỖI GỐC: Tạo một chuỗi bộ lọc bảo mật RIÊNG cho Zalo API.
+     * @Order(1) đảm bảo quy tắc này được ưu tiên áp dụng trước.
      */
     @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails user = User.builder()
-                .username("user")
-                .password(passwordEncoder().encode("password")) // Mật khẩu là "password"
-                .roles("USER")
-                .build();
-        return new InMemoryUserDetailsManager(user);
-    }
-
-    /**
-     * Bean này định nghĩa chuỗi bộ lọc bảo mật, là nơi áp dụng các quy tắc chính.
-     */
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    public SecurityFilterChain zaloApiFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf().disable()
+                // Áp dụng quy tắc này cho tất cả các đường dẫn bắt đầu bằng /api/zalo/
+                .antMatcher("/api/zalo/**")
                 .authorizeHttpRequests(auth -> auth
-                        // Cho phép truy cập không cần đăng nhập vào các tài nguyên tĩnh
-                        .antMatchers("/css/**", "/js/**", "/images/**").permitAll()
-
-                        // CHO PHÉP TRUY CẬP MỌI TRANG để tiện cho việc phát triển
+                        // Cho phép tất cả các yêu cầu này đi qua mà không cần xác thực
                         .anyRequest().permitAll()
                 )
-                // Cấu hình form đăng nhập (sẽ dùng đến sau này)
-                .formLogin(form -> form
-                        .loginPage("/login") // Chỉ định URL của trang đăng nhập tùy chỉnh
-                        .permitAll()
-                )
-                // Cấu hình chức năng đăng xuất
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout")
-                        .permitAll()
-                );
+                // Yêu cầu Spring Security KHÔNG tạo session cho các API này (quan trọng)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Tắt tính năng chống tấn công CSRF cho các API này
+                .csrf(csrf -> csrf.disable());
+
         return http.build();
     }
+
+    /**
+     * Chuỗi bộ lọc bảo mật cho phần còn lại của ứng dụng web (ERP nội bộ).
+     * @Order(2) đảm bảo quy tắc này được áp dụng sau quy tắc cho Zalo API.
+     */
+    @Bean
+    @Order(2)
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        // THÊM authenticationProvider() VÀO ĐÂY ĐỂ KÍCH HOẠT
+        http
+                .authenticationProvider(authenticationProvider())
+                .authorizeHttpRequests(auth -> auth
+                        .antMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                // Cấu hình form đăng nhập cho hệ thống web nội bộ
+                .formLogin(form -> form
+                        .loginPage("/login") // Đường dẫn đến trang đăng nhập
+                        .loginProcessingUrl("/login") // URL xử lý đăng nhập
+                        .defaultSuccessUrl("/sale-orders", true) // Chuyển hướng sau khi thành công
+                        .failureUrl("/login?error=true") // Chuyển hướng khi thất bại
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout=true") // Chuyển hướng sau khi đăng xuất
+                        .permitAll()
+                );
+
+        return http.build();
+    }
+
 }

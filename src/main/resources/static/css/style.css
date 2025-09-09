@@ -1,6 +1,8 @@
 :root {
     --main-bg-color: #F8F9FD;
     --sidebar-width: 260px;
+    --primary-blue: #4e73df; /* Màu xanh chính của theme */
+    --edit-button-color: #3159e1; /* Ví dụ màu xanh đậm cho chữ nút Search/AddNew */
 }
 
 body {
@@ -363,60 +365,46 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
     min-width: 1000px; /* Đặt chiều rộng tối thiểu lớn để bảng không bị co lại */
 }
 
-/* Kích hoạt thanh trượt ngang cho bảng được bao bọc bởi .table-responsive */
+/* --- Cải tiến cho bảng BOM Details --- */
+
+/* 1. Kích hoạt thanh trượt ngang */
 .table-responsive > .table-modern {
-    min-width: 2800px; /* Đặt chiều rộng tối thiểu lớn để bảng không bị co lại */
+    min-width: 2800px;
 }
 
-/* Áp dụng các style chung cho bảng .table-modern */
+/* 2. Style chung cho bảng */
+.table-modern {
+    border-color: #dee2e6;
+    table-layout: fixed; /* QUAN TRỌNG: Buộc bảng tuân theo chiều rộng đã định */
+}
+
 .table-modern th,
 .table-modern td {
-    white-space: nowrap;
-    vertical-align: middle; /* Căn giữa nội dung theo chiều dọc */
-    padding: 0.5rem; /* Giảm padding cho gọn hơn */
+    vertical-align: middle;
+    padding: 0.5rem;
+    /* FIX: Bỏ nowrap và xử lý text dài bằng text-overflow */
+    white-space: normal; /* Cho phép text xuống dòng nếu cần */
 }
-
 
 .table-modern thead th {
-background-image: linear-gradient(to right, #384295, #384295);
+    background-image: linear-gradient(to right, #384295, #384295);
     -webkit-background-clip: text;
     background-clip: text;
-    color: transparent; /* Makes the text color transparent to show the gradient */
-    font-weight: 500; /* Adjusting font weight for a softer, more modern look */
+    color: transparent;
+    font-weight: 500;
 }
-
-
 
 .table-modern tbody tr:hover {
     background-color: #f2f7ff;
     cursor: pointer;
 }
 
-/* 5. Căn chỉnh input và select trong bảng */
+/* 3. Căn chỉnh input và select trong bảng */
 .table-modern td .form-control,
 .table-modern td .form-select {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
-    min-width: 80px; /* Đảm bảo các ô select/input không quá hẹp */
-}
-
-/* Các lớp tiện ích cho chiều rộng cột, chỉ áp dụng cho bảng .table-modern */
-.table-modern .col-wide { width: 250px; }
-.table-modern .col-medium { width: 150px; }
-.table-modern .col-normal { width: 120px; }
-
-/* Nút xóa trên từng dòng (giữ nguyên) */
-.delete-row-btn {
-    /* ... các style cũ ... */
-}
-
-/* 3. Làm cho giao diện bảng hiện đại hơn */
-.table-modern {
-    border-color: #dee2e6;
-}
-
-.table-modern td {
-    color: #212529;
+    min-width: 80px;
 }
 
 /* Nút xóa trên từng dòng */
@@ -439,9 +427,169 @@ background-image: linear-gradient(to right, #384295, #384295);
     color: white;
 }
 
-.col-super { width: 700px !important; }
-.col-wide { width: 350px !important; }
-.col-medium { width: 300px !important; }
-.col-normal { width: 200px !important; }
-.col-narrow { width: 100px !important; }
+/* 5. FIX: Hợp nhất và sửa lỗi các lớp tiện ích cho chiều rộng cột */
+/* Xóa bỏ các định nghĩa cũ và chỉ sử dụng bộ quy tắc này */
+.col-max { width: 300px !important; }
+.col-super { width: 250px !important; }
+.col-wide { width: 170px !important; }
+.col-medium { width: 130px !important; }
+.col-normal { width: 100px !important; }
+.col-narrow { width: 50px !important; }
+.col-midSmall { width: 30px !important; }
+.col-small { width: 20px !important; }
 
+
+
+/* Dấu } bị lỗi ở cuối file cũ đã được xóa bỏ */
+
+/* === Tăng kích thước cho Modal Preview PO === */
+#generatePoModal .modal-dialog {
+    /* Chiều rộng tối đa là 95% chiều rộng màn hình */
+    max-width: 95%;
+}
+
+#generatePoModal .modal-content {
+    /* Chiều cao là 90% chiều cao màn hình */
+    height: 90vh;
+}
+
+/* === THÊM MỚI: CSS GHI ĐÈ CHỈ DÀNH CHO BẢNG PREVIEW TRONG POP-UP === */
+/* Bằng cách thêm #generatePoModal ở trước, quy tắc này sẽ mạnh hơn và chỉ áp dụng cho bảng nằm trong pop-up */
+#generatePoModal .table-responsive > .table-modern {
+    min-width: 2100px; /* <<-- Bạn có thể điều chỉnh con số này cho hợp lý */
+}
+
+.table-responsive > .table-po-details {
+    min-width: 1700px; /* <<-- Chỉnh lại con số này cho phù hợp với bạn */
+}
+
+/* 2. Định nghĩa chiều rộng cho từng cột trong bảng mới */
+/* Bằng cách đặt .table-bpo-details ở trước, các class này chỉ có hiệu lực bên trong bảng của bạn */
+.table-po-details .col-type {
+    width: 7%;
+}
+
+.table-po-details .col-longCode {
+    width: 10%;
+}
+
+.table-po-details .col-name {
+    width: 15%; /* <<-- Tăng chiều rộng cho cột Material Name */
+}
+
+.table-po-details .col-code {
+    width: 6%;
+}
+
+.table-po-details .col-action {
+    width: 15%;
+}
+
+/* === CSS CHO DASHBOARD === */
+
+.kpi-card {
+    border-left: 5px solid;
+}
+.kpi-card-primary {
+    border-left-color: #0d6efd;
+}
+.kpi-card-danger {
+    border-left-color: #dc3545;
+}
+.kpi-card-info {
+    border-left-color: #0dcaf0;
+}
+.kpi-card-success {
+    border-left-color: #198754;
+}
+.remark-cell {
+    font-weight: bold;
+    color: #dc3545;
+}
+.chart-container {
+    min-height: 300px;
+}
+
+/* === CSS CHO DASHBOARD (Thêm vào cuối file) === */
+
+.kpi-card {
+    border-left: 5px solid;
+}
+.kpi-card-primary {
+    border-left-color: #0d6efd;
+}
+.kpi-card-danger {
+    border-left-color: #dc3545;
+}
+.kpi-card-info {
+    border-left-color: #0dcaf0;
+}
+.kpi-card-success {
+    border-left-color: #198754;
+}
+.remark-cell {
+    font-weight: bold;
+    color: #dc3545;
+}
+.chart-container-wip {
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+/* === YÊU CẦU MỚI: Style cho các Tab trên Dashboard === */
+
+/* 1. Bỏ đường viền dưới của container chứa các tab */
+.nav-tabs {
+    border-bottom: none;
+}
+
+/* 2. Style cho từng nút tab (trạng thái không được chọn) */
+.nav-tabs .nav-link {
+    border: none; /* Bỏ viền xung quanh */
+    border-radius: 0.5rem; /* Bo góc mềm mại */
+    background-color: #e9ecef; /* Màu nền xám nhạt */
+    color: #495057; /* Màu chữ tối */
+    font-weight: 600;
+    margin-right: 10px; /* Tạo khoảng cách giữa 2 nút */
+    transition: all 0.3s ease; /* Hiệu ứng chuyển màu mượt mà */
+    padding: 0.5rem 1rem;
+}
+
+/* 3. Style cho nút tab KHI ĐƯỢC CHỌN (active) hoặc KHI DI CHUỘT VÀO (hover) */
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-link:hover {
+    /* Dùng lại màu gradient từ nút Search */
+    background-image: linear-gradient(to right, #14ADD6, #384295);
+    color: white; /* Chữ màu trắng */
+}
+
+/* Thêm các định nghĩa CSS này vào file style.css của bạn */
+
+/* Dùng màu đen hoặc màu tối cho tiêu đề khi in */
+.po-title-print {
+    color: #333 !important; /* Màu đen */
+    /* Nếu bạn có định nghĩa font-size hay font-weight cho text-gradient-custom
+       thì cũng có thể sao chép chúng vào đây */
+    font-size: 2.5rem; /* Ví dụ: Giữ nguyên kích thước hoặc tùy chỉnh */
+    font-weight: bold;
+}
+
+.po-details-title-print {
+    color: #333 !important; /* Màu đen */
+    font-size: 1.5rem; /* Ví dụ: Giữ nguyên kích thước hoặc tùy chỉnh */
+    font-weight: bold;
+}
+
+/* Bạn có thể cần ẩn các nút "Back" và "Export to PDF"
+   trong trang preview khi in ra giấy thật (nếu người dùng bấm Ctrl+P)
+   Thêm đoạn này vào cuối file CSS của bạn
+*/
+@media print {
+    #exportPdfBtn,
+    .btn-link-custom {
+        display: none !important;
+    }
+}

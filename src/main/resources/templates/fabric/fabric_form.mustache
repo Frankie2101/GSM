@@ -44,6 +44,9 @@
                 </div>
 
                 <form action="/fabrics/save" method="post" id="fabricForm">
+                    {{#_csrf}}
+                        <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
+                    {{/_csrf}}
                     <input type="hidden" name="fabricId" value="{{#fabricId}}{{.}}{{/fabricId}}">
 
                     <!-- ========== FABRIC INFORMATION ========== -->

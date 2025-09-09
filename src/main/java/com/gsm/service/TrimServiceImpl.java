@@ -177,6 +177,7 @@ public class TrimServiceImpl implements TrimService {
             dto.setSupplierId(trim.getSupplier().getSupplierId());
             dto.setSupplierName(trim.getSupplier().getSupplierName());
         }
+        dto.setTechnicalReference(trim.getTechnicalReference());
         return dto;
     }
 

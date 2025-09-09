@@ -1,0 +1,86 @@
+<div class="pt-4">
+    <div class="row mb-4">
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card shadow h-100 py-2 kpi-card kpi-card-success">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">On-Time Completion</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{dashboardData.performanceTab.onTimeCompletionRate}}%</div>
+                        </div>
+                        <div class="col-auto"><i class="bi bi-check-circle-fill fs-2 text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card shadow h-100 py-2 kpi-card kpi-card-info">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Avg. Lead Time</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{dashboardData.performanceTab.averageLeadTime}} Days</div>
+                        </div>
+                        <div class="col-auto"><i class="bi bi-clock-history fs-2 text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Daily Throughput (Last 7 Days)</h6></div>
+                <div class="card-body"><canvas id="dailyThroughputChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">S-Curve: Planned vs. Actual</h6></div>
+                <div class="card-body"><canvas id="sCurveChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Material Risk Analysis</h6></div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm mb-0 align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>SO No.</th>
+                                <th>Style</th>
+                                <th>Prod. Start Date</th>
+                                <th>Material</th>
+                                <th>PO No.</th>
+                                <th>PO Arrival Date</th>
+                                <th>Days Diff.</th>
+                                <th>Status</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {{#dashboardData.performanceTab.materialRiskTable}}
+                                <tr>
+                                    <td>{{saleOrderNo}}</td>
+                                    <td>{{style}}</td>
+                                    <td>{{productionStartDate}}</td>
+                                    <td>{{materialDescription}}</td>
+                                    <td>{{purchaseOrderNo}}</td>
+                                    <td>{{poArrivalDate}}</td>
+                                    <td>{{daysDifference}}</td>
+                                    <td><span class="badge {{#riskStatus}}bg-danger{{/riskStatus}}{{^riskStatus}}bg-success{{/riskStatus}}">{{riskStatus}}</span></td>
+                                </tr>
+                            {{/dashboardData.performanceTab.materialRiskTable}}
+                            {{^dashboardData.performanceTab.materialRiskTable}}
+                                <tr><td colspan="8" class="text-center p-4">No material risks found.</td></tr>
+                            {{/dashboardData.performanceTab.materialRiskTable}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

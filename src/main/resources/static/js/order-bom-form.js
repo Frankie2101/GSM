@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Hàm tạo và khởi tạo logic cho một dòng mới (Cập nhật HTML)
+    // Thay thế hàm createAndInitRow bằng phiên bản mới này
     async function createAndInitRow(detail = {}) {
         const index = tableBody.rows.length;
         const row = tableBody.insertRow();
@@ -45,40 +46,44 @@ document.addEventListener('DOMContentLoaded', function() {
         const supplierOptionsHtml = supplierTemplate?.innerHTML || '<option value=""></option>';
         const materialGroupOptionsHtml = materialGroupTemplate?.innerHTML || '<option value=""></option>';
 
+        // Thay thế toàn bộ khối row.innerHTML trong hàm createAndInitRow
         row.innerHTML = `
-        <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox"></td>
-        <td class="align-middle text-center seq-number"></td>
-        
-        <input type="hidden" name="details[${index}].seq">
-        <input type="hidden" name="details[${index}].fabricId" value="${detail.fabricId || ''}">
-        <input type="hidden" name="details[${index}].trimId" value="${detail.trimId || ''}">
+    <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox"></td>
+    <td class="align-middle text-center seq-number"></td>
+    
+    <input type="hidden" name="details[${index}].orderBOMDetailId" value="${detail.orderBOMDetailId || ''}">
+    <input type="hidden" name="details[${index}].seq">
+    <input type="hidden" name="details[${index}].fabricId" value="${detail.fabricId || ''}">
+    <input type="hidden" name="details[${index}].trimId" value="${detail.trimId || ''}">
 
-        <td><select class="form-select form-select-sm material-group-select" name="details[${index}].materialGroupId">${materialGroupOptionsHtml}</select></td>
-        <td>
-            <select class="form-select form-select-sm material-type-select" name="details[${index}].materialType">
-                <option value=""></option>
-                <option value="FA" ${detail.materialType === 'FA' ? 'selected' : ''}>Fabric</option>
-                <option value="TR" ${detail.materialType === 'TR' ? 'selected' : ''}>Trim</option>
-            </select>
-        </td>
-        <td><select class="form-select form-select-sm material-code-select" name="details[${index}].materialCode"></select></td>
-        <td><input type="text" class="form-control form-control-sm material-name-input" value="${detail.materialName || ''}" readonly></td>
-        <td><select class="form-select form-select-sm color-code-select" name="details[${index}].colorCode"></select></td>
-        <td><input type="text" class="form-control form-control-sm color-name-input" value="${detail.colorName || ''}" readonly></td>
-        <td><select class="form-select form-select-sm size-select" name="details[${index}].size"></select></td>
-        <td><select class="form-select form-select-sm uom-select" name="details[${index}].uom">${unitOptionsHtml}</select></td>
-        <td><select class="form-select form-select-sm supplier-select" name="details[${index}].supplier">${supplierOptionsHtml}</select></td>
-        <td><input type="number" class="form-control form-control-sm price-input" value="${detail.price || ''}" step="0.01"></td>
-        <td><input type="text" class="form-control form-control-sm currency-input" value="${detail.currency || ''}" maxlength="3" readonly></td>
-        <td><input type="number" class="form-control form-control-sm usage-input" value="${detail.usageValue || 0}" step="0.001"></td>
-        <td><input type="number" class="form-control form-control-sm waste-input" value="${detail.waste || 0}" step="0.01"></td>
-        <td><input type="number" class="form-control form-control-sm so-qty-input" value="${detail.soQty || 0}"></td>
-        <td><input type="number" class="form-control form-control-sm demand-qty-input" value="${detail.demandQty || 0}" step="0.0001" readonly></td>
-        <td><input type="number" step="0.01" class="form-control form-control-sm inventory-qty-input" name="details[${index}].inventoryQty" value="${(detail.inventoryQty || 0).toFixed(2)}"></td>
-        <td><input type="number" step="0.01" class="form-control form-control-sm purchase-qty-input" name="details[${index}].purchaseQty" value="${(detail.purchaseQty || 0).toFixed(2)}"></td>
-        <td class="text-center align-middle"><button type="button" class="btn btn-sm delete-row-btn"><i class="bi bi-trash"></i></button></td>
-    `;
-
+    <td><select class="form-select form-select-sm material-group-select" name="details[${index}].materialGroupId">${materialGroupOptionsHtml}</select></td>
+    <td>
+        <select class="form-select form-select-sm material-type-select" name="details[${index}].materialType">
+            <option value=""></option>
+            <option value="FA" ${detail.materialType === 'FA' ? 'selected' : ''}>Fabric</option>
+            <option value="TR" ${detail.materialType === 'TR' ? 'selected' : ''}>Trim</option>
+        </select>
+    </td>
+    <td><select class="form-select form-select-sm material-code-select" name="details[${index}].materialCode"></select></td>
+    <td><input type="text" class="form-control form-control-sm material-name-input" name="details[${index}].materialName" value="${detail.materialName || ''}" readonly></td>
+    <td><select class="form-select form-select-sm color-code-select" name="details[${index}].colorCode"></select></td>
+    <td><input type="text" class="form-control form-control-sm color-name-input" name="details[${index}].colorName" value="${detail.colorName || ''}" readonly></td>
+    <td><select class="form-select form-select-sm size-select" name="details[${index}].size"></select></td>
+    <td><select class="form-select form-select-sm uom-select" name="details[${index}].uom">${unitOptionsHtml}</select></td>
+    <td><select class="form-select form-select-sm supplier-select" name="details[${index}].supplier">${supplierOptionsHtml}</select></td>
+    <td><input type="number" class="form-control form-control-sm price-input" name="details[${index}].price" value="${detail.price || ''}" step="0.01"></td>
+    <td><input type="text" class="form-control form-control-sm currency-input" name="details[${index}].currency" value="${detail.currency || ''}" maxlength="3" readonly></td>
+    
+    <td><input type="number" class="form-control form-control-sm usage-input" name="details[${index}].usageValue" value="${detail.usageValue || 0}" step="0.001"></td>
+    
+    <td><input type="number" class="form-control form-control-sm waste-input" name="details[${index}].waste" value="${detail.waste || 0}" step="0.01"></td>
+    <td><input type="number" class="form-control form-control-sm so-qty-input" name="details[${index}].soQty" value="${detail.soQty || 0}"></td>
+    <td><input type="number" class="form-control form-control-sm demand-qty-input" name="details[${index}].demandQty" value="${detail.demandQty || 0}" step="0.0001" readonly></td>
+    <td><input type="number" step="0.01" class="form-control form-control-sm inventory-qty-input" name="details[${index}].inventoryQty" value="${(detail.inventoryQty || 0).toFixed(2)}"></td>
+    <td><input type="number" step="0.01" class="form-control form-control-sm purchase-qty-input" name="details[${index}].purchaseQty" value="${(detail.purchaseQty || 0).toFixed(2)}"></td>
+    <td class="text-center align-middle"><button type="button" class="btn btn-sm delete-row-btn"><i class="bi bi-trash"></i></button></td>
+`;
+        // Phần còn lại của hàm giữ nguyên...
         // Populate và chọn các dropdown tĩnh
         if (detail.materialGroupId) row.querySelector('.material-group-select').value = detail.materialGroupId;
         if (detail.uom) row.querySelector('.uom-select').value = detail.uom;
@@ -86,7 +91,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const supplierSelect = row.querySelector('.supplier-select');
         if (detail.supplier) {
             supplierSelect.value = detail.supplier;
-            // **SỬA LỖI 2: TỰ ĐỘNG CẬP NHẬT CURRENCY KHI LOAD**
             const selectedSupplierOption = supplierSelect.options[supplierSelect.selectedIndex];
             if (selectedSupplierOption) {
                 row.querySelector('.currency-input').value = selectedSupplierOption.dataset.currency || '';
@@ -105,7 +109,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 codeSelect.add(option);
             });
 
-            // **SỬA LỖI 1: TỰ ĐỘNG TẢI DANH SÁCH COLOR KHI LOAD**
             if (codeSelect.value) {
                 const colors = await fetchMaterialColors(detail.materialType, codeSelect.value);
                 const colorSelect = row.querySelector('.color-code-select');
@@ -114,7 +117,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     const option = new Option(c.code, c.code);
                     option.dataset.name = c.name;
                     option.dataset.price = c.price;
-                    // Tự động chọn color đã có (nếu có trong DTO)
                     if(detail.colorCode && c.code === detail.colorCode) {
                         option.selected = true;
                     }
@@ -194,8 +196,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (details) {
                     row.querySelector('.material-name-input').value = details.name || '';
                     row.querySelector('.uom-select').value = details.unitName || '';
-                    row.querySelector('.supplier-select').value = details.supplier || '';
-                    // Price sẽ được cập nhật sau khi chọn Color/Size
+
+                    // === FIX: THÊM LOGIC CẬP NHẬT CURRENCY TẠI ĐÂY ===
+                    const supplierSelect = row.querySelector('.supplier-select');
+                    supplierSelect.value = details.supplier || ''; // Gán giá trị supplier
+
+                    // Lấy option đang được chọn để đọc data-currency
+                    const selectedSupplierOption = supplierSelect.options[supplierSelect.selectedIndex];
+                    if (selectedSupplierOption) {
+                        row.querySelector('.currency-input').value = selectedSupplierOption.dataset.currency || '';
+                    } else {
+                        row.querySelector('.currency-input').value = ''; // Nếu không tìm thấy supplier thì xóa currency
+                    }
+                    // === KẾT THÚC FIX ===                    // Price sẽ được cập nhật sau khi chọn Color/Size
                 }
 
                 // Load danh sách Color
@@ -301,4 +314,151 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error("Could not parse initial BOM details JSON.", e);
         }
     }
+
+    // ===============================================
+// LOGIC CHO CHỨC NĂNG GENERATE PURCHASE ORDER
+// ===============================================
+
+// Lấy các element cần thiết cho modal
+    const generatePoBtn = document.getElementById('generatePoBtn');
+    const poPreviewTableBody = document.getElementById('poPreviewTableBody');
+// Khởi tạo đối tượng modal của Bootstrap
+    const generatePoModal = new bootstrap.Modal(document.getElementById('generatePoModal'));
+
+// Bắt sự kiện click vào nút "Generate PO"
+    // Bắt sự kiện click vào nút "Generate PO"
+    if (generatePoBtn) {
+        generatePoBtn.addEventListener('click', function() {
+
+            // 1. Thu thập dữ liệu từ tất cả các dòng trong bảng BOM Details
+            const allRows = tableBody.querySelectorAll('tr');
+            const bomDetails = [];
+            allRows.forEach(row => {
+                // FIX 1: Chỉ lấy Material Group khi đã được chọn (value khác rỗng)
+                const materialGroupSelect = row.querySelector('.material-group-select');
+                const materialGroupText = materialGroupSelect.value ? materialGroupSelect.options[materialGroupSelect.selectedIndex].textContent.trim() : '';
+
+                const detail = {
+                    materialGroup: materialGroupText,
+                    materialType: row.querySelector('.material-type-select').value,
+                    materialCode: row.querySelector('.material-code-select option:checked').textContent.trim(),
+                    materialName: row.querySelector('.material-name-input').value,
+                    colorCode: row.querySelector('.color-code-select').value,
+                    colorName: row.querySelector('.color-name-input').value,
+                    size: row.querySelector('.size-select').value,
+                    uom: row.querySelector('.uom-select').value,
+                    supplier: row.querySelector('.supplier-select').value,
+                    price: parseFloat(row.querySelector('.price-input').value) || 0,
+                    currency: row.querySelector('.currency-input').value,
+                    purchaseQty: parseFloat(row.querySelector('.purchase-qty-input').value) || 0,
+                };
+                bomDetails.push(detail);
+            });
+
+            // 2. Lọc ra các dòng hợp lệ để tạo PO
+            const validDetailsForPO = bomDetails.filter(d => {
+                const hasBaseInfo = d.purchaseQty > 0 && d.supplier && d.price > 0 && d.currency && d.uom && d.colorCode;
+                if (!hasBaseInfo) return false;
+                if (d.materialType === 'TR' && !d.size) return false;
+                return true;
+            });
+
+            // FIX 4: Sắp xếp danh sách hợp lệ theo tên Supplier
+            validDetailsForPO.sort((a, b) => {
+                return a.supplier.localeCompare(b.supplier);
+            });
+
+            // 3. Hiển thị kết quả lên Modal
+            poPreviewTableBody.innerHTML = '';
+
+            if (validDetailsForPO.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Valid Items Found',
+                    text: 'Không tìm thấy dòng nào hợp lệ để tạo PO. Vui lòng kiểm tra lại các điều kiện (Purchase Qty > 0, đã chọn đủ màu sắc, size, nhà cung cấp, giá, đơn vị...).'
+                });
+                return;
+            }
+
+            validDetailsForPO.forEach(d => {
+                const rowHtml = `
+                <tr>
+                    <td>${d.materialGroup}</td>
+                    <td>${d.materialType}</td>
+                    <td>${d.materialCode}</td>
+                    <td>${d.materialName}</td>
+                    <td>${d.colorCode}</td>
+                    <td>${d.colorName}</td>
+                    <td>${d.size || 'N/A'}</td>
+                    <td>${d.uom}</td>
+                    <td>${d.supplier}</td>
+                    <td>${d.price}</td>
+                    <td>${d.currency}</td>
+                    <td><strong>${d.purchaseQty.toFixed(2)}</strong></td>
+                </tr>
+            `;
+                poPreviewTableBody.insertAdjacentHTML('beforeend', rowHtml);
+            });
+
+            // 4. Mở Modal
+            generatePoModal.show();
+        });
+    }
+
+    // === LOGIC CHO NÚT CONFIRM GENERATE PO ===
+
+// Lấy nút Confirm và form chính
+    const confirmPoGenerationBtn = document.getElementById('confirmPoGenerationBtn');
+    const orderBOMForm = document.getElementById('orderBOMForm');
+
+    if (confirmPoGenerationBtn) {
+        confirmPoGenerationBtn.addEventListener('click', async function() {
+
+            // Hiển thị thông báo đang xử lý
+            Swal.fire({
+                title: 'Processing...',
+                text: 'System is saving BOM and generating Purchase Orders.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Tạo một đối tượng FormData từ form chính
+            const formData = new FormData(orderBOMForm);
+
+            try {
+                // Gửi yêu cầu POST đến endpoint mới
+                const response = await fetch('/order-boms/generate-pos', {
+                    method: 'POST',
+                    body: new URLSearchParams(formData) // Gửi dữ liệu form
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Nếu thành công, hiển thị thông báo và chuyển hướng
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: result.message,
+                    }).then(() => {
+                        // Chuyển về trang Sale Order sau khi thành công
+                        window.location.href = `/sale-orders/form?id=${saleOrderIdInput.value}`;
+                    });
+                } else {
+                    // Nếu có lỗi từ server, hiển thị lỗi
+                    throw new Error(result.message || 'An unknown error occurred.');
+                }
+
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Operation Failed',
+                    text: error.message,
+                });
+            }
+        });
+    }
+
 });

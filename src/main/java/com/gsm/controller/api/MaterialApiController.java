@@ -67,7 +67,7 @@ public class MaterialApiController {
             return fabricRepository.findById(materialId)
                     .map(fabric -> {
                         List<ColorInfo> colors = fabric.getFabricColors().stream()
-                                .map(fc -> new ColorInfo(fc.getColor(), fc.getColorName(), fc.getNetPrice()))
+                                .map(fc -> new ColorInfo(fc.getColor(), fc.getColorName(), fc.getNetPrice(), 0.0))
                                 .collect(Collectors.toList());
                         return ResponseEntity.ok(colors);
                     })
@@ -77,7 +77,7 @@ public class MaterialApiController {
                     .map(trim -> {
                         // Lấy các màu sắc duy nhất từ variant
                         List<ColorInfo> colors = trim.getVariants().stream()
-                                .collect(Collectors.toMap(TrimVariant::getColorCode, tv -> new ColorInfo(tv.getColorCode(), tv.getColorName(), tv.getNetPrice()), (existing, replacement) -> existing))
+                                .collect(Collectors.toMap(TrimVariant::getColorCode, tv -> new ColorInfo(tv.getColorCode(), tv.getColorName(), tv.getNetPrice(), tv.getTaxRate()), (existing, replacement) -> existing))
                                 .values().stream().collect(Collectors.toList());
                         return ResponseEntity.ok(colors);
                     })
@@ -93,8 +93,7 @@ public class MaterialApiController {
                 .map(trim -> {
                     List<SizeInfo> sizes = trim.getVariants().stream()
                             .filter(v -> colorCode.equals(v.getColorCode()))
-                            .map(v -> new SizeInfo(v.getSizeCode(), v.getNetPrice()))
-                            .collect(Collectors.toList());
+                            .map(v -> new SizeInfo(v.getSizeCode(), v.getNetPrice(), v.getTaxRate()))                            .collect(Collectors.toList());
                     return ResponseEntity.ok(sizes);
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -161,6 +160,7 @@ public class MaterialApiController {
         private String code;
         private String name;
         private Double price;
+        private Double taxRate; // <-- THÊM DÒNG NÀY
     }
 
 
@@ -169,5 +169,6 @@ public class MaterialApiController {
     public static class SizeInfo {
         private String size;
         private Double price;
+        private Double taxRate; // <-- THÊM DÒNG NÀY
     }
 }

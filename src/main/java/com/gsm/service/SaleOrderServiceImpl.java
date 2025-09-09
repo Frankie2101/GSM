@@ -24,6 +24,7 @@ public class SaleOrderServiceImpl implements SaleOrderService {
     private final CustomerRepository customerRepository;
     private final ProductVariantRepository productVariantRepository;
 
+
     @Autowired
     public SaleOrderServiceImpl(SaleOrderRepository saleOrderRepository,
                                 CustomerRepository customerRepository,
@@ -232,5 +233,14 @@ public class SaleOrderServiceImpl implements SaleOrderService {
         dto.setShipDate(order.getShipDate());
         dto.setStatus(order.getStatus());
         return dto;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SaleOrderDto findBySaleOrderNo(String saleOrderNo) {
+        SaleOrder order = saleOrderRepository.findBySaleOrderNo(saleOrderNo)
+                .orElseThrow(() -> new ResourceNotFoundException("Sale Order not found with No: " + saleOrderNo));
+        // Tái sử dụng hàm convert đã có để trả về DTO đơn giản
+        return convertEntityToDtoSimple(order);
     }
 }

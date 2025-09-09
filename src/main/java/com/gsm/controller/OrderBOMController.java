@@ -10,13 +10,17 @@ import com.gsm.repository.SupplierRepository;
 import com.gsm.repository.UnitRepository;
 import com.gsm.service.BOMTemplateService;
 import com.gsm.service.OrderBOMService;
+import com.gsm.service.PurchaseOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.server.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.gsm.repository.MaterialGroupRepository; // Thêm import
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,8 +45,19 @@ public class OrderBOMController {
         this.materialGroupRepository = materialGroupRepository;
     }
 
+    // ===============================================
+    // === ENDPOINT MỚI ĐỂ HIỂN THỊ DANH SÁCH BOM ===
+    // ===============================================
+    @GetMapping
+    public String showOrderBomList(Model model) {
+        List<OrderBOMDto> orderBOMs = orderBOMService.findAll();
+        model.addAttribute("orderBOMs", orderBOMs);
+        model.addAttribute("isBomPage", true); // Để highlight menu sidebar
+        return "bom/order_bom_list";
+    }
+
     @GetMapping("/form")
-    public String showOrderBomForm(@RequestParam Long saleOrderId, Model model) throws JsonProcessingException { // Thêm throws
+    public String showOrderBomForm(@RequestParam Long saleOrderId, Model model, HttpServletRequest request) throws JsonProcessingException { // Thêm throws
         OrderBOMDto orderBOM = orderBOMService.findOrCreateBySaleOrderId(saleOrderId);
         List<BOMTemplateDto> bomTemplates = bomTemplateService.findAll();
 
@@ -67,6 +82,7 @@ public class OrderBOMController {
         }
         // ==========================================================
 
+        model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));
         model.addAttribute("orderBOM", orderBOM);
         model.addAttribute("bomTemplates", bomTemplates);
         model.addAttribute("units", allUnits); // Truyền danh sách Unit
@@ -89,6 +105,18 @@ public class OrderBOMController {
             redirectAttributes.addFlashAttribute("errorMessage", "Error saving Order BOM: " + e.getMessage());
             redirectAttributes.addFlashAttribute("orderBOM", orderBOMDto);
             return "redirect:/order-boms/form?saleOrderId=" + orderBOMDto.getSaleOrderId();
+        }
+    }
+
+    @PostMapping("/generate-pos")
+    @ResponseBody
+    public ResponseEntity<?> generatePurchaseOrders(@ModelAttribute OrderBOMDto orderBOMDto) {
+        try {
+            // === SỬA LẠI: Gọi đến orderBOMService thay vì purchaseOrderService ===
+            Map<String, Object> result = orderBOMService.saveAndGeneratePOs(orderBOMDto);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 }

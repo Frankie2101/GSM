@@ -1,25 +1,33 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
     <div class="container-fluid">
-
-        {{! SỬA LỖI: Xóa thẻ div.collapse.navbar-collapse không cần thiết }}
         <ul class="navbar-nav ms-auto align-items-center">
             <li class="nav-item">
                 <a class="nav-link" href="#"><i class="bi bi-bell fs-5"></i></a>
             </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle d-flex align-items-center" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <img src="/images/avatar.jpg" class="me-2 user-avatar-img" alt="User Avatar">
-                    <div>
-                        <div class="fw-bold">{{username}}</div>
-                        <div class="small text-muted">Planning Staff</div>
+            {{#loggedInUser}} {{! Bắt đầu khối nếu loggedInUser tồn tại }}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <img src="/images/avatar.jpg" class="me-2 user-avatar-img" alt="User Avatar">
+                        <div>
+                            {{! SỬA Ở ĐÂY: Lấy userName từ đối tượng loggedInUser }}
+                            <div class="fw-bold">{{userName}}</div>
+                            {{! SỬA Ở ĐÂY: Lấy department từ đối tượng loggedInUser }}
+                            <div class="small text-muted">{{department}}</div>
+                        </div>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="#!">Profile</a>
+                        <div class="dropdown-divider"></div>
+                        {{! THAY THẾ THẺ <a> BẰNG FORM DƯỚI ĐÂY }}
+                        <form action="/logout" method="post" id="logoutForm" class="d-inline">
+                            {{#_csrf}}
+                                <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
+                            {{/_csrf}}
+                            <button type="submit" class="dropdown-item">Logout</button>
+                        </form>
                     </div>
-                </a>
-                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                    <a class="dropdown-item" href="#!">Profile</a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="/logout">Logout</a>
-                </div>
-            </li>
+                </li>
+            {{/loggedInUser}} {{! Kết thúc khối }}
         </ul>
     </div>
 </nav>

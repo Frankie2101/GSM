@@ -45,6 +45,9 @@
                 </div>
 
                 <form action="/sale-orders/save" method="post" id="saleOrderForm">
+                    {{#_csrf}}
+                        <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
+                    {{/_csrf}}
                     <input type="hidden" name="saleOrderId" value="{{#saleOrderId}}{{.}}{{/saleOrderId}}">
 
                     <!-- ========== ORDER INFORMATION (HEADER) ========== -->

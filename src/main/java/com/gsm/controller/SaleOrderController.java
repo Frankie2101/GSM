@@ -56,7 +56,7 @@ public class SaleOrderController {
     }
 
     @GetMapping("/form")
-    public String showSaleOrderForm(@RequestParam(required = false) Long id, Model model) throws JsonProcessingException {
+    public String showSaleOrderForm(@RequestParam(required = false) Long id, Model model, HttpServletRequest request) throws JsonProcessingException {
         SaleOrderDto order;
         if (id != null) {
             order = saleOrderService.findById(id);
@@ -102,6 +102,7 @@ public class SaleOrderController {
             model.addAttribute("detailsJson", "[]"); // Trả về mảng rỗng nếu không có details
         }
 
+        model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));
         model.addAttribute("order", order);
         model.addAttribute("isSaleOrderPage", true);
         model.addAttribute("customers", customerOptions);
