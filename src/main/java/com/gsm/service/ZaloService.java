@@ -1,15 +1,16 @@
 package com.gsm.service;
 
-import com.gsm.dto.*; // Đảm bảo import đủ DTO
+import com.gsm.dto.*;
 import java.util.List;
 
 public interface ZaloService {
-    // THAY ĐỔI: Cập nhật phương thức login
-    ZaloLoginResponseDto login(ZaloLoginRequestDto loginRequest);
 
-    // MỚI: Thêm phương thức kết nối tài khoản
-    UserDto linkAccount(ZaloLinkRequestDto linkRequest);
+    // [MỚI] Tìm user bằng userName
+    UserDto findUserByUserName(String userName);
 
+    // Lấy chi tiết đơn hàng
     List<ZaloSaleOrderDetailDto> getSaleOrderDetailsForZalo(String saleOrderNo);
-    void saveProductionOutputs(List<ProductionOutputDto> outputDtos, Long userId);
+
+    // [CẬP NHẬT] Lưu sản lượng, không cần userId
+    void saveProductionOutputs(List<ProductionOutputDto> outputDtos);
 }

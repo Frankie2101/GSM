@@ -7,13 +7,17 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+    // Trong file WebConfig.java
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // Áp dụng cho tất cả các đường dẫn
-                .allowedOrigins("*") // Cho phép tất cả các nguồn gốc (để test)
-                // TODO: Khi deploy chính thức, hãy đổi "*" thành URL của Zalo Mini App
+        registry.addMapping("/api/**") // Chỉ áp dụng cho các đường dẫn API
+                .allowedOrigins(
+                        "https://zapps.zalo.me",
+                        "https://h5.zalo.me",
+                        "https://cdnd.zalo.me"
+                )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
-                .allowCredentials(false);
+                .allowCredentials(true);
     }
 }
