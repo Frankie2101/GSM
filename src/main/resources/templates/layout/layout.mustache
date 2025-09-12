@@ -38,7 +38,8 @@
         {{! Main Content (Nội dung của trang con sẽ được chèn vào đây) }}
         <main class="container-fluid p-4">
             {{! CÚ PHÁP ĐÚNG: Định nghĩa một khối tên là "content" để file con thay thế }}
-            {{$content}}{{/content}}
+            {{#partial "content"}}
+            {{/partial}}
         </main>
 
         {{! Footer }}

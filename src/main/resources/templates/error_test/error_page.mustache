@@ -1,4 +1,10 @@
-{{! Bắt đầu nội dung của trang con }}
+{{! Gọi file layout chính làm khung sườn }}
+{{> layout/_layout}}
+
+{{! Định nghĩa nội dung cho pageTitle trong layout }}
+{{#partial "pageTitle"}}Error{{/partial}}
+
+{{! Định nghĩa nội dung cho phần content chính trong layout }}
 {{#partial "content"}}
     <div class="container text-center mt-5">
         <h1 class="display-1">{{errorStatus}}</h1>
@@ -6,6 +12,3 @@
         <a href="/dashboard" class="btn btn-primary mt-3">Go to Dashboard</a>
     </div>
 {{/partial}}
-
-{{> layout/_layout}}
-{{#partial "pageTitle"}}Error{{/partial}}
