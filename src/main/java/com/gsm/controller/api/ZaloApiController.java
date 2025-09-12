@@ -1,10 +1,15 @@
+// File: src/main/java/com/gsm/controller/api/ZaloApiController.java
 package com.gsm.controller.api;
 
-import com.gsm.dto.*;
+import com.gsm.dto.ProductionOutputDto;
+import com.gsm.dto.UserDto;
+import com.gsm.dto.ZaloLoginRequestDto;
+import com.gsm.dto.ZaloStyleColorDto;
 import com.gsm.service.ZaloService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -18,47 +23,34 @@ public class ZaloApiController {
         this.zaloService = zaloService;
     }
 
-    // --- ENDPOINTS MỚI VÀ ĐƯỢC CẬP NHẬT ---
-
     /**
-     * [MỚI] Endpoint để xác thực người dùng dựa trên userName từ QR code.
-     * Mini App sẽ gọi endpoint này sau khi quét QR để lấy thông tin đầy đủ của user.
-     * @param userName Tên người dùng từ QR code.
-     * @return Thông tin chi tiết của người dùng (UserDto).
+     * [API 01 - CẬP NHẬT] Endpoint đăng nhập và lấy thông tin User.
+     * Mini App sẽ gửi phoneNumberToken lấy từ Zalo SDK lên đây.
+     * Backend sẽ dùng token này để lấy SĐT, tìm user trong DB và trả về thông tin.
      */
-    @GetMapping("/user-info/{userName}")
-    public ResponseEntity<UserDto> getUserInfoByUserName(@PathVariable String userName) {
-        UserDto userDto = zaloService.findUserByUserName(userName);
+    @PostMapping("/login")
+    public ResponseEntity<UserDto> loginWithZalo(@RequestBody ZaloLoginRequestDto loginRequest) {
+        UserDto userDto = zaloService.login(loginRequest);
         return ResponseEntity.ok(userDto);
     }
 
     /**
-     * [CẬP NHẬT] Endpoint để lưu sản lượng.
-     * Bây giờ nó không cần userId trong URL nữa, vì thông tin người dùng và trạm
-     * sẽ được gửi trực tiếp trong payload.
-     * @param outputDtos Danh sách các sản phẩm cần nhập sản lượng.
-     * @return Trả về 200 OK nếu thành công.
+     * [API 02 - MỚI] Endpoint để lấy danh sách Style và Color dựa trên Sale Order No.
+     * Mini App gọi API này sau khi người dùng nhập xong mã đơn hàng.
      */
-    @PostMapping("/output") // Bỏ {userId} khỏi URL
-    public ResponseEntity<Void> saveProductionOutputs(@RequestBody List<ProductionOutputDto> outputDtos) {
-        zaloService.saveProductionOutputs(outputDtos); // Gọi service đã được cập nhật
-        return ResponseEntity.ok().build();
-    }
-
-
-    // --- CÁC ENDPOINTS CŨ GIỮ NGUYÊN ---
-
-    @GetMapping("/sale-orders/{saleOrderNo}")
-    public ResponseEntity<List<ZaloSaleOrderDetailDto>> getSaleOrderDetails(@PathVariable String saleOrderNo) {
-        List<ZaloSaleOrderDetailDto> details = zaloService.getSaleOrderDetailsForZalo(saleOrderNo);
-        return ResponseEntity.ok(details);
+    @GetMapping("/sale-orders/{saleOrderNo}/styles")
+    public ResponseEntity<List<ZaloStyleColorDto>> getStylesAndColorsForSaleOrder(@PathVariable String saleOrderNo) {
+        List<ZaloStyleColorDto> styles = zaloService.findStylesAndColorsBySaleOrderNo(saleOrderNo);
+        return ResponseEntity.ok(styles);
     }
 
     /**
-     * Endpoint này có thể dùng để lấy token nếu cần, giữ lại để tham khảo.
+     * [API 03 - CẬP NHẬT] Endpoint để lưu sản lượng.
+     * Logic đã được cập nhật trong ZaloServiceImpl để đọc userId từ payload.
      */
-    @GetMapping("/init-token")
-    public ResponseEntity<String> initToken(@RequestParam("code") String authorizationCode) {
-        return ResponseEntity.ok("Token initialization triggered. Check server console for refresh token.");
+    @PostMapping("/output")
+    public ResponseEntity<Void> saveProductionOutputs(@RequestBody List<ProductionOutputDto> outputDtos) {
+        zaloService.saveProductionOutputs(outputDtos);
+        return ResponseEntity.ok().build();
     }
 }

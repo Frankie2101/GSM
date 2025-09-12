@@ -1,16 +1,21 @@
+// File: src/main/java/com/gsm/service/ZaloService.java
 package com.gsm.service;
 
-import com.gsm.dto.*;
+import com.gsm.dto.ProductionOutputDto;
+import com.gsm.dto.UserDto;
+import com.gsm.dto.ZaloLoginRequestDto;
+import com.gsm.dto.ZaloStyleColorDto;
+
 import java.util.List;
 
 public interface ZaloService {
 
-    // [MỚI] Tìm user bằng userName
-    UserDto findUserByUserName(String userName);
+    // Luồng đăng nhập mới: Dùng token SĐT để lấy thông tin User
+    UserDto login(ZaloLoginRequestDto loginRequest);
 
-    // Lấy chi tiết đơn hàng
-    List<ZaloSaleOrderDetailDto> getSaleOrderDetailsForZalo(String saleOrderNo);
+    // [MỚI] Tìm style và color cho Mini App
+    List<ZaloStyleColorDto> findStylesAndColorsBySaleOrderNo(String saleOrderNo);
 
-    // [CẬP NHẬT] Lưu sản lượng, không cần userId
+    // Lưu sản lượng từ Mini App
     void saveProductionOutputs(List<ProductionOutputDto> outputDtos);
 }

@@ -14,7 +14,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "https://zapps.zalo.me",
                         "https://h5.zalo.me",
-                        "https://cdnd.zalo.me"
+                        "https://cdnd.zalo.me",
+                        "https://h5.zdn.vn" // <-- THÊM DÒNG QUAN TRỌNG NÀY
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
