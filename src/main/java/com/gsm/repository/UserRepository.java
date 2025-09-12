@@ -25,5 +25,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByZaloUserId(String zaloUserId);
 
+    // YÊU CẦU MỚI: Lấy danh sách Department duy nhất
+    @Query("SELECT DISTINCT u.department FROM User u WHERE u.department IS NOT NULL AND u.department <> ''")
+    List<String> findDistinctDepartments();
+
+    // YÊU CẦU MỚI: Lấy danh sách Production Line duy nhất
+    @Query("SELECT DISTINCT u.productionLine FROM User u WHERE u.productionLine IS NOT NULL AND u.productionLine <> ''")
+    List<String> findDistinctProductionLines();
 
 }

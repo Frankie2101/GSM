@@ -1,16 +1,16 @@
 package com.gsm.controller.api;
 
 import com.gsm.model.Customer;
-import com.gsm.repository.CustomerRepository;
-import com.gsm.repository.ProductRepository;
-import com.gsm.repository.ProductVariantRepository;
-import com.gsm.repository.SaleOrderRepository;
+import com.gsm.repository.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -21,6 +21,7 @@ public class SaleOrderApiController {
     @Autowired private ProductVariantRepository productVariantRepository;
     @Autowired private CustomerRepository customerRepository;
     @Autowired private SaleOrderRepository saleOrderRepository;
+    @Autowired private SaleOrderDetailRepository saleOrderDetailRepository;
 
     @GetMapping("/products")
     public List<ProductInfo> getProducts() {
@@ -32,6 +33,16 @@ public class SaleOrderApiController {
                         p.getUnit() != null ? p.getUnit().getUnitName() : ""
                 ))
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/{saleOrderNo}/details")
+    public ResponseEntity<List<Map<String, String>>> getSaleOrderDetails(@PathVariable String saleOrderNo) {
+        return saleOrderRepository.findBySaleOrderNo(saleOrderNo)
+                .map(saleOrder -> {
+                    List<Map<String, String>> details = saleOrderDetailRepository.findDistinctStylesAndColorsBySaleOrderId(saleOrder.getSaleOrderId());
+                    return ResponseEntity.ok(details);
+                })
+                .orElse(ResponseEntity.ok(Collections.emptyList()));
     }
 
     // SỬA LẠI: Thêm logic chuyển đổi từ Object[] sang ColorInfo

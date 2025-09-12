@@ -1,9 +1,11 @@
-package com.gsm.controller;
+package com.gsm.controller.api;
 
 import com.gsm.dto.UserDto;
+import com.gsm.security.CustomUserDetails;
 import com.gsm.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +24,16 @@ public class UserApiController {
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
         UserDto userDto = userService.findById(id);
+        return ResponseEntity.ok(userDto);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getCurrentUserInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            // Trả về lỗi 401 Unauthorized nếu không có thông tin user
+            return ResponseEntity.status(401).build();
+        }
+        UserDto userDto = userService.findById(userDetails.getUserId());
         return ResponseEntity.ok(userDto);
     }
 

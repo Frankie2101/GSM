@@ -1,47 +1,296 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
-    const deleteBtn = document.getElementById('deleteBtn');
-    const deleteForm = document.getElementById('deleteForm');
+    // --- Khai báo các biến ---
+    const createBtn = document.getElementById('createBtn');
+    const outputTableBody = document.getElementById('outputTableBody');
+    const outputModal = new bootstrap.Modal(document.getElementById('outputModal'));
+    const outputForm = document.getElementById('outputForm');
 
-    // Logic cho "Select All" checkbox
-    if(selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function () {
-            rowCheckboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
-            });
-        });
+    const saleOrderNoInput = document.getElementById('saleOrderNo');
+    const styleSelect = document.getElementById('style');
+    const colorSelect = document.getElementById('color');
+    const departmentInput = document.getElementById('modalDepartment');
+    const productionLineInput = document.getElementById('modalProductionLine');
+
+    let saleOrderDetailsCache = [];
+    let currentUser = null; // Biến lưu thông tin user
+
+    // --- FUNCTIONS ---
+
+    // Hàm tải thông tin user đang đăng nhập
+    async function loadCurrentUser() {
+        if (currentUser) return; // Chỉ tải 1 lần
+        try {
+            const response = await fetch('/api/users/me');
+            if (response.ok) {
+                currentUser = await response.json();
+            } else {
+                console.error('Could not fetch current user info.');
+            }
+        } catch (error) {
+            console.error('Error fetching current user:', error);
+        }
     }
 
-    // Logic cho nút Delete
-    if(deleteBtn) {
-        deleteBtn.addEventListener('click', function () {
-            const selectedIds = Array.from(rowCheckboxes)
-                .filter(i => i.checked)
-                .map(i => i.value);
+    // Hàm xử lý khi người dùng nhập SO No
+    async function handleSaleOrderNoChange(callback) {
+        const soNo = saleOrderNoInput.value.trim();
+        styleSelect.innerHTML = '<option value="">-- Loading... --</option>';
+        colorSelect.innerHTML = '<option value="">-- Select Style first --</option>';
 
-            if (selectedIds.length === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'No Selection',
-                    text: 'Please select at least one item to delete.',
-                });
-                return;
+        if (!soNo) {
+            styleSelect.innerHTML = '<option value="">-- Type SO No first --</option>';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/sale-orders/${soNo}/details`);
+            const details = await response.json();
+            saleOrderDetailsCache = details;
+
+            const styles = [...new Set(details.map(d => d.style))];
+
+            populateSelect(styleSelect, styles, 'Select Style');
+
+            // YÊU CẦU MỚI: Tự động chọn nếu chỉ có 1 style
+            if (styles.length === 1) {
+                styleSelect.value = styles[0];
+                handleStyleChange(); // Tự động kích hoạt thay đổi để load color
             }
 
-            Swal.fire({
-                title: 'Are you sure?',
-                text: `You are about to delete ${selectedIds.length} item(s). You won't be able to revert this!`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    deleteForm.submit();
-                }
-            });
+            if (callback) callback();
+        } catch (error) {
+            console.error('Error fetching SO details:', error);
+            styleSelect.innerHTML = '<option value="">-- Error loading --</option>';
+        }
+    }
+
+    // Hàm xử lý khi người dùng chọn Style
+    function handleStyleChange() {
+        const selectedStyle = styleSelect.value;
+        if (!selectedStyle) {
+            colorSelect.innerHTML = '<option value="">-- Select Style first --</option>';
+            return;
+        }
+
+        const colors = saleOrderDetailsCache
+            .filter(d => d.style === selectedStyle)
+            .map(d => d.color);
+        const uniqueColors = [...new Set(colors)];
+
+        populateSelect(colorSelect, uniqueColors, 'Select Color');
+
+        // YÊU CẦU MỚI: Tự động chọn nếu chỉ có 1 color
+        if (uniqueColors.length === 1) {
+            colorSelect.value = uniqueColors[0];
+        }
+    }
+
+    // --- Event Listeners ---
+
+    // Sự kiện khi bấm nút "Create"
+    createBtn.addEventListener('click', async () => {
+        outputForm.reset();
+        styleSelect.innerHTML = '<option value="">-- Type SO No first --</option>';
+        colorSelect.innerHTML = '<option value="">-- Select Style first --</option>';
+        document.getElementById('outputModalLabel').textContent = 'Create Production Output';
+        document.getElementById('productionOutputId').value = '';
+        document.getElementById('outputDate').valueAsDate = new Date();
+
+        // YÊU CẦU MỚI: Tải và điền thông tin user
+        await loadCurrentUser();
+        if (currentUser) {
+            departmentInput.value = currentUser.department || '';
+            productionLineInput.value = currentUser.productionLine || '';
+        }
+
+        outputModal.show();
+    });
+
+    saleOrderNoInput.addEventListener('blur', () => handleSaleOrderNoChange(null));
+    styleSelect.addEventListener('change', handleStyleChange);
+
+
+    // --- Helper Functions and other parts of the script ---
+    // (Toàn bộ các hàm fetchOutputs, renderTable, openEditModal, saveOutput, deleteSelectedOutputs và các event listener khác giữ nguyên như file trước)
+
+    function populateSelect(selectElement, options, placeholder) {
+        selectElement.innerHTML = `<option value="">-- ${placeholder} --</option>`;
+        options.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option;
+            optionElement.textContent = option;
+            selectElement.appendChild(optionElement);
         });
     }
+
+    // --- Các hàm còn lại từ lần trước ---
+
+    const searchBtn = document.getElementById('searchBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const csrfTokenInput = document.getElementById('csrfToken');
+    const csrfHeader = csrfTokenInput ? csrfTokenInput.getAttribute('name') : '_csrf';
+    const csrfToken = csrfTokenInput ? csrfTokenInput.getAttribute('value') : '';
+
+    async function fetchOutputs() {
+        const keyword = document.getElementById('keyword').value;
+        const outputDateFrom = document.getElementById('outputDateFrom').value;
+        const outputDateTo = document.getElementById('outputDateTo').value;
+        const department = document.getElementById('department').value;
+        const productionLine = document.getElementById('productionLine').value;
+
+        const queryParams = new URLSearchParams({ keyword, outputDateFrom, outputDateTo, department, productionLine });
+        const url = `/api/production-outputs?${queryParams}`;
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const outputs = await response.json();
+            renderTable(outputs);
+        } catch (error) {
+            console.error('Fetch error:', error);
+            outputTableBody.innerHTML = `<tr><td colspan="11" class="text-center text-danger p-4">Error loading data.</td></tr>`;
+        }
+    }
+
+    function renderTable(outputs) {
+        outputTableBody.innerHTML = '';
+        if (outputs.length === 0) {
+            outputTableBody.innerHTML = `<tr><td colspan="11" class="text-center text-muted p-4">No production outputs found.</td></tr>`;
+            return;
+        }
+        outputs.forEach(output => {
+            const row = `
+                <tr>
+                    <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox" value="${output.productionOutputId}"></td>
+                    <td class="p-3 align-middle">${output.sequenceNumber}</td>
+                    <td class="p-3 align-middle">${output.saleOrderNo || ''}</td>
+                    <td class="p-3 align-middle">${output.style || ''}</td>
+                    <td class="p-3 align-middle">${output.color || ''}</td>
+                    <td class="p-3 align-middle">${output.department || ''}</td>
+                    <td class="p-3 align-middle">${output.productionLine || ''}</td>
+                    <td class="py-3 ps-2 align-middle">${output.outputDate || ''}</td>
+                    <td class="py-3 ps-2 align-middle text-end">${output.outputQuantity || 0}</td>
+                    <td class="p-3 align-middle">${output.createdBy || ''}</td>
+                    <td class="p-3 align-middle">
+                        <button type="button" class="btn btn-sm btn-link-custom edit-btn" data-id="${output.productionOutputId}">Edit</button>
+                    </td>
+                </tr>
+            `;
+            outputTableBody.insertAdjacentHTML('beforeend', row);
+        });
+    }
+
+    async function openEditModal(id) {
+        try {
+            const response = await fetch(`/api/production-outputs/${id}`);
+            if (!response.ok) throw new Error('Failed to fetch data');
+            const data = await response.json();
+
+            document.getElementById('outputModalLabel').textContent = 'Edit Production Output';
+            outputForm.querySelector('#productionOutputId').value = data.productionOutputId;
+            outputForm.querySelector('#saleOrderNo').value = data.saleOrderNo;
+            outputForm.querySelector('#outputDate').value = data.outputDate;
+            outputForm.querySelector('#outputQuantity').value = data.outputQuantity;
+
+            departmentInput.value = data.department || '';
+            productionLineInput.value = data.productionLine || '';
+
+            await handleSaleOrderNoChange(() => {
+                styleSelect.value = data.style;
+                handleStyleChange();
+                setTimeout(() => { colorSelect.value = data.color; }, 100);
+            });
+
+            outputModal.show();
+        } catch (error) {
+            console.error('Error in openEditModal:', error);
+            Swal.fire('Error', 'Could not fetch data for editing.', 'error');
+        }
+    }
+
+    async function saveOutput() {
+        const dto = {
+            productionOutputId: document.getElementById('productionOutputId').value || null,
+            saleOrderNo: document.getElementById('saleOrderNo').value,
+            outputDate: document.getElementById('outputDate').value,
+            style: document.getElementById('style').value,
+            color: document.getElementById('color').value,
+            department: departmentInput.value,
+            productionLine: productionLineInput.value,
+            outputQuantity: document.getElementById('outputQuantity').value
+        };
+
+        try {
+            const response = await fetch('/api/production-outputs/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', [csrfHeader]: csrfToken },
+                body: JSON.stringify(dto)
+            });
+
+            if (response.ok) {
+                outputModal.hide();
+                await fetchOutputs();
+                Swal.fire('Success', 'Saved successfully!', 'success');
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to save');
+            }
+        } catch (error) {
+            console.error('Error in saveOutput:', error);
+            Swal.fire('Error', error.message, 'error');
+        }
+    }
+
+    async function deleteSelectedOutputs() {
+        const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+        if (selectedIds.length === 0) {
+            Swal.fire('No Selection', 'Please select at least one item to delete.', 'warning');
+            return;
+        }
+
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: `You are about to delete ${selectedIds.length} item(s). You won't be able to revert this!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch('/api/production-outputs/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', [csrfHeader]: csrfToken },
+                    body: JSON.stringify(selectedIds)
+                });
+                if (response.ok) {
+                    await fetchOutputs();
+                    Swal.fire('Deleted!', 'The selected items have been deleted.', 'success');
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message);
+                }
+            } catch(error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        }
+    }
+
+    searchBtn.addEventListener('click', fetchOutputs);
+    saveBtn.addEventListener('click', saveOutput);
+    deleteBtn.addEventListener('click', deleteSelectedOutputs);
+    outputTableBody.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('edit-btn')) {
+            openEditModal(e.target.dataset.id);
+        }
+    });
+    selectAllCheckbox.addEventListener('change', function() {
+        document.querySelectorAll('.row-checkbox').forEach(checkbox => checkbox.checked = this.checked);
+    });
+
+    fetchOutputs();
+
 });

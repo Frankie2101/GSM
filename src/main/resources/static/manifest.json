@@ -1,0 +1,25 @@
+{
+  "short_name": "GSM",
+  "name": "Garment Simple MES",
+  "description": "Garment Simple MES",
+  "icons": [
+    {
+      "src": "/images/GSM Logo.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/GSM Logo.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/mobile-output",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff"
+}

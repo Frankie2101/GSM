@@ -21,33 +21,31 @@
 
             <div class="card mb-4">
                 <div class="card-body">
-                    <form action="/production-outputs" method="get" id="searchForm">
+                    <form id="searchForm">
                         <div class="row g-3">
-                            <!-- Row 1 -->
                             <div class="col-md-4">
                                 <label for="keyword" class="form-label">General Search</label>
-                                <input type="text" class="form-control" id="keyword" name="keyword" placeholder="Enter SO No, Style, Color..." value="{{#keyword}}{{.}}{{/keyword}}">
+                                <input type="text" class="form-control" id="keyword" name="keyword" placeholder="Enter SO No, Style, Color...">
                             </div>
                             <div class="col-md-2">
                                 <label for="outputDateFrom" class="form-label">Output Date From</label>
-                                <input type="date" class="form-control" id="outputDateFrom" name="outputDateFrom" value="{{#outputDateFrom}}{{.}}{{/outputDateFrom}}">
+                                <input type="date" class="form-control" id="outputDateFrom" name="outputDateFrom">
                             </div>
                             <div class="col-md-2">
                                 <label for="outputDateTo" class="form-label">To</label>
-                                <input type="date" class="form-control" id="outputDateTo" name="outputDateTo" value="{{#outputDateTo}}{{.}}{{/outputDateTo}}">
+                                <input type="date" class="form-control" id="outputDateTo" name="outputDateTo">
                             </div>
-
-                            <!-- Row 2 -->
                             <div class="col-md-4">
                                 <label for="department" class="form-label">Department</label>
-                                <input type="text" class="form-control" id="department" name="department" placeholder="Enter Department..." value="{{#department}}{{.}}{{/department}}">
+                                <input type="text" class="form-control" id="department" name="department" placeholder="Enter Department...">
                             </div>
                             <div class="col-md-4">
                                 <label for="productionLine" class="form-label">Production Line</label>
-                                <input type="text" class="form-control" id="productionLine" name="productionLine" placeholder="Enter Production Line..." value="{{#productionLine}}{{.}}{{/productionLine}}">
+                                <input type="text" class="form-control" id="productionLine" name="productionLine" placeholder="Enter Production Line...">
                             </div>
                             <div class="col-md-4 d-flex align-items-end justify-content-start">
-                                <button type="submit" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-search me-1"></i> Search</button>
+                                <button type="button" id="createBtn" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-plus-circle me-1"></i> Create</button>
+                                <button type="button" id="searchBtn" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-search me-1"></i> Search</button>
                                 <button type="button" id="deleteBtn" class="btn btn-delete-gradient rounded-pill px-4"><i class="bi bi-trash me-1"></i> Delete</button>
                             </div>
                         </div>
@@ -58,59 +56,96 @@
             <div class="card">
                 <div class="card-header">Result</div>
                 <div class="card-body">
-                    <form action="/production-outputs/delete" method="post" id="deleteForm">
-                        {{#_csrf}}
-                            <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
-                        {{/_csrf}}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
-                                <tr>
-                                    <th style="width: 5%;" class="text-center"><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
-                                    <th style="width: 5%;">Seq</th>
-                                    <th style="width: 12%;">SO No</th>
-                                    <th style="width: 12%;">Style</th>
-                                    <th style="width: 12%;">Color</th>
-                                    <th style="width: 12%;">Department</th>
-                                    <th style="width: 12%;">Prod. Line</th>
-                                    <th style="width: 10%;">Output Date</th>
-                                    <th style="width: 10%;">Output Qty</th>
-                                    <th style="width: 10%;">Created By</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {{#outputs}}
-                                    <tr>
-                                        <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox" name="selectedIds" value="{{productionOutputId}}"></td>
-                                        <td class="p-3 align-middle">{{sequenceNumber}}</td>
-                                        <td class="p-3 align-middle">{{saleOrderNo}}</td>
-                                        <td class="p-3 align-middle">{{style}}</td>
-                                        <td class="p-3 align-middle">{{color}}</td>
-                                        <td class="p-3 align-middle">{{department}}</td>
-                                        <td class="p-3 align-middle">{{productionLine}}</td>
-                                        <td class="py-3 ps-2 align-middle">{{outputDate}}</td>
-                                        <td class="py-3 ps-2 align-middle text-end">{{outputQuantity}}</td>
-                                        <td class="p-3 align-middle">{{createdBy}}</td>
-                                    </tr>
-                                {{/outputs}}
-                                {{^outputs}}
-                                    <tr>
-                                        <td colspan="10" class="text-center text-muted p-4">No production outputs found.</td>
-                                    </tr>
-                                {{/outputs}}
-                                </tbody>
-                            </table>
-                        </div>
-                    </form>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                            <tr>
+                                <th style="width: 5%;" class="text-center"><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                <th style="width: 5%;">Seq</th>
+                                <th style="width: 12%;">SO No</th>
+                                <th style="width: 12%;">Style</th>
+                                <th style="width: 10%;">Color</th>
+                                <th style="width: 10%;">Department</th>
+                                <th style="width: 10%;">Prod. Line</th>
+                                <th style="width: 10%;">Output Date</th>
+                                <th style="width: 10%;">Output Qty</th>
+                                <th style="width: 10%;">Created By</th>
+                                <th style="width: 6%;">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody id="outputTableBody">
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
         {{> layout/footer}}
     </div>
 </div>
+
+<div class="modal fade" id="outputModal" tabindex="-1" aria-labelledby="outputModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="outputForm">
+                <div class="modal-header">
+                    <h5 class="modal-title text-gradient-custom" id="outputModalLabel"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="productionOutputId" name="productionOutputId">
+                    {{#_csrf}}
+                        <input type="hidden" id="csrfToken" name="{{parameterName}}" value="{{token}}"/>
+                    {{/_csrf}}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="saleOrderNo" class="form-label">Sale Order No <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="saleOrderNo" name="saleOrderNo" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="outputDate" class="form-label">Output Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="outputDate" name="outputDate" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="style" class="form-label">Style <span class="text-danger">*</span></label>
+                            <select class="form-select" id="style" name="style" required>
+                                <option value="">-- Type SO No first --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="color" class="form-label">Color <span class="text-danger">*</span></label>
+                            <select class="form-select" id="color" name="color" required>
+                                <option value="">-- Select Style first --</option>
+                            </select>
+                        </div>
+
+                        <!-- YÊU CẦU MỚI: Đổi thành input chỉ đọc -->
+                        <div class="col-md-6">
+                            <label for="modalDepartment" class="form-label">Department</label>
+                            <input type="text" class="form-control" id="modalDepartment" name="department" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="modalProductionLine" class="form-label">Production Line</label>
+                            <input type="text" class="form-control" id="modalProductionLine" name="productionLine" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="outputQuantity" class="form-label">Output Quantity <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="outputQuantity" name="outputQuantity" required min="1">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Close</button>
+                    <button type="button" id="saveBtn" class="btn btn-custom-gradient rounded-pill px-4">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {{> layout/scripts}}
-<!-- JavaScript cho chức năng chọn và xóa vẫn dùng chung được -->
 <script src="/js/production-output-list.js"></script>
 </body>
 </html>
-
