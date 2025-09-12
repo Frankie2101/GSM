@@ -24,4 +24,5 @@ public class ProductionOutputDto {
 
     private Integer outputQuantity;
     private String createdBy;
+    private Long userId;
 }

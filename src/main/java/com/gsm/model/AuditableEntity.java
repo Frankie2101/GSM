@@ -20,7 +20,7 @@ public abstract class AuditableEntity {
     // Sửa lại name="CreatedBy" để khớp với Database
     @CreatedBy
     @Column(name = "CreatedBy", nullable = false, updatable = false)
-    private Long createdBy;
+    protected Long createdBy;
 
     // Sửa lại name="LastModifiedBy" (DB của bạn là LastModUser)
     @LastModifiedBy
@@ -36,4 +36,8 @@ public abstract class AuditableEntity {
     @LastModifiedDate
     @Column(name = "LastModTime", nullable = false)
     private LocalDateTime lastModifiedDate;
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
 }

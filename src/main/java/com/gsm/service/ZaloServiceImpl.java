@@ -71,9 +71,9 @@ public class ZaloServiceImpl implements ZaloService {
                 .toUriString();
 
         HttpEntity<String> entity = new HttpEntity<>(new HttpHeaders());
-        ResponseEntity<ZaloUserResponse> response = restTemplate.exchange(urlWithParams, HttpMethod.GET, entity, ZaloUserResponse.class);
+        ResponseEntity<ZaloUserResponseDto> response = restTemplate.exchange(urlWithParams, HttpMethod.GET, entity, ZaloUserResponseDto.class);
 
-        ZaloUserResponse zaloResponse = response.getBody();
+        ZaloUserResponseDto zaloResponse = response.getBody();
         if (zaloResponse == null || zaloResponse.getError() != 0 || zaloResponse.getPhone() == null) {
             log.error("Failed to get phone number from Zalo: {}", zaloResponse);
             throw new SecurityException("Could not get phone number from Zalo. The token might be invalid.");
@@ -108,40 +108,49 @@ public class ZaloServiceImpl implements ZaloService {
             return;
         }
 
-        ProductionOutputDto firstDto = outputDtos.get(0);
-        Long saleOrderId = firstDto.getSaleOrderId();
-        Long creatorUserId = firstDto.getUserId();
-
+        // Lấy userId từ DTO đầu tiên (giả định tất cả đến từ cùng 1 user trong 1 lần submit)
+        Long creatorUserId = outputDtos.get(0).getUserId();
         if (creatorUserId == null) {
             throw new IllegalArgumentException("User ID is required to save production output.");
         }
 
+        // [LOGIC MỚI] Dùng userId để lấy thông tin User đầy đủ và chính xác từ DB
+        User user = userRepository.findById(creatorUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + creatorUserId));
+
+        // Lấy saleOrderId từ DTO
+        Long saleOrderId = outputDtos.get(0).getSaleOrderId();
         SaleOrder saleOrder = saleOrderRepository.findById(saleOrderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sale Order not found with ID: " + saleOrderId));
 
         List<ProductionOutput> outputsToSave = outputDtos.stream()
                 .filter(dto -> dto.getOutputQuantity() != null && dto.getOutputQuantity() > 0)
                 .map(dto -> {
-                    ProductionOutput newOutput = new ProductionOutput();
-                    newOutput.setSaleOrder(saleOrder);
-                    newOutput.setStyle(dto.getStyle());
-                    newOutput.setColor(dto.getColor());
-                    newOutput.setOutputQuantity(dto.getOutputQuantity());
-                    newOutput.setOutputDate(LocalDate.now());
-                    newOutput.setDepartment(dto.getDepartment());
-                    newOutput.setProductionLine(dto.getProductionLine());
-                    newOutput.setCreatedBy(creatorUserId);
-                    return newOutput;
+                    // Đổi tên biến: Tạo một entity để lưu
+                    ProductionOutput productionOutputEntity = new ProductionOutput();
+                    productionOutputEntity.setSaleOrder(saleOrder);
+                    productionOutputEntity.setStyle(dto.getStyle());
+                    productionOutputEntity.setColor(dto.getColor());
+                    productionOutputEntity.setOutputQuantity(dto.getOutputQuantity());
+                    productionOutputEntity.setOutputDate(LocalDate.now());
+
+                    // [LOGIC MỚI] Lấy department và line từ User đã truy vấn, an toàn hơn
+                    productionOutputEntity.setDepartment(user.getDepartment());
+                    productionOutputEntity.setProductionLine(user.getProductionLine());
+
+                    // Gán người tạo thủ công
+                    productionOutputEntity.setCreatedBy(user.getUserId());
+
+                    return productionOutputEntity;
                 })
                 .collect(Collectors.toList());
 
         if (!outputsToSave.isEmpty()) {
             productionOutputRepository.saveAll(outputsToSave);
-            log.info("Saved {} production output records for Sale Order ID {} by user ID {}",
-                    outputsToSave.size(), saleOrderId, creatorUserId);
+            log.info("Saved {} production output records for Sale Order ID {} by user '{}'",
+                    outputsToSave.size(), saleOrderId, user.getUserName());
         }
     }
-
     // --- Helper and Token Management Methods ---
 
     private UserDto mapUserToDto(User user) {
