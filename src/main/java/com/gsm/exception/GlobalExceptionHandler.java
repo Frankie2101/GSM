@@ -2,11 +2,18 @@ package com.gsm.exception;
 
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Lớp xử lý exception tập trung cho toàn bộ ứng dụng.
@@ -15,18 +22,19 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Bắt và xử lý các lỗi ResourceNotFoundException (HTTP 404).
-     * @param ex Exception được ném ra.
-     * @param model Dùng để truyền thông tin lỗi sang cho trang view.
-     * @return Tên của trang view lỗi 404.
-     */
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String handleResourceNotFoundException(ResourceNotFoundException ex, Model model) {
-        model.addAttribute("errorMessage", ex.getMessage());
-        model.addAttribute("errorStatus", "404 Not Found");
-        return "error/error_page"; // Trả về một trang lỗi chung
+    public ResponseEntity<Object> handleResourceNotFoundException(
+            ResourceNotFoundException ex, WebRequest request) {
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.NOT_FOUND.value()); // 404
+        body.put("error", "Not Found");
+        body.put("message", ex.getMessage());
+        body.put("path", ((ServletWebRequest)request).getRequest().getRequestURI());
+
+        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
 
     /**

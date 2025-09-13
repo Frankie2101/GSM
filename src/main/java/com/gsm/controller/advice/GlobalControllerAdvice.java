@@ -1,4 +1,4 @@
-package com.gsm.controller;
+package com.gsm.controller.advice;
 
 import com.gsm.model.User;
 import com.gsm.repository.UserRepository;
@@ -29,4 +29,6 @@ public class GlobalControllerAdvice {
 
         return null;
     }
+
+
 }

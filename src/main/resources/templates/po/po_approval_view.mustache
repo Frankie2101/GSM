@@ -15,75 +15,98 @@
         {{> layout/header}}
         <main class="container-fluid p-4">
             {{#po}}
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex justify-content-between align-items-center
+mb-3">
                     <div>
                         <a href="/purchase-orders/pending-approval" class="btn btn-link-custom"><i class="bi bi-arrow-left me-1"></i>Back to Approval List</a>
                     </div>
                     <div>
+
                         {{! Nút bấm sẽ lấy PO ID từ data attribute }}
-                        <button class="btn btn-secondary rounded-pill px-4 py-2" id="printBtn"><i class="bi bi-printer-fill me-1"></i> Print</button>
-                        <button class="btn btn-success rounded-pill px-4 py-2 approve-btn" data-po-id="{{purchaseOrderId}}"><i class="bi bi-check-circle-fill me-1"></i> Approve</button>
-                        <button class="btn btn-danger rounded-pill px-4 py-2 reject-btn" data-po-id="{{purchaseOrderId}}"><i class="bi bi-x-circle-fill me-1"></i> Reject</button>
+                        <button class="btn btn-custom-gradient rounded-pill px-4 py-2 me-2 approve-btn" data-po-id="{{purchaseOrderId}}"><i class="bi bi-check-circle-fill me-1"></i> Approve</button>
+
+                        <button class="btn btn-delete-gradient rounded-pill px-4 py-2 reject-btn" data-po-id="{{purchaseOrderId}}"><i class="bi bi-x-circle-fill me-1"></i> Reject</button>
                     </div>
                 </div>
 
                 <div class="card" id="poPrintArea">
                     <div class="card-body p-5">
+
                         <h1 class="text-center text-gradient-custom mb-4">PURCHASE ORDER</h1>
                         <div class="row mb-4">
                             <div class="col-6">
+
                                 <h5>To: <strong>{{supplierName}}</strong></h5>
                                 <p class="mb-1"><strong>Currency:</strong> {{currencyCode}}</p>
                                 <p class="mb-1"><strong>Payment Term:</strong> {{paymentTerm}}</p>
+
                                 <p class="mb-1"><strong>Delivery Term:</strong> {{deliveryTerm}}</p>
-                                {{! Bạn có thể thêm các thông tin khác của nhà cung cấp ở đây }}
+                                {{!
+Bạn có thể thêm các thông tin khác của nhà cung cấp ở đây }}
                             </div>
                             <div class="col-6 text-end">
+
                                 <p class="mb-1"><strong>PO Number:</strong> {{purchaseOrderNo}}</p>
                                 <p class="mb-1"><strong>PO Date:</strong> {{poDate}}</p>
                                 {{#arrivalDate}}
+
                                     <p class="mb-1"><strong>Arrival Date:</strong> {{arrivalDate}}</p>
                                 {{/arrivalDate}}
                             </div>
                         </div>
 
+
                         <h5 class="text-gradient-custom">Order Details</h5>
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle">
+
                                 <thead class="table-light">
                                 <tr>
                                     <th>Material Code</th>
+
                                     <th>Material Name</th>
                                     <th>Color</th>
                                     <th>Size</th>
+
                                     <th class="text-end">Quantity</th>
                                     <th>UOM</th>
-                                    <th class="text-end">Price</th>
+                                    <th
+                                            class="text-end">Price</th>
                                     <th class="text-end">Amount</th>
                                 </tr>
+
                                 </thead>
                                 <tbody>
                                 {{#details}}
+
                                     <tr>
                                         <td>{{materialCode}}</td>
                                         <td>{{materialName}}</td>
+
                                         <td>{{colorCode}}</td>
                                         <td>
+
                                             {{#size}}{{size}}{{/size}}
                                             {{^size}}N/A{{/size}}
                                         </td>
+
                                         <td class="text-end">{{#FormatNumber}}{{purchaseQuantity}}{{/FormatNumber}}</td>
                                         <td>{{uom}}</td>
+
                                         <td class="text-end">{{#FormatNumber}}{{netPrice}}{{/FormatNumber}}</td>
                                         <td class="text-end">{{#FormatNumber}}{{lineAmount}}{{/FormatNumber}}</td>                                    </tr>
+
                                 {{/details}}
                                 </tbody>
                                 <tfoot>
+
                                 <tr class="fw-bold">
                                     <td colspan="7" class="text-end">Total Amount:</td>
-                                    <td class="text-end">{{#FormatNumber}}{{totalAmount}}{{/FormatNumber}} {{currencyCode}}</td>                                </tr>
+                                    <td class="text-end">{{#FormatNumber}}{{totalAmount}}{{/FormatNumber}} {{currencyCode}}</td>
+                                </tr>
                                 </tfoot>
                             </table>
+
                         </div>
                     </div>
                 </div>
@@ -94,7 +117,8 @@
 </div>
 
 {{> layout/scripts}}
-{{! File JS mới để xử lý logic Approve/Reject trên trang này }}
+{{!
+File JS mới để xử lý logic Approve/Reject trên trang này }}
 <script src="/js/po-print.js"></script>
 </body>
 </html>

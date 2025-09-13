@@ -85,7 +85,7 @@ public class PurchaseOrderController {
         model.addAttribute("FormatNumber", formatNumberLambda());
 
         model.addAttribute("isPurchaseOrderPage", true);
-        return "po_approval_view";
+        return "po/po_approval_view";
     }
 
     // Thêm phương thức này vào PurchaseOrderController

@@ -86,38 +86,44 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private PurchaseOrderDetailDto convertDetailEntityToDto(PurchaseOrderDetail detail) {
         if (detail == null) return null;
 
-        // 1. Tạo một đối tượng DTO rỗng
         PurchaseOrderDetailDto dto = new PurchaseOrderDetailDto();
 
-        // 2. Lấy dữ liệu từ entity
+        // Lấy dữ liệu số lượng, giá và tính toán thành tiền (giữ nguyên)
         Double quantity = detail.getPurchaseQuantity() != null ? detail.getPurchaseQuantity() : 0.0;
         Double price = detail.getNetPrice() != null ? detail.getNetPrice() : 0.0;
         Double tax = detail.getTaxRate() != null ? detail.getTaxRate() : 0.0;
         Double lineAmount = quantity * price * (1 + tax / 100.0);
 
+        // --- PHẦN SỬA LỖI ---
         OrderBOMDetail bomDetail = detail.getOrderBOMDetail();
         Long fabricId = null;
         Long trimId = null;
+        String materialCode = "N/A"; // Giá trị mặc định
 
         if (bomDetail != null) {
+            // Lấy thông tin chung từ BOM Detail
+            dto.setOrderBOMDetailId(bomDetail.getOrderBOMDetailId());
+            dto.setMaterialType(bomDetail.getMaterialType());
+            dto.setMaterialName(bomDetail.getMaterialName());
+            dto.setColorCode(bomDetail.getColorCode());
+            dto.setSize(bomDetail.getSize());
+            dto.setUom(bomDetail.getUom());
+
+            // Lấy ID và MÃ CODE từ đối tượng Fabric hoặc Trim gốc để đảm bảo chính xác
             if ("FA".equals(bomDetail.getMaterialType()) && bomDetail.getFabric() != null) {
                 fabricId = bomDetail.getFabric().getFabricId();
+                materialCode = bomDetail.getFabric().getFabricCode(); // Lấy mã code thật
             } else if ("TR".equals(bomDetail.getMaterialType()) && bomDetail.getTrim() != null) {
                 trimId = bomDetail.getTrim().getTrimId();
+                materialCode = bomDetail.getTrim().getTrimCode(); // Lấy mã code thật
             }
         }
 
-        // 3. Dùng các phương thức setter để gán giá trị cho DTO
+        // Gán các giá trị đã được xử lý vào DTO
         dto.setPurchaseOrderDetailId(detail.getPurchaseOrderDetailId());
-        dto.setOrderBOMDetailId(bomDetail != null ? bomDetail.getOrderBOMDetailId() : null);
         dto.setFabricId(fabricId);
         dto.setTrimId(trimId);
-        dto.setMaterialType(bomDetail != null ? bomDetail.getMaterialType() : "FA");
-        dto.setMaterialCode(bomDetail != null ? bomDetail.getMaterialCode() : "N/A");
-        dto.setMaterialName(bomDetail != null ? bomDetail.getMaterialName() : "N/A");
-        dto.setColorCode(bomDetail != null ? bomDetail.getColorCode() : "N/A");
-        dto.setSize(bomDetail != null ? bomDetail.getSize() : "N/A");
-        dto.setUom(bomDetail != null ? bomDetail.getUom() : "N/A");
+        dto.setMaterialCode(materialCode); // Gán mã code đã được lấy đúng
         dto.setPurchaseQuantity(quantity);
         dto.setNetPrice(price);
         dto.setTaxRate(detail.getTaxRate());

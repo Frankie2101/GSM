@@ -4,10 +4,9 @@ import com.gsm.dto.OrderBOMDto;
 import com.gsm.service.OrderBOMService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/order-boms")
@@ -34,5 +33,16 @@ public class OrderBOMApiController {
 
         OrderBOMDto previewDto = orderBOMService.generatePreviewFromTemplate(saleOrderId, bomTemplateId);
         return ResponseEntity.ok(previewDto);
+    }
+
+    @PostMapping("/generate-pos")
+    public ResponseEntity<?> generatePurchaseOrders(@ModelAttribute OrderBOMDto orderBOMDto) {
+        try {
+            Map<String, Object> result = orderBOMService.saveAndGeneratePOs(orderBOMDto);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            // Trả về một đối tượng JSON có chứa thông báo lỗi
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 }

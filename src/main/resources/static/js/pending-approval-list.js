@@ -45,9 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td>${po.currencyCode || 'N/A'}</td>
                 <td><span class="badge bg-warning text-dark">${po.status}</span></td>
                 <td class="text-center">
-                    <a href="/purchase_orders/print/${po.purchaseOrderId}" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-eye-fill"></i> View
-                    </a>
+                    <a href="/purchase_orders/print/${po.purchaseOrderId}" class="action-link">View</a>
                 </td>
             </tr>
         `;

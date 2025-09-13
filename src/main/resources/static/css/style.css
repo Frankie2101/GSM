@@ -283,10 +283,9 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
 /* Container chính của grid */
 .size-grid-container {
     display: grid;
-    grid-template-columns: 100px repeat(auto-fill, minmax(65px, 1fr)); /* Cột đầu 80px, các cột size tự chia đều */
-    border: 1px solid #ced4da; /* Viền ngoài giống hệt input */
-    border-radius: 0.375rem; /* Bo góc giống hệt input */
-    overflow: hidden; /* Đảm bảo bo góc hoạt động */
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    overflow: hidden;
     background-color: #fff;
 }
 
@@ -583,6 +582,18 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
     font-weight: bold;
 }
 
+.table-sm th {
+    /* Đặt chiều rộng cố định cho các cột size, đủ cho 5 ký tự */
+    min-width: 80px;
+    text-align: center;
+}
+
+/* Style cho Header đầu tiên (nhãn Qty, Price...) */
+.table-sm th:first-child {
+    min-width: 100px;
+    text-align: left;
+}
+
 /* Bạn có thể cần ẩn các nút "Back" và "Export to PDF"
    trong trang preview khi in ra giấy thật (nếu người dùng bấm Ctrl+P)
    Thêm đoạn này vào cuối file CSS của bạn
@@ -592,4 +603,28 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
     .btn-link-custom {
         display: none !important;
     }
+}
+
+/* --- SỬA LỖI LAYOUT CHO BẢNG SIZE MATRIX TRONG SALE ORDER --- */
+
+/* Áp dụng cho container để kích hoạt thanh trượt ngang */
+.size-matrix-container {
+    overflow-x: auto;
+}
+
+/* Đặt chiều rộng tối thiểu cho toàn bộ bảng để nó không bị co lại */
+.size-matrix-container .table-sm {
+    min-width: 500px; /* Bạn có thể tăng giá trị này nếu có nhiều size hơn */
+}
+
+/* Đặt chiều rộng cố định cho các cột size (header) */
+.size-matrix-container .table-sm thead th {
+    min-width: 85px;
+    text-align: center;
+}
+
+/* Đặt chiều rộng cố định cho cột nhãn đầu tiên (Order Qty, Price...) */
+.size-matrix-container .table-sm th:first-child {
+    min-width: 100px;
+    text-align: left;
 }

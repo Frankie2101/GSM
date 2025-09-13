@@ -66,8 +66,7 @@
                 <small>Logout</small>
             </a>
             <div class="text-center mb-4">
-                <h1 class="h3 fw-bold m-0">Production Report</h1>
-                <p class="text-muted">Worker Input Interface</p>
+                <h1 class="h3 fw-bold m-0">Production Output</h1>
             </div>
             <form id="outputForm" class="row g-3" novalidate>
                 <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}" id="csrfToken"/>
@@ -96,7 +95,7 @@
                 <div class="col-12 d-grid">
                     <!-- === THAY ĐỔI STYLE NÚT TẠI ĐÂY === -->
                     <button type="submit" class="btn btn-custom-gradient rounded-pill btn-lg">
-                        <i class="bi bi-check-circle-fill me-2"></i> Save Report
+                        <i class="bi bi-check-circle-fill me-2"></i> Submit
                     </button>
                 </div>
             </form>

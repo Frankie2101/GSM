@@ -16,18 +16,22 @@
         <main class="container-fluid p-4">
             <h1 class="h5 mb-3 text-gradient-custom"><i class="bi bi-cart-check-fill me-2"></i>Purchase Order</h1>
 
-            <div class="card mb-4">
+            <div class="card
+mb-4">
                 <div class="card-body">
-                    <div class="row align-items-center">
+                    <div class="row align-items-end">
                         <div class="col-md-8">
                             <label for="searchInput" class="form-label">Search</label>
+
                             <input type="text" class="form-control" id="searchInput" placeholder="Enter PO No, or Supplier Name...">
                         </div>
-                        <div class="col-md-4 d-flex justify-content-end align-items-end" style="gap: 0.5rem;">
-                            <button class="btn btn-create" id="searchBtn"><i class="bi bi-search"></i> Search</button>
-                            <button class="btn btn-delete" id="deleteSelectedBtn"><i class="bi bi-trash"></i> Delete</button>
+                        <div class="col-md-4 d-flex justify-content-end">
+
+                            <button class="btn btn-custom-gradient rounded-pill px-4 me-2" id="searchBtn"><i class="bi bi-search me-1"></i> Search</button>
+                            <button class="btn btn-delete-gradient rounded-pill px-4" id="deleteSelectedBtn"><i class="bi bi-trash me-1"></i> Delete</button>
                         </div>
                     </div>
+
                 </div>
             </div>
 
@@ -35,31 +39,39 @@
                 <div class="card-header">
                     Result
                 </div>
+
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
+
                             <tr>
                                 <th style="width: 3%;"><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
                                 <th style="width: 5%;">Seq</th>
+
                                 <th>PO Number</th>
                                 <th>Supplier</th>
                                 <th>PO Date</th>
+
                                 <th>Arrival Date</th>
                                 <th>Currency</th>
                                 <th>Delivery Term</th>
+
                                 <th>Payment Term</th>
                                 <th class="text-end">Total Amount</th>
                                 <th>Status</th>
+
                                 <th class="text-center">Action</th>
                             </tr>
                             </thead>
                             <tbody id="po-table-body">
+
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
+
         </main>
         {{> layout/footer}}
     </div>

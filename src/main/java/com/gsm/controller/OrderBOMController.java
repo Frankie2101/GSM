@@ -107,16 +107,4 @@ public class OrderBOMController {
             return "redirect:/order-boms/form?saleOrderId=" + orderBOMDto.getSaleOrderId();
         }
     }
-
-    @PostMapping("/generate-pos")
-    @ResponseBody
-    public ResponseEntity<?> generatePurchaseOrders(@ModelAttribute OrderBOMDto orderBOMDto) {
-        try {
-            // === SỬA LẠI: Gọi đến orderBOMService thay vì purchaseOrderService ===
-            Map<String, Object> result = orderBOMService.saveAndGeneratePOs(orderBOMDto);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
-    }
 }

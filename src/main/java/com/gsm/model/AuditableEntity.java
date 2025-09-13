@@ -40,4 +40,8 @@ public abstract class AuditableEntity {
     public void setCreatedBy(Long createdBy) {
         this.createdBy = createdBy;
     }
+
+    public void setLastModifiedBy(Long lastModifiedBy) {
+        this.lastModifiedBy = lastModifiedBy;
+    }
 }

@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to save user (Create or Update)
     async function saveUser() {
         // ... (phần logic save không thay đổi)
+        const password = document.getElementById('password').value;
         const userData = {
             userId: document.getElementById('userId').value || null,
             userName: document.getElementById('userName').value,
@@ -83,6 +84,10 @@ document.addEventListener('DOMContentLoaded', function() {
             emailAddress: document.getElementById('emailAddress').value,
             userType: document.getElementById('userType').value
         };
+
+        if (password) {
+            userData.password = password;
+        }
 
         const response = await fetch('/api/users', {
             method: 'POST',

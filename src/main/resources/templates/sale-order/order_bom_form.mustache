@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {{#_csrf}}
+        <meta name="_csrf" content="{{token}}">
+        <meta name="_csrf_header" content="{{headerName}}">
+    {{/_csrf}}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create BOM - Garment Simple MES</title>

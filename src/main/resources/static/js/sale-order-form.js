@@ -63,38 +63,42 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
 
-// HÃY THAY THẾ HÀM createDetailCard BẰNG PHIÊN BẢN NÀY
+/// HÃY THAY THẾ TOÀN BỘ HÀM createDetailCard BẰNG PHIÊN BẢN NÀY
     const createDetailCard = () => {
         const card = document.createElement('div');
         card.className = 'card mb-2 detail-card';
         card.dataset.index = detailIndex++;
         card.innerHTML = `
         <div class="card-body">
-            <div class="d-flex align-items-begin">
-                <div style="width: 13%;" class="me-3">
-                    <label class="form-label form-label-sm mb-0">Product</label>
-                    <select class="form-select form-select-sm product-select" title="Product"></select>
+            <div class="d-flex align-items-end">
+
+                <div class="d-flex align-items-end" style="flex: 0 0 50%;">
+                    <div style="width: 25%;" class="me-2">
+                        <label class="form-label form-label-sm mb-0">Product</label>
+                        <select class="form-select form-select-sm product-select" title="Product"></select>
+                    </div>
+                    <div style="width: 30%;" class="me-2">
+                        <label class="form-label form-label-sm mb-0">Product Name</label>
+                        <input type="text" class="form-control form-control-sm product-name" readonly title="Product Name">
+                    </div>
+                    <div style="width: 20%;" class="me-2">
+                        <label class="form-label form-label-sm mb-0">Color</label>
+                        <select class="form-select form-select-sm color-select" title="Color"></select>
+                    </div>
+                    <div style="width: 20%;" class="me-2">
+                        <label class="form-label form-label-sm mb-0">Color Name</label>
+                        <input type="text" class="form-control form-control-sm color-name" readonly title="Color Name">
+                    </div>
+                    <div style="width: 10%;" class="me-2">
+                         <label class="form-label form-label-sm mb-0">Unit</label>
+                         <input type="text" class="form-control form-control-sm unit-name" readonly title="Unit">
+                    </div>
                 </div>
-                <div style="width: 17%;" class="me-3">
-                    <label class="form-label form-label-sm mb-0">Product Name</label>
-                    <input type="text" class="form-control form-control-sm product-name" readonly title="Product Name">
-                </div>
-                <div style="width: 10%;" class="me-3">
-                    <label class="form-label form-label-sm mb-0">Color</label>
-                    <select class="form-select form-select-sm color-select" title="Color"></select>
-                </div>
-                <div style="width: 10%;" class="me-3">
-                    <label class="form-label form-label-sm mb-0">Color Name</label>
-                    <input type="text" class="form-control form-control-sm color-name" readonly title="Color Name">
-                </div>
-                <div style="width: 7%;" class="me-3">
-                     <label class="form-label form-label-sm mb-0">Unit</label>
-                     <input type="text" class="form-control form-control-sm unit-name" readonly title="Unit">
-                </div>
-                <div class="flex-grow-1" style="min-width: 300px;">
-                     <div class="size-matrix-container"></div>
-                </div>
-                <div class="ms-auto ps-2">
+
+                <div class="table-responsive size-matrix-container" style="flex: 0 0 50%;">
+                    </div>
+
+                <div class="ps-2">
                     <button type="button" class="btn btn-sm btn-outline-danger delete-detail-btn"><i class="bi bi-trash"></i></button>
                 </div>
             </div>
@@ -117,43 +121,56 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Bắt đầu tạo HTML cho grid
-        let gridHtml = '<div class="size-grid-container">';
+        // --- BẮT ĐẦU LOGIC MỚI: TẠO BẢNG HTML ---
 
-        // --- Hàng 1: Headers (Ô trống + XS, S, M...) ---
-        gridHtml += '<div class="grid-header"></div>'; // Ô trống góc trên bên trái
-        sizes.forEach(s => {
-            gridHtml += `<div class="grid-header">${s.size}</div>`;
-        });
+        // 1. Tạo header cho bảng (XS, S, M...)
+        let tableHeaders = sizes.map(s => `<th>${s.size}</th>`).join('');
 
-        // --- Hàng 2: Qty ---
-        gridHtml += '<div class="grid-label">Order Qty</div>';
-        sizes.forEach(s => {
-            const qty = existingDetail && existingDetail.quantities && existingDetail.quantities[s.size] ? existingDetail.quantities[s.size] : '';
-            gridHtml += `<div class="grid-input-cell"><input type="number" name="details[${index}].quantities[${s.size}]" value="${qty}" min="0"></div>`;
-        });
+        // 2. Tạo các dòng input cho Order Qty, Price, Ship Qty
+        let orderQtyInputs = sizes.map(s => {
+            const qty = existingDetail?.quantities?.[s.size] || '';
+            return `<td><input type="number" class="form-control form-control-sm text-center" name="details[${index}].quantities[${s.size}]" value="${qty}" min="0"></td>`;
+        }).join('');
 
-        // --- Hàng 3: Price ---
-        gridHtml += '<div class="grid-label">Price</div>';
-        sizes.forEach(s => {
-            const price = existingDetail && existingDetail.prices && existingDetail.prices[s.size] ? existingDetail.prices[s.size] : s.price;
-            gridHtml += `<div class="grid-input-cell"><input type="number" step="0.01" name="details[${index}].prices[${s.size}]" value="${price || ''}"></div>`;
-        });
+        let priceInputs = sizes.map(s => {
+            const price = existingDetail?.prices?.[s.size] ?? s.price;
+            return `<td><input type="number" step="0.01" class="form-control form-control-sm text-center" name="details[${index}].prices[${s.size}]" value="${price || ''}"></td>`;
+        }).join('');
 
-        // --- Hàng 4: Ship Qty (Hàng cuối) ---
-        gridHtml += '<div class="grid-label grid-row-end">Ship Qty</div>';
-        sizes.forEach((s, i) => {
-            const shipQty = existingDetail && existingDetail.shipQuantities && existingDetail.shipQuantities[s.size] ? existingDetail.shipQuantities[s.size] : '';
-            // Thêm class grid-row-end cho các ô cuối cùng của hàng
-            const endClass = (i === sizes.length - 1) ? 'grid-row-end' : '';
-            gridHtml += `<div class="grid-input-cell ${endClass}"><input type="number" name="details[${index}].shipQuantities[${s.size}]" value="${shipQty}" min="0"></div>`;
-        });
+        let shipQtyInputs = sizes.map(s => {
+            const shipQty = existingDetail?.shipQuantities?.[s.size] || '';
+            return `<td><input type="number" class="form-control form-control-sm text-center" name="details[${index}].shipQuantities[${s.size}]" value="${shipQty}" min="0"></td>`;
+        }).join('');
 
-        // Đóng thẻ container và thêm các input ẩn
-        gridHtml += '</div>';
-        let variantIdInputs = sizes.map(s => `<input type="hidden" name="details[${index}].variantIds[${s.size}]" value="${s.variantId}">`).join('');
+        // 3. Ghép tất cả lại thành một thẻ <table> hoàn chỉnh
+        const tableHtml = `
+        <table class="table table-bordered table-sm">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 100px;"></th> ${tableHeaders}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>Order Qty</th>
+                    ${orderQtyInputs}
+                </tr>
+                <tr>
+                    <th>Price</th>
+                    ${priceInputs}
+                </tr>
+                <tr>
+                    <th>Ship Qty</th>
+                    ${shipQtyInputs}
+                </tr>
+            </tbody>
+        </table>
+    `;
 
-        container.innerHTML = gridHtml + variantIdInputs;
+        // 4. Lấy các input ẩn và hiển thị bảng
+        const variantIdInputs = sizes.map(s => `<input type="hidden" name="details[${index}].variantIds[${s.size}]" value="${s.variantId}">`).join('');
+
+        container.innerHTML = tableHtml + variantIdInputs;
     };
 
     // HÃY THAY THẾ TOÀN BỘ HÀM renderExistingDetails CŨ BẰNG HÀM NÀY

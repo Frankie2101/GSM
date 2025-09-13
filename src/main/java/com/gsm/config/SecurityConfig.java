@@ -13,6 +13,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.config.Customizer;
 
 @Configuration
 @EnableWebSecurity
@@ -56,8 +57,11 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain zaloApiFilterChain(HttpSecurity http) throws Exception {
         http
+                // SỬA LẠI: Dùng antMatcher() cho Spring Boot 2.7
                 .antMatcher("/api/zalo/**")
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()
+                )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(csrf -> csrf.disable());
         return http.build();
