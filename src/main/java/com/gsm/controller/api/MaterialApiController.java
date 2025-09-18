@@ -16,6 +16,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * REST Controller that provides API endpoints related to raw materials (Fabrics and Trims).
+ * These APIs are consumed by the dynamic Order BOM form to populate dropdowns and retrieve details.
+ */
 @RestController
 @RequestMapping("/api")
 public class MaterialApiController {
@@ -24,7 +28,9 @@ public class MaterialApiController {
     @Autowired private TrimRepository trimRepository;
 
     /**
-     * API 1: Lấy danh sách Code và ID để hiển thị trong dropdown.
+     * API to get a list of materials (ID and Code only) for selection dropdowns.
+     * @param type The type of material to fetch ("FA" for Fabric, "TR" for Trim).
+     * @return A list of simplified material info.
      */
     @GetMapping("/materials")
     public ResponseEntity<List<MaterialSelectionInfo>> getMaterialList(@RequestParam String type) {
@@ -41,7 +47,10 @@ public class MaterialApiController {
     }
 
     /**
-     * API 2: Lấy thông tin chi tiết của một material sau khi người dùng đã chọn.
+     * API to get detailed information of a single material after a user selects it.
+     * @param id The ID of the Fabric or Trim.
+     * @param type The type of material ("FA" or "TR").
+     * @return Detailed info used to auto-fill form fields.
      */
     @GetMapping("/material-details/{id}")
     public ResponseEntity<MaterialDetailInfo> getMaterialDetails(
@@ -60,10 +69,14 @@ public class MaterialApiController {
         return ResponseEntity.badRequest().build();
     }
 
-    // === API MỚI 1: LẤY DANH SÁCH MÀU SẮC ===
+    /**
+     * API to get the list of available colors for a given material.
+     * For Trims, it cleverly extracts a unique list of colors from its variants.
+     */
     @GetMapping("/material-colors")
     public ResponseEntity<List<ColorInfo>> getMaterialColors(@RequestParam String type, @RequestParam Long materialId) {
         if ("FA".equalsIgnoreCase(type)) {
+            // For Fabric, colors are a direct child collection.
             return fabricRepository.findById(materialId)
                     .map(fabric -> {
                         List<ColorInfo> colors = fabric.getFabricColors().stream()
@@ -75,9 +88,14 @@ public class MaterialApiController {
         } else if ("TR".equalsIgnoreCase(type)) {
             return trimRepository.findById(materialId)
                     .map(trim -> {
-                        // Lấy các màu sắc duy nhất từ variant
+                        // For Trim, multiple variants can have the same color. We need a unique list.
+                        // Collectors.toMap is used here to get distinct colors.
                         List<ColorInfo> colors = trim.getVariants().stream()
-                                .collect(Collectors.toMap(TrimVariant::getColorCode, tv -> new ColorInfo(tv.getColorCode(), tv.getColorName(), tv.getNetPrice(), tv.getTaxRate()), (existing, replacement) -> existing))
+                                .collect(Collectors.toMap(
+                                        TrimVariant::getColorCode, // Key for the map is the color code.
+                                        tv -> new ColorInfo(tv.getColorCode(), tv.getColorName(), tv.getNetPrice(), tv.getTaxRate()), // Value is the ColorInfo object.
+                                        (existing, replacement) -> existing // Merge function: if a key collision occurs (duplicate color), keep the existing one.
+                                ))
                                 .values().stream().collect(Collectors.toList());
                         return ResponseEntity.ok(colors);
                     })
@@ -86,24 +104,24 @@ public class MaterialApiController {
         return ResponseEntity.badRequest().build();
     }
 
-    // === API MỚI 2: LẤY DANH SÁCH SIZE DỰA TRÊN MÀU SẮC (CHỈ DÀNH CHO TRIM) ===
+    /**
+     * API to get available sizes for a specific Trim and color combination.
+     */
     @GetMapping("/material-sizes")
     public ResponseEntity<List<SizeInfo>> getMaterialSizes(@RequestParam Long trimId, @RequestParam String colorCode) {
         return trimRepository.findById(trimId)
                 .map(trim -> {
                     List<SizeInfo> sizes = trim.getVariants().stream()
                             .filter(v -> colorCode.equals(v.getColorCode()))
-                            .map(v -> new SizeInfo(v.getSizeCode(), v.getNetPrice(), v.getTaxRate()))                            .collect(Collectors.toList());
+                            .map(v -> new SizeInfo(v.getSizeCode(), v.getNetPrice(), v.getTaxRate())).collect(Collectors.toList());
                     return ResponseEntity.ok(sizes);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // --- CÁC HÀM HELPER ĐỂ CHUYỂN ĐỔI ---
-
+    // --- Helper methods for conversion to DTOs ---
     private MaterialDetailInfo convertFabricToDetailInfo(Fabric f) {
         Supplier s = f.getSupplier();
-        // Lấy giá từ FabricColor đầu tiên tìm thấy (hoặc null nếu không có)
         Double price = f.getFabricColors().stream()
                 .findFirst()
                 .map(fc -> fc.getNetPrice())
@@ -120,7 +138,6 @@ public class MaterialApiController {
 
     private MaterialDetailInfo convertTrimToDetailInfo(Trim t) {
         Supplier s = t.getSupplier();
-        // Lấy giá từ TrimVariant đầu tiên tìm thấy (hoặc null nếu không có)
         Double price = t.getVariants().stream()
                 .findFirst()
                 .map(tv -> tv.getNetPrice())
@@ -135,8 +152,7 @@ public class MaterialApiController {
         );
     }
 
-    // --- INNER CLASSES CHO CÁC API RESPONSE ---
-
+    // --- Inner classes for structuring API JSON responses ---
     @Data
     @AllArgsConstructor
     public static class MaterialSelectionInfo {
@@ -160,7 +176,7 @@ public class MaterialApiController {
         private String code;
         private String name;
         private Double price;
-        private Double taxRate; // <-- THÊM DÒNG NÀY
+        private Double taxRate;
     }
 
 
@@ -169,6 +185,6 @@ public class MaterialApiController {
     public static class SizeInfo {
         private String size;
         private Double price;
-        private Double taxRate; // <-- THÊM DÒNG NÀY
+        private Double taxRate;
     }
 }

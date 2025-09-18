@@ -8,6 +8,12 @@ import java.util.Optional;
 
 @Repository
 public interface OrderBOMRepository extends JpaRepository<OrderBOM, Long> {
-    // Tìm OrderBOM dựa trên SaleOrderId để kiểm tra đã tồn tại hay chưa
+
+    /**
+     * Finds an OrderBOM associated with a specific SaleOrder ID.
+     * This is used to check if a BOM has already been created for a sale order.
+     * @param saleOrderId The ID of the parent {@link com.gsm.model.SaleOrder}.
+     * @return An {@link Optional} containing the found OrderBOM.
+     */
     Optional<OrderBOM> findBySaleOrder_SaleOrderId(Long saleOrderId);
 }

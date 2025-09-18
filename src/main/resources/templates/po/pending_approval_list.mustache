@@ -1,12 +1,23 @@
+{{!
+    This is the Mustache template for the "Pending Approval POs" list page.
+    This page is client-side rendered; it acts as a shell, and the associated
+    JavaScript file (`pending-approval-list.js`) is responsible for fetching
+    data via API and populating the table.
+}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {{! ... Standard head elements ... }}
     <meta charset="UTF-8">
     <title>Pending Approval POs</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {{#_csrf}}
+        <meta name="_csrf" content="{{token}}">
+        <meta name="_csrf_header" content="{{headerName}}">
+    {{/_csrf}}
 </head>
 <body>
 <div class="d-flex" id="wrapper">
@@ -36,8 +47,12 @@
                                 <th class="text-center" style="width: 15%;">Action</th>
                             </tr>
                             </thead>
+                            {{!
+                                The table body is intentionally left empty.
+                                `pending-approval-list.js` will fetch data from the `/api/purchase_orders/pending`
+                                endpoint and dynamically insert all `<tr>` rows here.
+                            }}
                             <tbody id="pending-po-table-body">
-                            {{! Rows will be inserted here by JavaScript }}
                             </tbody>
                         </table>
                     </div>

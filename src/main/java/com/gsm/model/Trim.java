@@ -37,6 +37,9 @@ public class Trim extends AuditableEntity {
     @Column(name = "TechnicalReference", length = 255)
     private String technicalReference;
 
+    /**
+     * A list of all available variants for this trim.
+     */
     @OneToMany(mappedBy = "trim", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<TrimVariant> variants = new ArrayList<>();
 

@@ -20,6 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller for handling all HTTP requests for the Trim management feature.
+ */
 @Controller
 @RequestMapping("/trims")
 public class TrimController {
@@ -28,6 +31,10 @@ public class TrimController {
     @Autowired private UnitRepository unitRepository;
     @Autowired private SupplierRepository supplierRepository;
 
+    /**
+     * Displays the list of all trims, with an optional keyword search.
+     * <p><b>Use Case:</b> The main landing page for trim management.
+     */
     @GetMapping
     public String showTrimList(@RequestParam(required = false) String keyword, Model model, HttpServletRequest request) {
         List<TrimDto> trims;
@@ -44,7 +51,8 @@ public class TrimController {
     }
 
     /**
-     * Hiển thị form tạo mới hoặc chỉnh sửa Trim.
+     * Displays the form for creating a new trim or editing an existing one.
+     * <p><b>Use Case:</b> Called when a user clicks "Create" or "Edit".
      */
     @GetMapping("/form")
     public String showTrimForm(@RequestParam(required = false) Long id, Model model, HttpServletRequest request) {
@@ -56,7 +64,7 @@ public class TrimController {
             trim.setVariants(new ArrayList<>()); // Khởi tạo list rỗng
         }
 
-        // Logic xử lý Unit Dropdown để "đánh dấu" mục đã chọn
+        // Logic for preparing dropdown data...
         List<Unit> allUnits = unitRepository.findAll();
         List<Map<String, Object>> unitOptions = new ArrayList<>();
         for (Unit unit : allUnits) {
@@ -69,7 +77,6 @@ public class TrimController {
             unitOptions.add(option);
         }
 
-        // Logic xử lý Supplier Dropdown
         List<Supplier> allSuppliers = supplierRepository.findAll();
         List<Map<String, Object>> supplierOptions = new ArrayList<>();
         for (Supplier supplier : allSuppliers) {
@@ -92,20 +99,17 @@ public class TrimController {
     }
 
     /**
-     * Xử lý lưu thông tin Trim.
+     * Processes the submission of the trim form.
      */
     @PostMapping("/save")
-    public String saveTrim(@ModelAttribute TrimDto trimDto,
-                           @RequestParam(name = "technicalReference", required = false) String technicalReference, // <-- THÊM DÒNG NÀY
-                           RedirectAttributes redirectAttributes) {
+    public String saveTrim(@ModelAttribute TrimDto trimDto, RedirectAttributes redirectAttributes) {
         try {
-            trimDto.setTechnicalReference(technicalReference); // <-- VÀ THÊM DÒNG NÀY
             TrimDto savedTrim = trimService.save(trimDto);
             redirectAttributes.addFlashAttribute("successMessage", "Saved Successfully!");
             return "redirect:/trims/form?id=" + savedTrim.getTrimId();
         } catch (DuplicateResourceException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            redirectAttributes.addFlashAttribute("trim", trimDto); // Giữ lại dữ liệu đã nhập
+            redirectAttributes.addFlashAttribute("trim", trimDto);
             if (trimDto.getTrimId() == null) {
                 return "redirect:/trims/form";
             }
@@ -113,6 +117,10 @@ public class TrimController {
         }
     }
 
+    /**
+     * Deletes one or more trims based on a list of selected IDs.
+     * <p><b>Use Case:</b> Called when the user clicks "Delete" on the list page.
+     */
     @PostMapping("/delete")
     public String deleteTrims(@RequestParam(value = "selectedIds", required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
         if (ids == null || ids.isEmpty()) {

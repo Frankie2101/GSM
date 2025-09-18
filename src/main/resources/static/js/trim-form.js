@@ -1,10 +1,20 @@
+/**
+ * @fileoverview Manages the dynamic and interactive behavior of the trim_form.mustache page.
+ * Handles client-side CRUD for trim variants and re-indexes input names for Spring MVC binding.
+ */
 document.addEventListener('DOMContentLoaded', function() {
+    // --- Element Selectors ---
     const addBtn = document.getElementById('addVariantBtn');
     const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
     const tableBody = document.getElementById('variantTableBody');
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
     const trimForm = document.getElementById('trimForm');
 
+    /**
+     * Re-indexes the `name` attributes of all variant inputs.
+     * This is critical for Spring MVC to bind the form data to a List<TrimVariantDto>.
+     * The names must be in the format `variants[index].fieldName`.
+     */
     const reindexRows = () => {
         const rows = tableBody.querySelectorAll('tr');
         rows.forEach((row, index) => {
@@ -18,6 +28,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
+    /**
+     * Event listener for the "New Detail" button.
+     * Appends a new, empty row to the variants table.
+     */
     if (addBtn) {
         addBtn.addEventListener('click', function() {
             const newIndex = tableBody.rows.length;
@@ -36,10 +50,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 </tr>
             `;
             tableBody.insertAdjacentHTML('beforeend', newRowHtml);
-            reindexRows(); // Gọi sau khi thêm dòng mới
+            reindexRows();
         });
     }
 
+    /**
+     * Event listener for the "Delete Selected" button.
+     * Removes all rows that have their checkbox checked.
+     */
     if (deleteSelectedBtn) {
         deleteSelectedBtn.addEventListener('click', function() {
             const checkedBoxes = tableBody.querySelectorAll('.row-checkbox:checked');
@@ -48,19 +66,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             checkedBoxes.forEach(checkbox => checkbox.closest('tr').remove());
-            reindexRows(); // Gọi sau khi xóa
+            reindexRows();
         });
     }
 
+    /**
+     * Event listener for individual delete buttons on each row using event delegation.
+     */
     if (tableBody) {
         tableBody.addEventListener('click', function(e) {
             if (e.target.closest('.delete-row-btn')) {
                 e.target.closest('tr').remove();
-                reindexRows(); // Gọi sau khi xóa
+                reindexRows();
             }
         });
     }
 
+    /**
+     * Event listener for the "Select All" checkbox.
+     * Toggles the state of all checkboxes in the table body.
+     */
     if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', function() {
             tableBody.querySelectorAll('.row-checkbox').forEach(checkbox => {
@@ -69,6 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Gán lại name cho các dòng đã có sẵn khi tải trang
+    // Initial call to set names for any pre-existing rows on page load.
     reindexRows();
 });

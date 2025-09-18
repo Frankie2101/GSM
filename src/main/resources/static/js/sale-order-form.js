@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Manages the highly dynamic UI for the Sale Order form.
+ * See technical explanation above for core concepts like Data Hydration, Caching, and Map Binding.
+ */
 document.addEventListener('DOMContentLoaded', function() {
     const detailsContainer = document.getElementById('detailsContainer');
     const addDetailBtn = document.getElementById('addDetailBtn');
@@ -7,13 +11,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const orderDateInput = document.getElementById('orderDate');
     let detailIndex = 0;
 
-    // YÊU CẦU 2: Tự động điền ngày hôm nay nếu là đơn hàng mới
     if (!document.querySelector('[name="saleOrderId"]').value) {
         const today = new Date().toISOString().split('T')[0];
         orderDateInput.value = today;
     }
 
-    // YÊU CẦU 1 & 3: Tự động điền Order No và Currency khi chọn Customer
     customerSelect.addEventListener('change', async function() {
         const selectedOption = this.options[this.selectedIndex];
         const customerCode = selectedOption.dataset.code;
@@ -63,8 +65,12 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
 
-/// HÃY THAY THẾ TOÀN BỘ HÀM createDetailCard BẰNG PHIÊN BẢN NÀY
-    const createDetailCard = () => {
+    /**
+     * Creates the main HTML structure for a new detail card.
+     * The card includes dropdowns for product/color and a container for the size matrix.
+     * @returns {HTMLElement} The newly created card element.
+     */
+        const createDetailCard = () => {
         const card = document.createElement('div');
         card.className = 'card mb-2 detail-card';
         card.dataset.index = detailIndex++;
@@ -110,8 +116,17 @@ document.addEventListener('DOMContentLoaded', function() {
         return card;
     };
 
-    // HÃY THAY THẾ TOÀN BỘ HÀM buildSizeMatrix CŨ BẰNG HÀM NÀY
-    const buildSizeMatrix = async (card, productId, color, existingDetail = null) => {
+    /**
+     * Asynchronously builds and renders a size matrix table within a detail card.
+     * This function dynamically creates table headers for sizes and input rows for quantities/prices.
+     * It uses a naming convention (`details[index].quantities[size]`) to enable
+     * data binding to Map structures in the Spring Boot backend.
+     * @param {HTMLElement} card - The parent card element where the table will be rendered.
+     * @param {string} productId - The selected product's ID.
+     * @param {string} color - The selected color code.
+     * @param {object|null} existingDetail - Pre-existing data for this card (used in edit mode).
+     */
+        const buildSizeMatrix = async (card, productId, color, existingDetail = null) => {
         const sizes = await fetchSizes(productId, color);
         const container = card.querySelector('.size-matrix-container');
         const index = card.dataset.index;
@@ -121,12 +136,10 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // --- BẮT ĐẦU LOGIC MỚI: TẠO BẢNG HTML ---
-
-        // 1. Tạo header cho bảng (XS, S, M...)
+        // 1. Create table headers from the list of sizes.
         let tableHeaders = sizes.map(s => `<th>${s.size}</th>`).join('');
 
-        // 2. Tạo các dòng input cho Order Qty, Price, Ship Qty
+        // 2. Create input rows for Order Qty, Price, etc.
         let orderQtyInputs = sizes.map(s => {
             const qty = existingDetail?.quantities?.[s.size] || '';
             return `<td><input type="number" class="form-control form-control-sm text-center" name="details[${index}].quantities[${s.size}]" value="${qty}" min="0"></td>`;
@@ -142,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return `<td><input type="number" class="form-control form-control-sm text-center" name="details[${index}].shipQuantities[${s.size}]" value="${shipQty}" min="0"></td>`;
         }).join('');
 
-        // 3. Ghép tất cả lại thành một thẻ <table> hoàn chỉnh
+        // 3. Assemble the full table HTML.
         const tableHtml = `
         <table class="table table-bordered table-sm">
             <thead class="table-light">
@@ -167,32 +180,31 @@ document.addEventListener('DOMContentLoaded', function() {
         </table>
     `;
 
-        // 4. Lấy các input ẩn và hiển thị bảng
+        // 4. Create hidden inputs for variant IDs, also for Map binding.
         const variantIdInputs = sizes.map(s => `<input type="hidden" name="details[${index}].variantIds[${s.size}]" value="${s.variantId}">`).join('');
 
         container.innerHTML = tableHtml + variantIdInputs;
     };
 
-    // HÃY THAY THẾ TOÀN BỘ HÀM renderExistingDetails CŨ BẰNG HÀM NÀY
-    // HÃY THAY THẾ HÀM renderExistingDetails BẰNG PHIÊN BẢN NÀY
+    /**
+     * Renders the initial set of detail cards when editing an existing sale order.
+     * It uses a `for...of` loop to correctly handle the `async/await` calls in sequence.
+     * @param {Array<object>} details - The list of detail DTOs from the backend's JSON data island.
+     */
     const renderExistingDetails = async (details) => {
         if (!details || details.length === 0) return;
 
-        // Tải danh sách sản phẩm một lần để không phải gọi lại trong vòng lặp
         const products = await fetchProducts();
 
-        // Dùng for...of để xử lý tuần tự, tránh lỗi bất đồng bộ
         for (const detail of details) {
             const card = createDetailCard(); // Luôn tạo card mới với cấu trúc HTML đúng
 
-            // Lấy các element cần thiết từ card vừa tạo
             const productSelect = card.querySelector('.product-select');
             const productNameInput = card.querySelector('.product-name');
             const colorSelect = card.querySelector('.color-select');
             const colorNameInput = card.querySelector('.color-name');
             const unitInput = card.querySelector('.unit-name');
 
-            // 1. Populate và chọn đúng Product
             productSelect.innerHTML = '<option value="">-- Select --</option>';
             let selectedProductData = null;
             products.forEach(p => {
@@ -205,14 +217,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Điền dữ liệu cho Product
             if (selectedProductData) {
                 productSelect.value = detail.productId;
                 productNameInput.value = selectedProductData.name;
                 unitInput.value = selectedProductData.unitName;
             }
 
-            // 2. Populate và chọn đúng Color
             const colors = await fetchColors(detail.productId);
             colorSelect.innerHTML = '<option value="">-- Color --</option>';
             let selectedColorData = null;
@@ -225,28 +235,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Điền dữ liệu cho Color
             if (selectedColorData) {
                 colorSelect.value = detail.color;
                 colorNameInput.value = selectedColorData.colorName;
             }
 
-            // Cập nhật các giá trị ẩn
             card.querySelector(`[name="details[${card.dataset.index}].productId"]`).value = detail.productId;
             card.querySelector(`[name="details[${card.dataset.index}].color"]`).value = detail.color;
 
-            // 3. Xây dựng ma trận size với dữ liệu có sẵn
             await buildSizeMatrix(card, detail.productId, detail.color, detail);
         }
     };
-    // === BẮT ĐẦU GỌI HÀM RENDER KHI TRANG TẢI ===
+
+    // This block is the entry point for "edit" mode.
     const detailsDataEl = document.getElementById('details-data');
     if (detailsDataEl) {
+        // 1. Parse the JSON string from the <script> tag into a JavaScript object.
         const existingDetails = JSON.parse(detailsDataEl.textContent);
+        // 2. Call the main rendering function to build the UI from this data.
         renderExistingDetails(existingDetails);
     }
 
     // --- Event Handlers ---
+
+    /**
+     * Handles the click on the "Add Product" button.
+     * It creates a new blank card and populates its product dropdown with all available products.
+     */
     addDetailBtn.addEventListener('click', async () => {
         const card = createDetailCard();
         const productSelect = card.querySelector('.product-select');
@@ -261,19 +276,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    /**
+     * This is the master event listener for the entire details container.
+     * It uses event delegation to efficiently handle changes on dynamically created elements.
+     */
     detailsContainer.addEventListener('change', async (e) => {
         const target = e.target;
         const card = target.closest('.detail-card');
         if (!card) return;
 
+        // --- Logic when a PRODUCT is selected ---
         if (target.classList.contains('product-select')) {
+            // 1. Get extra data stored in the selected option's data-* attributes.
             const selectedOption = target.options[target.selectedIndex];
+
+            // 2. Auto-fill other fields like product name and unit.
             card.querySelector('.product-name').value = selectedOption.dataset.productName || '';
+
+            // 3. Clear the old color/size info.
             const colorSelect = card.querySelector('.color-select');
             card.querySelector('.color-name').value = '';
             card.querySelector('.unit-name').value = selectedOption.dataset.unitName || '';
             card.querySelector(`[name="details[${card.dataset.index}].productId"]`).value = target.value;
 
+            // 4. If a valid product was selected, fetch and populate its colors.
             if (target.value) {
                 const colors = await fetchColors(target.value);
                 colorSelect.innerHTML = '<option value="">-- Color --</option>';
@@ -288,18 +314,26 @@ document.addEventListener('DOMContentLoaded', function() {
             card.querySelector('.size-matrix-container').innerHTML = '';
         }
 
+        // --- Logic when a COLOR is selected ---
         if (target.classList.contains('color-select')) {
             const selectedOption = target.options[target.selectedIndex];
             card.querySelector('.color-name').value = selectedOption.dataset.colorName || '';
 
             const productId = card.querySelector('.product-select').value;
             card.querySelector(`[name="details[${card.dataset.index}].color"]`).value = target.value;
+
+            // Call the main function to build the size matrix for the selected product and color.
             buildSizeMatrix(card, productId, target.value, e.detail || null);
         }
     });
 
+    /**
+     * Uses event delegation to handle clicks on the delete button of any detail card.
+     */
     detailsContainer.addEventListener('click', (e) => {
+        // If the clicked element (or its parent) is a delete button...
         if (e.target.closest('.delete-detail-btn')) {
+            // ...find its parent card and remove it from the DOM.
             e.target.closest('.detail-card').remove();
         }
     });

@@ -21,6 +21,11 @@ import com.samskivert.mustache.Mustache;
 import javax.servlet.http.HttpServletRequest;
 import java.text.DecimalFormat;
 
+/**
+ * Controller for handling user-facing HTTP requests for the Purchase Order (PO) feature.
+ * This controller is primarily responsible for serving the HTML pages (views) that
+ * act as a shell for the JavaScript-driven user interface.
+ */
 @Controller
 @RequestMapping("/purchase_orders")
 public class PurchaseOrderController {
@@ -28,14 +33,23 @@ public class PurchaseOrderController {
     @Autowired
     private PurchaseOrderService purchaseOrderService;
 
-    // Hiển thị trang danh sách tất cả PO
+    /**
+     * Displays the main list page for all Purchase Orders.
+     * The actual data loading is handled by JavaScript via API calls.
+     */
     @GetMapping
     public String showPoListPage(Model model) {
         model.addAttribute("isPurchaseOrderPage", true);
         return "po/po_list";
     }
 
-    // Hiển thị form tạo mới hoặc xem/sửa PO
+    /**
+     * Displays the form for creating or viewing/editing a Purchase Order.
+     * This method passes the entire PO data as a single JSON string ("poJson") to the view.
+     * The JavaScript on the frontend will then parse this JSON to hydrate and render the form.
+     * @param id The ID of the PO to edit (null for creation).
+     * @return The path to the PO form view.
+     */
     @GetMapping("/form")
     public String showPoForm(@RequestParam(required = false) Long id, Model model, HttpServletRequest request) throws JsonProcessingException {
         PurchaseOrderDto poDto = (id != null) ? purchaseOrderService.findById(id) : new PurchaseOrderDto();
@@ -47,34 +61,42 @@ public class PurchaseOrderController {
         return "po/po_form";
     }
 
-    // Hiển thị trang duyệt PO "Pending Approval"
+    /**
+     * Displays the page for approving POs ("Pending Approval").
+     */
     @GetMapping("/pending-approval")
     public String showPendingApprovalPage(Model model) {
         model.addAttribute("isPurchaseOrderPage", true);
         return "po/pending_approval_list";
     }
 
-    // Thêm hàm private này vào trong class PurchaseOrderController
+    /**
+     * A Mustache.Lambda function that provides server-side number formatting.
+     * This allows the template to format numbers without containing complex logic.
+     * Usage in Mustache: {{#FormatNumber}}{{totalAmount}}{{/FormatNumber}}
+     * @return A Mustache.Lambda that formats numbers as #,##0.00.
+     */
     private Mustache.Lambda formatNumberLambda() {
         return (frag, out) -> {
             try {
-                // Lấy giá trị số từ template
                 String text = frag.execute();
                 if (text == null || text.isEmpty()) {
                     return;
                 }
                 double number = Double.parseDouble(text);
-                // Định dạng lại theo chuẩn #,##0.00
                 DecimalFormat formatter = new DecimalFormat("#,##0.00");
                 out.write(formatter.format(number));
             } catch (NumberFormatException e) {
-                // Nếu không phải là số, ghi lại giá trị gốc
                 out.write(frag.execute());
             }
         };
     }
 
-    //Pending Approval Print
+    /**
+     * Displays a printable view of an approved Purchase Order.
+     * @param id The ID of the PO to print.
+     * @return The path to the printable PO view.
+     */
     @GetMapping("/print/{id}")
     public String showPrintPoPage(@PathVariable Long id, Model model, HttpServletRequest request) {
         PurchaseOrderDto poDto = purchaseOrderService.findById(id);
@@ -88,12 +110,16 @@ public class PurchaseOrderController {
         return "po/po_approval_view";
     }
 
-    // Thêm phương thức này vào PurchaseOrderController
+    /**
+     * Displays a print-friendly preview of a PO.
+     * @param id The ID of the PO to preview.
+     * @return The path to the print preview template.
+     */
     @GetMapping("/print-preview/{id}")
     public String showPrintPreviewPage(@PathVariable Long id, Model model) {
         PurchaseOrderDto poDto = purchaseOrderService.findById(id);
         model.addAttribute("po", poDto);
         model.addAttribute("FormatNumber", formatNumberLambda());
-        return "po/po_print_preview"; // Trỏ đến file preview mới
+        return "po/po_print_preview";
     }
 }

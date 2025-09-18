@@ -7,29 +7,61 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Service layer interface for managing Purchase Order business logic.
+ * Defines the contract for all PO operations, including state transitions like approval and rejection.
+ */
 public interface PurchaseOrderService {
 
-    // Lấy danh sách tất cả PO
+    /**
+     * Retrieves a list of all Purchase Orders, optimized for list view.
+     * @return A list of {@link PurchaseOrderDto} objects.
+     */
     List<PurchaseOrderDto> findAll();
 
-    // Tìm một PO theo ID
+    /**
+     * Finds a single Purchase Order by its ID, with full details.
+     * @param id The ID of the PO to find.
+     * @return The detailed {@link PurchaseOrderDto}.
+     */
     PurchaseOrderDto findById(Long id);
 
-    // Lưu (tạo mới/cập nhật) một PO
+    /**
+     * Saves a new PO or updates an existing one based on the provided DTO.
+     * This is the primary method for persisting PO data from the UI.
+     * @param dto The DTO containing the PO data.
+     * @return The saved {@link PurchaseOrderDto}.
+     */
     PurchaseOrderDto save(PurchaseOrderDto dto);
 
-    // Xóa một PO
-    void deleteById(Long id);
+    /**
+     * Deletes one or more Purchase Orders based on a list of IDs.
+     * REFACTORED: Changed from deleteById to handle bulk deletion consistently.
+     * @param ids A list of PO IDs to be deleted.
+     */
+    void deleteByIds(List<Long> ids);
 
-    // Trình duyệt PO
+    /**
+     * Submits a Purchase Order for approval, changing its status from 'New' to 'Submitted'.
+     * @param id The ID of the PO to submit.
+     */
     void submitForApproval(Long id);
 
-    // Tìm các PO đang chờ duyệt
+    /**
+     * Finds all Purchase Orders that are currently awaiting approval (status is 'Submitted').
+     * @return A list of pending {@link PurchaseOrderDto}s.
+     */
     List<PurchaseOrderDto> findPendingApproval();
 
-    // Duyệt PO
+    /**
+     * Approves a Purchase Order, changing its status to 'Approved'.
+     * @param id The ID of the PO to approve.
+     */
     void approve(Long id);
 
-    // Từ chối PO
+    /**
+     * Rejects a Purchase Order, changing its status to 'Rejected'.
+     * @param id The ID of the PO to reject.
+     */
     void reject(Long id);
 }

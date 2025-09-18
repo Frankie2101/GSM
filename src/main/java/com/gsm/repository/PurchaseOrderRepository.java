@@ -9,12 +9,17 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Spring Data JPA repository for the {@link PurchaseOrder} entity.
+ */
 @Repository
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Long> {
 
     /**
-     * Đếm số lượng PO đã được tạo ra từ một Sale Order cụ thể.
-     * Query này sẽ join qua các bảng để tìm liên kết.
+     * Counts the number of POs that have been generated from a specific Sale Order.
+     * This query joins through multiple tables to find the link.
+     * @param saleOrderId The ID of the originating Sale Order.
+     * @return The total count of associated POs.
      */
     @Query("SELECT count(po) FROM PurchaseOrder po " +
             "JOIN po.details pod " +
@@ -23,28 +28,38 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
             "WHERE ob.saleOrder.saleOrderId = :saleOrderId")
     long countBySaleOrderId(@Param("saleOrderId") Long saleOrderId);
 
+    /**
+     * Finds all Purchase Orders and eagerly fetches their detail lines in a single query.
+     * The `LEFT JOIN FETCH` clause is a performance optimization that prevents the "N+1 query problem"
+     * by loading the `details` collection at the same time as the `PurchaseOrder`.
+     * @return A list of all Purchase Orders with their details initialized.
+     */
     @Query("SELECT DISTINCT po FROM PurchaseOrder po " +
             "LEFT JOIN FETCH po.details " +
             "ORDER BY po.poDate DESC, po.purchaseOrderId DESC")
     List<PurchaseOrder> findAllWithDetails();
 
     /**
-     * Tìm PO theo ID và fetch các details liên quan trong cùng một query.
-     * @param id ID của PO.
-     * @return Optional chứa PurchaseOrder.
+     * Finds a single Purchase Order by its ID and eagerly fetches its detail lines.
+     * @param id The ID of the PO to find.
+     * @return An Optional containing the Purchase Order with its details.
      */
     @Query("SELECT po FROM PurchaseOrder po LEFT JOIN FETCH po.details WHERE po.purchaseOrderId = :id")
     Optional<PurchaseOrder> findByIdWithDetails(@Param("id") Long id);
 
     /**
-     * Lấy tất cả PO và fetch các supplier liên quan để hiển thị danh sách hiệu quả.
-     * @return Danh sách PurchaseOrder.
+     * Finds all Purchase Orders and eagerly fetches their associated suppliers.
+     * This is efficient for list views where the supplier name is always needed.
+     * @return A list of all Purchase Orders with their suppliers initialized.
      */
     @Query("SELECT po FROM PurchaseOrder po JOIN FETCH po.supplier ORDER BY po.poDate DESC, po.purchaseOrderId DESC")
     List<PurchaseOrder> findAllWithSupplier();
 
     /**
-     * THÊM MỚI: Query để tìm PO theo status, dùng cho màn hình Pending Approval.
+     * Finds all Purchase Orders with a specific status, also fetching their suppliers.
+     * Used for the "Pending Approval" screen.
+     * @param status The status to filter by (e.g., "Submitted").
+     * @return A list of matching Purchase Orders.
      */
     @Query("SELECT po FROM PurchaseOrder po JOIN FETCH po.supplier WHERE po.status = :status ORDER BY po.poDate DESC")
     List<PurchaseOrder> findByStatus(@Param("status") String status);

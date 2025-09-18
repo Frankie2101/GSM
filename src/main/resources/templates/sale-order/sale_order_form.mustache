@@ -1,5 +1,9 @@
+{{!
+    Template for the Sale Order creation/editing form.
+}}
 <!DOCTYPE html>
 <html lang="en">
+{{! ... head section ... }}
 <head>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta charset="UTF-8">
@@ -15,6 +19,7 @@
     <div id="page-content-wrapper">
         {{> layout/header}}
         <main class="container-fluid p-4">
+            {{! Display success/error flash messages }}
             {{#successMessage}}
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     {{successMessage}}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -27,6 +32,8 @@
             {{/errorMessage}}
 
             {{#order}}
+
+            {{! ... Action buttons and form header ... }}
                 <div class="mb-2 d-flex align-items-center">
                     <h1 class="h5 mb-0 text-gradient-custom">
                         {{#saleOrderId}}Edit Sale Order{{/saleOrderId}}
@@ -45,12 +52,14 @@
                 </div>
 
                 <form action="/sale-orders/save" method="post" id="saleOrderForm">
+
+                    {{! ... CSRF token and hidden saleOrderId ... }}
                     {{#_csrf}}
                         <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
                     {{/_csrf}}
                     <input type="hidden" name="saleOrderId" value="{{#saleOrderId}}{{.}}{{/saleOrderId}}">
 
-                    <!-- ========== ORDER INFORMATION (HEADER) ========== -->
+                    {{! ... General order information fields ... }}
                     <div class="card mb-4">
                         <div class="card-header text-gradient-custom"><i class="bi bi-info-circle me-1"></i>Order Information</div>
                         <div class="card-body">
@@ -94,7 +103,6 @@
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="currencyCode" class="form-label">Currency</label>
-                                    {{! YÊU CẦU 2: Bỏ readonly để có thể sửa }}
                                     <input type="text" class="form-control" id="currencyCode" name="currencyCode" value="{{#currencyCode}}{{.}}{{/currencyCode}}" maxlength="3">
                                 </div>
                                 <div class="col-md-4 mb-3">
@@ -113,8 +121,11 @@
                     <div class="card mb-4">
                         <div class="card-header text-gradient-custom"><i class="bi bi-list-ul me-1"></i> Order Details</div>
                         <div class="card-body">
+                            {{!
+                               This container is intentionally left empty.
+                               JavaScript will dynamically create and insert all detail cards here.
+                            }}
                             <div id="detailsContainer">
-                                <!-- Details will be dynamically inserted here by JavaScript -->
                             </div>
                             <div class="mt-3">
                                 <button type="button" id="addDetailBtn" class="btn btn-custom-gradient rounded-pill px-3 py-2"><i class="bi bi-plus-circle me-1"></i> Add Product</button>
@@ -128,6 +139,12 @@
     </div>
 </div>
 {{> layout/scripts}}
+
+{{!
+    JSON Data Island.
+    The backend serializes the existing order details into this script tag.
+    JavaScript then reads this data to "hydrate" the form on page load.
+}}
 <script id="details-data" type="application/json">
     {{{detailsJson}}}
 </script>

@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * REST Controller that provides a full suite of API endpoints for managing Purchase Orders.
+ * This follows a RESTful design, with specific endpoints for actions and resources.
+ */
 @RestController
 @RequestMapping("/api/purchase_orders")
 public class PurchaseOrderApiController {
@@ -17,19 +21,30 @@ public class PurchaseOrderApiController {
     @Autowired
     private PurchaseOrderService purchaseOrderService;
 
-    // Lấy danh sách tất cả PO
+    /**
+     * API to get a list of all Purchase Orders.
+     * @return A list of all POs.
+     */
     @GetMapping
     public ResponseEntity<List<PurchaseOrderDto>> getAllPurchaseOrders() {
         return ResponseEntity.ok(purchaseOrderService.findAll());
     }
 
-    // THÊM MỚI: API để lấy thông tin chi tiết của 1 PO
+    /**
+     * API to get the full details of a single Purchase Order by its ID.
+     * @param id The ID of the PO.
+     * @return The detailed PO DTO.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<PurchaseOrderDto> getPurchaseOrderById(@PathVariable Long id) {
         return ResponseEntity.ok(purchaseOrderService.findById(id));
     }
 
-    // Lưu (tạo mới/cập nhật) PO
+    /**
+     * API to save (create a new or update an existing) Purchase Order.
+     * @param poDto The PO data sent in the request body.
+     * @return The saved PO DTO, or an error message.
+     */
     @PostMapping
     public ResponseEntity<?> savePurchaseOrder(@RequestBody PurchaseOrderDto poDto) {
         try {
@@ -39,7 +54,6 @@ public class PurchaseOrderApiController {
         }
     }
 
-    // Xóa PO
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePurchaseOrder(@PathVariable Long id) {
         try {
@@ -50,7 +64,12 @@ public class PurchaseOrderApiController {
         }
     }
 
-    // Trình duyệt PO
+    /**
+     * API for the business action of submitting a PO for approval.
+     * Using a dedicated endpoint like `/submit` is a good RESTful practice for state transitions.
+     * @param id The ID of the PO to submit.
+     * @return A success or error message.
+     */
     @PostMapping("/{id}/submit")
     public ResponseEntity<?> submitPurchaseOrder(@PathVariable Long id) {
         try {
@@ -61,13 +80,20 @@ public class PurchaseOrderApiController {
         }
     }
 
-    // Lấy danh sách PO đang chờ duyệt (status = Submitted)
+    /**
+     * API to get all POs that are pending approval (status = "Submitted").
+     * @return A list of pending POs.
+     */
     @GetMapping("/pending")
     public ResponseEntity<List<PurchaseOrderDto>> getPendingPurchaseOrders() {
         return ResponseEntity.ok(purchaseOrderService.findPendingApproval());
     }
 
-    // Duyệt PO
+    /**
+     * API for the business action of approving a PO.
+     * @param id The ID of the PO to approve.
+     * @return A success or error message.
+     */
     @PostMapping("/{id}/approve")
     public ResponseEntity<?> approvePurchaseOrder(@PathVariable Long id) {
         try {
@@ -78,7 +104,11 @@ public class PurchaseOrderApiController {
         }
     }
 
-    // Từ chối PO
+    /**
+     * API for the business action of rejecting a PO.
+     * @param id The ID of the PO to reject.
+     * @return A success or error message.
+     */
     @PostMapping("/{id}/reject")
     public ResponseEntity<?> rejectPurchaseOrder(@PathVariable Long id) {
         try {

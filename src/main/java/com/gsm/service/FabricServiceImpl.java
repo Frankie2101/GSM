@@ -20,6 +20,11 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+/**
+ * The concrete implementation of the {@link FabricService} interface.
+ * This class orchestrates all business logic for the Fabric feature,
+ * including validation, data mapping, and persistence.
+ */
 @Service
 public class FabricServiceImpl implements FabricService {
 
@@ -36,6 +41,7 @@ public class FabricServiceImpl implements FabricService {
         this.supplierRepository = supplierRepository;
     }
 
+    /** {@inheritDoc} */
     @Override
     @Transactional(readOnly = true)
     public List<FabricDto> findAll() {
@@ -49,6 +55,7 @@ public class FabricServiceImpl implements FabricService {
                 .collect(Collectors.toList());
     }
 
+    /** {@inheritDoc} */
     @Override
     @Transactional(readOnly = true)
     public FabricDto findById(Long id) {
@@ -57,28 +64,32 @@ public class FabricServiceImpl implements FabricService {
         return convertEntityToDto(fabric);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p><b>Use Case:</b> Executed when the user saves the fabric form.
+     * This implementation ensures data integrity by validating uniqueness and
+     * correctly synchronizing the nested list of fabric colors.
+     */
     @Override
     @Transactional
     public FabricDto save(FabricDto dto) {
-        // 1. Kiểm tra mã vải đã tồn tại hay chưa
+        // 1. Validate for duplicate fabric code before proceeding.
         fabricRepository.findByFabricCode(dto.getFabricCode()).ifPresent(existing -> {
             if (dto.getFabricId() == null || !existing.getFabricId().equals(dto.getFabricId())) {
                 throw new DuplicateResourceException("Fabric Code '" + dto.getFabricCode() + "' already exists.");
             }
         });
 
-        // 2. Tìm hoặc tạo mới entity Fabric
+        // 2. Fetch the existing entity for an update, or create a new one.
         Fabric fabric = (dto.getFabricId() != null)
                 ? fabricRepository.findById(dto.getFabricId())
                 .orElseThrow(() -> new ResourceNotFoundException("Fabric not found with id: " + dto.getFabricId()))
                 : new Fabric();
 
-        // 3. Map dữ liệu từ DTO sang Entity
+        // 3. Map simple properties from DTO to the entity.
         mapDtoToEntity(dto, fabric);
 
-        // 4. --- LOGIC ĐỒNG BỘ FABRIC COLORS CHÍNH XÁC ---
-
-        // Tạo một Map chứa các màu đang có trong DB để dễ dàng truy xuất
+        // 4. Synchronize the collection of child entities (FabricColors).
         Map<Long, FabricColor> existingColorsMap = fabric.getFabricColors().stream()
                 .collect(Collectors.toMap(FabricColor::getFabricColorId, color -> color));
 
@@ -89,7 +100,6 @@ public class FabricServiceImpl implements FabricService {
                 FabricColor color;
                 Long colorId = colorDto.getFabricColorId();
 
-                // A. Nếu màu từ form có ID -> Đây là màu CŨ, cần UPDATE
                 if (colorId != null) {
                     color = existingColorsMap.get(colorId);
                     if (color == null) {
@@ -97,13 +107,12 @@ public class FabricServiceImpl implements FabricService {
                         throw new ResourceNotFoundException("FabricColor not found with id: " + colorId);
                     }
                 }
-                // B. Nếu màu từ form KHÔNG có ID -> Đây là màu MỚI, cần ADD
                 else {
                     color = new FabricColor();
                     color.setFabric(fabric);
                 }
 
-                // Cập nhật/gán thông tin cho màu (cũ hoặc mới)
+                // Update properties for both new and existing colors.
                 color.setColor(colorDto.getColor());
                 color.setColorName(colorDto.getColorName());
                 color.setWidth(colorDto.getWidth());
@@ -113,20 +122,18 @@ public class FabricServiceImpl implements FabricService {
             }
         }
 
-        // Thao tác trên collection gốc của entity để `orphanRemoval` hoạt động
-        // JPA sẽ tự động phát hiện những màu nào bị thiếu và xóa chúng khỏi DB.
+        // By clearing and re-adding, use`orphanRemoval=true` in the Fabric entity
+        // to automatically delete any colors that were removed from the UI.
         fabric.getFabricColors().clear();
         fabric.getFabricColors().addAll(updatedColors);
 
-        // 5. Lưu lại Fabric, JPA sẽ tự động xử lý tất cả các thay đổi
+        // 5. Save the parent entity. JPA cascades all changes to the children.
         Fabric savedFabric = fabricRepository.save(fabric);
-
-        // Xả (flush) để đảm bảo dữ liệu được ghi xuống DB trước khi đọc lại
-        fabricRepository.flush();
 
         return convertEntityToDto(savedFabric);
     }
 
+    /** {@inheritDoc} */
     @Override
     @Transactional
     public void deleteByIds(List<Long> ids) {
@@ -138,6 +145,7 @@ public class FabricServiceImpl implements FabricService {
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     @Transactional(readOnly = true)
     public List<FabricDto> search(String keyword) {
@@ -155,6 +163,11 @@ public class FabricServiceImpl implements FabricService {
 
     // --- Helper Methods ---
 
+    /**
+     * Private helper to map data from a DTO to an existing Fabric entity.
+     * @param dto The source DTO.
+     * @param fabric The target entity.
+     */
     private void mapDtoToEntity(FabricDto dto, Fabric fabric) {
         Unit unit = unitRepository.findById(dto.getUnitId())
                 .orElseThrow(() -> new ResourceNotFoundException("Unit not found with ID: " + dto.getUnitId()));
@@ -176,8 +189,11 @@ public class FabricServiceImpl implements FabricService {
         fabric.setSupplier(supplier);
     }
 
-    // --- CÁC PHƯƠNG THỨC CONVERT HELPER ĐÃ SỬA LỖI ---
-
+    /**
+     * Private helper to convert a Fabric entity to a full DTO, including details.
+     * @param fabric The source entity.
+     * @return A detailed FabricDto.
+     */
     private FabricDto convertEntityToDto(Fabric fabric) {
         FabricDto dto = new FabricDto();
         dto.setFabricId(fabric.getFabricId());
@@ -211,7 +227,11 @@ public class FabricServiceImpl implements FabricService {
         return dto;
     }
 
-    // Phương thức này dùng cho trang danh sách (không cần chi tiết màu)
+    /**
+     * Private helper to convert a Fabric entity to a simple DTO for list views.
+     * @param fabric The source entity.
+     * @return A simplified FabricDto.
+     */
     private FabricDto convertEntityToDtoSimple(Fabric fabric) {
         FabricDto dto = new FabricDto();
         dto.setFabricId(fabric.getFabricId());
@@ -232,7 +252,11 @@ public class FabricServiceImpl implements FabricService {
         return dto;
     }
 
-    // Phương thức helper để convert FabricColor sang DTO
+    /**
+     * Private helper to convert a FabricColor entity to its DTO representation.
+     * @param color The source entity.
+     * @return A FabricColorDto.
+     */
     private FabricColorDto convertColorEntityToDto(FabricColor color) {
         FabricColorDto dto = new FabricColorDto();
         dto.setFabricColorId(color.getFabricColorId());

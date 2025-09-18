@@ -1,6 +1,11 @@
+{{!
+    This is the Mustache template for the BOM Template list page.
+    It displays a search bar and a table of all existing BOM templates.
+}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {{! ... Standard head elements ... }}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,6 +24,7 @@
                 <h1 class="h3 m-0"><i class="bi bi-journal-richtext me-2"></i>BOM Template</h1>
             </div>
 
+            {{! Search and actions card }}
             <div class="card mb-4">
                 <div class="card-body">
                     <form action="/bom-templates" method="get" id="searchForm">
@@ -37,9 +43,14 @@
                 </div>
             </div>
 
+            {{! Results card }}
             <div class="card">
                 <div class="card-header">Result</div>
                 <div class="card-body">
+
+                    {{!
+                        This form targets the delete endpoint and is controlled by JavaScript.
+                    }}
                     <form action="/bom-templates/delete" method="post" id="deleteForm">
                         <div class="table-responsive">
                             <table class="table table-hover">
@@ -54,6 +65,10 @@
                                 </tr>
                                 </thead>
                                 <tbody>
+
+                                {{!
+                                    Loop through the 'templates' list provided by the Controller.
+                                }}
                                 {{#templates}}
                                     <tr>
                                         <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox" name="selectedIds" value="{{bomTemplateId}}"></td>
@@ -67,6 +82,9 @@
                                     </tr>
                                 {{/templates}}
                                 {{^templates}}
+                                {{!
+                                    Inverted section: Displayed ONLY if the 'templates' list is empty.
+                                 }}
                                     <tr>
                                         <td colspan="6" class="text-center text-muted p-4">No templates found. Click 'Create' to add one.</td>
                                     </tr>

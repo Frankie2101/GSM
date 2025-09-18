@@ -20,15 +20,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller for handling all HTTP requests for the Fabric management feature.
+ * It is responsible for displaying views and processing user form submissions.
+ */
 @Controller
 @RequestMapping("/fabrics")
 public class FabricController {
 
     @Autowired private FabricService fabricService;
-    // THÊM MỚI: Inject các repository cần thiết cho dropdowns
     @Autowired private UnitRepository unitRepository;
     @Autowired private SupplierRepository supplierRepository;
 
+    /**
+     * Displays the list of all fabrics, with an optional keyword search.
+     * <p><b>Use Case:</b> The main landing page for fabric management.
+     *
+     * @param keyword Optional search term.
+     * @param model   The Spring Model for passing data to the view.
+     * @param request The HttpServletRequest for retrieving the CSRF token.
+     * @return The path to the fabric list view.
+     */
     @GetMapping
     public String showFabricList(@RequestParam(required = false) String keyword, Model model, HttpServletRequest request) {
         List<FabricDto> fabrics;
@@ -45,7 +57,13 @@ public class FabricController {
     }
 
     /**
-     * THÊM MỚI: Hiển thị form tạo mới hoặc chỉnh sửa Fabric.
+     * Displays the form for creating a new fabric or editing an existing one.
+     * <p><b>Use Case:</b> Called when a user clicks "Create" or "Edit".
+     *
+     * @param id      The ID of the fabric to edit (null for creation).
+     * @param model   The Spring Model.
+     * @param request The HttpServletRequest.
+     * @return The path to the fabric form view.
      */
     @GetMapping("/form")
     public String showFabricForm(@RequestParam(required = false) Long id, Model model, HttpServletRequest request) {
@@ -57,7 +75,6 @@ public class FabricController {
             fabric.setFabricColors(new ArrayList<>()); // Khởi tạo list rỗng
         }
 
-        // Logic xử lý Unit Dropdown
         List<Unit> allUnits = unitRepository.findAll();
         List<Map<String, Object>> unitOptions = new ArrayList<>();
         for (Unit unit : allUnits) {
@@ -70,7 +87,6 @@ public class FabricController {
             unitOptions.add(option);
         }
 
-        // Logic xử lý Supplier Dropdown
         List<Supplier> allSuppliers = supplierRepository.findAll();
         List<Map<String, Object>> supplierOptions = new ArrayList<>();
         for (Supplier supplier : allSuppliers) {
@@ -93,7 +109,12 @@ public class FabricController {
     }
 
     /**
-     * THÊM MỚI: Xử lý lưu thông tin Fabric.
+     * Processes the submission of the fabric form.
+     * <p><b>Use Case:</b> Called via POST when the user clicks "Save" on the form.
+     *
+     * @param fabricDto          The DTO populated with form data.
+     * @param redirectAttributes For passing flash messages after a redirect.
+     * @return A redirect string to the appropriate page.
      */
     @PostMapping("/save")
     public String saveFabric(@ModelAttribute FabricDto fabricDto, RedirectAttributes redirectAttributes) {
@@ -113,6 +134,14 @@ public class FabricController {
         }
     }
 
+    /**
+     * Deletes one or more fabrics based on a list of selected IDs.
+     * <p><b>Use Case:</b> Called when the user clicks "Delete" on the list page.
+     *
+     * @param ids                The list of fabric IDs to delete.
+     * @param redirectAttributes For passing flash messages.
+     * @return A redirect string back to the fabric list.
+     */
     @PostMapping("/delete")
     public String deleteFabrics(@RequestParam(value = "selectedIds", required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
         if (ids == null || ids.isEmpty()) {

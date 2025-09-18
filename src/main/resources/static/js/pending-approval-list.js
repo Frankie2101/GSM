@@ -1,7 +1,17 @@
+/**
+ * @fileoverview Manages the "Pending Approval POs" list page.
+ * It fetches the list of pending POs from an API and renders them into a table.
+ */
 document.addEventListener('DOMContentLoaded', function () {
+    // --- 1. INITIALIZATION & ELEMENT SELECTORS ---
     const tableBody = document.getElementById('pending-po-table-body');
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
 
-    // --- CÁC HÀM API ---
+    // --- 2. API HELPERS ---
+    /**
+     * A generic fetch wrapper to handle CSRF tokens and response parsing.
+     */
     async function fetchApi(url, options = {}) {
         try {
             const response = await fetch(url, {
@@ -20,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-
+    // --- 3. UI RENDERING ---
     function renderTable(pos) {
         tableBody.innerHTML = '';
         if (!pos || pos.length === 0) {
@@ -53,13 +63,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // --- XỬ LÝ SỰ KIỆN ---
     tableBody.addEventListener('click', function(event) {
         const target = event.target;
         const poId = target.closest('tr')?.dataset.poId;
 
         if (!poId) return;
-
         if (target.classList.contains('approve-btn')) {
             handleApproval(poId, 'approve');
         } else if (target.classList.contains('reject-btn')) {
@@ -86,25 +94,27 @@ document.addEventListener('DOMContentLoaded', function () {
                     `The PO has been ${action}d.`,
                     'success'
                 );
-                // Tải lại danh sách sau khi hành động thành công
                 loadPendingPOs();
             } catch (error) {
-                // Lỗi đã được hiển thị bởi fetchApi
             }
         }
     }
 
-    // --- HÀM TẢI DỮ LIỆU BAN ĐẦU ---
+    // --- 4. DATA LOADING ---
     async function loadPendingPOs() {
+        // Step 1: Display a "Loading..." message.
         tableBody.innerHTML = '<tr><td colspan="9" class="text-center p-5">Loading...</td></tr>';
         try {
+            // Step 2: Call the API endpoint for pending POs.
             const pendingPOs = await fetchApi('/api/purchase_orders/pending');
+            // Step 3: Render the table with the fetched data.
             renderTable(pendingPOs);
         } catch (error) {
+            // Step 4: If the API fails, show an error message.
             tableBody.innerHTML = '<tr><td colspan="9" class="text-center text-danger p-5">Failed to load data. Please try again.</td></tr>';
         }
     }
 
-    // --- KHỞI CHẠY ---
+    // --- 5. INITIALIZATION ---
     loadPendingPOs();
 });

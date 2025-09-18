@@ -10,9 +10,17 @@ import java.util.Optional;
 @Repository
 public interface SupplierRepository extends JpaRepository<Supplier, Long> {
 
-    // Spring Data JPA tự động cung cấp các phương thức CRUD cơ bản.
-    // Chúng ta có thể thêm các phương thức truy vấn tùy chỉnh ở đây nếu cần trong tương lai.
-    // Ví dụ: tìm nhà cung cấp theo mã.
+    /**
+     * Finds a Supplier by its unique business code.
+     * @param supplierCode The code of the supplier to find.
+     * @return An {@link Optional} containing the found supplier.
+     */
     Optional<Supplier> findBySupplierCode(String supplierCode);
+
+    /**
+     * Finds a Supplier by its unique name.
+     * @param supplierName The name of the supplier to find.
+     * @return An {@link Optional} containing the found supplier.
+     */
     Optional<Supplier> findBySupplierName(String supplierName);
 }

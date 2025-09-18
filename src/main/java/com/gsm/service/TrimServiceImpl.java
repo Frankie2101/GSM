@@ -19,9 +19,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+/**
+ * The concrete implementation of the {@link TrimService} interface.
+ * This class orchestrates all business logic for the Trim feature.
+ */
 @Service
 public class TrimServiceImpl implements TrimService {
 
@@ -38,6 +43,7 @@ public class TrimServiceImpl implements TrimService {
         this.supplierRepository = supplierRepository;
     }
 
+    /** {@inheritDoc} */
     @Override
     @Transactional(readOnly = true)
     public List<TrimDto> findAll() {
@@ -51,6 +57,7 @@ public class TrimServiceImpl implements TrimService {
                 .collect(Collectors.toList());
     }
 
+    /** {@inheritDoc} */
     @Override
     @Transactional(readOnly = true)
     public TrimDto findById(Long id) {
@@ -59,47 +66,77 @@ public class TrimServiceImpl implements TrimService {
         return convertEntityToDto(trim);
     }
 
+    /**
+     * {@inheritDoc}
+     * This method now uses an intelligent synchronization strategy for variants,
+     * consistent with other services. It correctly handles updates, additions, and deletions.
+     */
     @Override
     @Transactional
     public TrimDto save(TrimDto dto) {
+        // 1. Validate for duplicate trim code.
         trimRepository.findByTrimCode(dto.getTrimCode()).ifPresent(existing -> {
             if (dto.getTrimId() == null || !existing.getTrimId().equals(dto.getTrimId())) {
                 throw new DuplicateResourceException("Trim Code '" + dto.getTrimCode() + "' already exists.");
             }
         });
 
+        // 2. Fetch the existing entity for an update, or create a new one.
         Trim trim = (dto.getTrimId() != null)
-                ? trimRepository.findById(dto.getTrimId()).orElseGet(Trim::new)
+                ? trimRepository.findById(dto.getTrimId())
+                .orElseThrow(() -> new ResourceNotFoundException("Trim not found with id: " + dto.getTrimId()))
                 : new Trim();
 
+        // 3. Map simple properties from DTO to the entity.
         mapDtoToEntity(dto, trim);
 
-        // Logic xử lý dải size
+        // Pre-process variants to handle comma-separated size codes
         List<TrimVariantDto> processedVariants = new ArrayList<>();
         if (dto.getVariants() != null) {
-            dto.getVariants().forEach(variantDto -> {
-                String[] sizeCodes = variantDto.getSizeCode().split("\\s*,\\s*");
-                Arrays.stream(sizeCodes)
-                        .filter(size -> !size.trim().isEmpty())
-                        .forEach(size -> {
+            dto.getVariants().stream()
+                    .filter(variantDto -> variantDto.getSizeCode() != null && !variantDto.getSizeCode().trim().isEmpty())
+                    .forEach(variantDto -> {
+                        String[] sizeCodes = variantDto.getSizeCode().split("\\s*,\\s*");
+                        boolean isFirstSize = true;
+                        for (String size : sizeCodes) {
+                            if (size.trim().isEmpty()) continue;
                             TrimVariantDto newDto = new TrimVariantDto();
-                            newDto.setTrimVariantId(variantDto.getTrimVariantId());
                             newDto.setColorCode(variantDto.getColorCode());
                             newDto.setColorName(variantDto.getColorName());
-                            newDto.setSizeCode(size.trim());
                             newDto.setNetPrice(variantDto.getNetPrice());
                             newDto.setTaxRate(variantDto.getTaxRate());
+                            newDto.setSizeCode(size.trim());
+                            if (isFirstSize) {
+                                newDto.setTrimVariantId(variantDto.getTrimVariantId());
+                                isFirstSize = false;
+                            } else {
+                                newDto.setTrimVariantId(null);
+                            }
                             processedVariants.add(newDto);
-                        });
-            });
+                        }
+                    });
         }
 
-        // Logic đồng bộ hóa
+        // 4.VARIANT SYNCHRONIZATION LOGIC ---
+
+        // Create a map of existing variants for quick lookups.
+        Map<Long, TrimVariant> existingVariantsMap = trim.getVariants().stream()
+                .collect(Collectors.toMap(TrimVariant::getTrimVariantId, v -> v));
+
         List<TrimVariant> variantsToSave = new ArrayList<>();
-        for(TrimVariantDto variantDto : processedVariants) {
-            TrimVariant variant = new TrimVariant();
-            // Logic tìm variant cũ nếu có ID sẽ phức tạp hơn khi tách size,
-            // nên ta dùng chiến lược xóa hết thêm lại cho đơn giản và an toàn.
+        for (TrimVariantDto variantDto : processedVariants) {
+            TrimVariant variant;
+            Long variantId = variantDto.getTrimVariantId();
+
+            if (variantId != null) {
+                variant = existingVariantsMap.get(variantId);
+                if (variant == null) {
+                    throw new ResourceNotFoundException("TrimVariant not found with id: " + variantId);
+                }
+            } else {
+                variant = new TrimVariant();
+                variant.setTrim(trim);
+            }
             variant.setColorCode(variantDto.getColorCode());
             variant.setColorName(variantDto.getColorName());
             variant.setSizeCode(variantDto.getSizeCode());
@@ -109,12 +146,13 @@ public class TrimServiceImpl implements TrimService {
         }
 
         trim.getVariants().clear();
-        variantsToSave.forEach(trim::addVariant);
+        trim.getVariants().addAll(variantsToSave);
 
         Trim savedTrim = trimRepository.save(trim);
         return convertEntityToDto(savedTrim);
     }
 
+    /** {@inheritDoc} */
     @Override
     @Transactional
     public void deleteByIds(List<Long> ids) {
@@ -126,6 +164,7 @@ public class TrimServiceImpl implements TrimService {
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     @Transactional(readOnly = true)
     public List<TrimDto> search(String keyword) {
@@ -141,6 +180,11 @@ public class TrimServiceImpl implements TrimService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Private helper to map data from a DTO to an existing Trim entity.
+     * @param dto The source DTO.
+     * @param trim The target entity.
+     */
     private void mapDtoToEntity(TrimDto dto, Trim trim) {
         Unit unit = unitRepository.findById(dto.getUnitId())
                 .orElseThrow(() -> new ResourceNotFoundException("Unit not found with ID: " + dto.getUnitId()));
@@ -154,6 +198,11 @@ public class TrimServiceImpl implements TrimService {
         trim.setTechnicalReference(dto.getTechnicalReference());
     }
 
+    /**
+     * Private helper to convert a Trim entity to a full DTO, including details.
+     * @param trim The source entity.
+     * @return A detailed TrimDto.
+     */
     private TrimDto convertEntityToDto(Trim trim) {
         TrimDto dto = convertEntityToDtoSimple(trim);
         if (trim.getVariants() != null) {
@@ -164,6 +213,11 @@ public class TrimServiceImpl implements TrimService {
         return dto;
     }
 
+    /**
+     * Private helper to convert a Trim entity to a simple DTO for list views.
+     * @param trim The source entity.
+     * @return A simplified TrimDto.
+     */
     private TrimDto convertEntityToDtoSimple(Trim trim) {
         TrimDto dto = new TrimDto();
         dto.setTrimId(trim.getTrimId());
@@ -181,6 +235,11 @@ public class TrimServiceImpl implements TrimService {
         return dto;
     }
 
+    /**
+     * Private helper to convert a TrimVariant entity to its DTO representation.
+     * @param variant The source entity.
+     * @return A TrimVariantDto.
+     */
     private TrimVariantDto convertVariantEntityToDto(TrimVariant variant) {
         TrimVariantDto dto = new TrimVariantDto();
         dto.setTrimVariantId(variant.getTrimVariantId());

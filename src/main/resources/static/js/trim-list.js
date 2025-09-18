@@ -1,9 +1,15 @@
+/**
+ * @fileoverview Provides interactivity for the trim_list.mustache page.
+ * Handles the "select all" checkbox and the delete confirmation dialog.
+ */
 document.addEventListener('DOMContentLoaded', function() {
+    // --- Element Selectors ---
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
     const rowCheckboxes = document.querySelectorAll('.row-checkbox');
     const deleteForm = document.getElementById('deleteForm');
     const deleteBtn = document.getElementById('deleteBtn');
 
+    // --- Event Listener for "Select All" checkbox ---
     if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', function() {
             rowCheckboxes.forEach(checkbox => {
@@ -12,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // --- Event Listener for the main "Delete" button ---
     if (deleteBtn && deleteForm) {
         deleteBtn.addEventListener('click', function() {
             const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
@@ -27,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            // Show confirmation dialog before submitting the form.
             Swal.fire({
                 title: `Delete ${count} Trim(s)?`,
                 text: `This action cannot be undone.`,

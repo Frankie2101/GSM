@@ -1,6 +1,11 @@
+{{!
+    This is the Mustache template for the BOM List page.
+    It displays a simple, read-only list of all Order BOMs that have been created.
+}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {{! ... Head elements ... }}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BOM List - Garment Simple MES</title>
@@ -23,8 +28,7 @@
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table
-table-hover align-middle">
+                        <table class="table table-hover align-middle">
                             <thead class="table-light">
                             <tr>
                                 <th style="width: 5%;">Seq</th>
@@ -37,13 +41,17 @@ table-hover align-middle">
                             </thead>
                             <tbody>
 
+                            {{!
+                                Loop through the 'orderBOMs' list provided by the Controller.
+                            }}
                             {{#orderBOMs}}
                                 <tr>
-                                    <td>{{#index}}{{/index}}</td>
+                                    <td>{{sequenceNumber}}</td>
                                     <td>{{saleOrderNo}}</td>
                                     <td>{{bomTemplateName}}</td>
 
                                     <td class="text-center">
+                                        {{! The link navigates back to the Order BOM form for viewing/editing }}
                                         <a href="/order-boms/form?saleOrderId={{saleOrderId}}" class="action-link">View</a>
                                     </td>
 
@@ -51,6 +59,9 @@ table-hover align-middle">
                             {{/orderBOMs}}
                             {{^orderBOMs}}
 
+                            {{!
+                               Inverted section: This is displayed ONLY if the 'orderBOMs' list is empty.
+                            }}
                                 <tr>
                                     <td colspan="4" class="text-center p-4">No BOMs found.</td>
                                 </tr>

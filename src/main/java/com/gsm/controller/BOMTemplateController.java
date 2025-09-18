@@ -18,6 +18,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller for handling all user-facing HTTP requests for the BOM Template feature.
+ */
 @Controller
 @RequestMapping("/bom-templates")
 public class BOMTemplateController {
@@ -25,6 +28,10 @@ public class BOMTemplateController {
     @Autowired private BOMTemplateService bomTemplateService;
     @Autowired private ProductCategoryRepository categoryRepository;
 
+    /**
+     * Displays the form for creating a new BOM Template or editing an existing one.
+     * <p><b>Use Case:</b> Called when a user clicks "Create" or "Edit".
+     */
     @GetMapping("/form")
     public String showBomTemplateForm(@RequestParam(required = false) Long id, Model model, HttpServletRequest request) {
         BOMTemplateDto template;
@@ -35,7 +42,7 @@ public class BOMTemplateController {
             template.setDetails(new ArrayList<>());
         }
 
-        // Logic xử lý Product Category Dropdown
+        // Logic to prepare the Product Category dropdown and pre-select the correct option.
         List<ProductCategory> allCategories = categoryRepository.findAll();
         List<Map<String, Object>> categoryOptions = new ArrayList<>();
         for (ProductCategory category : allCategories) {
@@ -56,6 +63,10 @@ public class BOMTemplateController {
         return "bom-template/bom_template_form";
     }
 
+    /**
+     * Processes the submission of the BOM Template form.
+     * <p><b>Use Case:</b> Called via POST when the user clicks "Save" on the form.
+     */
     @PostMapping("/save")
     public String saveBomTemplate(@ModelAttribute BOMTemplateDto bomTemplateDto, RedirectAttributes redirectAttributes) {
         try {
@@ -72,6 +83,10 @@ public class BOMTemplateController {
         }
     }
 
+    /**
+     * Displays the list of all BOM Templates, with optional filtering.
+     * <p><b>Use Case:</b> The main landing page for BOM Template management.
+     */
     @GetMapping
     public String showBomTemplateList(@RequestParam(required = false) String keyword, Model model, HttpServletRequest request) {
         List<BOMTemplateDto> templates;
@@ -87,6 +102,10 @@ public class BOMTemplateController {
         return "bom-template/bom_template_list";
     }
 
+    /**
+     * Deletes one or more BOM Templates based on a list of selected IDs.
+     * <p><b>Use Case:</b> Called when the user clicks "Delete" on the list page.
+     */
     @PostMapping("/delete")
     public String deleteBomTemplates(@RequestParam(value = "selectedIds", required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
         if (ids == null || ids.isEmpty()) {

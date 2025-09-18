@@ -1,9 +1,14 @@
+/**
+ * @fileoverview A client-side application to manage the entire Purchase Order form UI.
+ * This script handles data hydration, dynamic UI rendering, cascading dropdowns with lazy loading,
+ * real-time calculations, and all API interactions for saving and state changes.
+ */
 document.addEventListener('DOMContentLoaded', function() {
-    // --- KHAI BÁO BIẾN VÀ ELEMENT ---
-    const poData = JSON.parse(document.getElementById('po-data').textContent);
+
+    // --- 1. INITIALIZATION: Get elements and initial data from the JSON data island ---    const poData = JSON.parse(document.getElementById('po-data').textContent);
     console.log("Loaded PO Data from Server:", poData);
 
-    // Form elements
+    // ... element selectors ..
     const poForm = document.getElementById('poForm');
     const poNumberSpan = document.getElementById('poNumberSpan');
     const idInput = document.getElementById('purchaseOrderId');
@@ -27,9 +32,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteSelectedDetailsBtn = document.getElementById('deleteSelectedDetailsBtn');
     const printBtn = document.getElementById('printPoBtn');
 
-    // --- CÁC HÀM GỌI API ---
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+    // --- 2. API HELPERS ---
     async function fetchApi(url, options = {}) {
-        const defaultOptions = { headers: { 'Content-Type': 'application/json' } };
+        const defaultOptions = {
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            }
+        };
         const response = await fetch(url, { ...defaultOptions, ...options });
         if (!response.ok) {
             const errorText = await response.text();
@@ -39,6 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return response.json();
     }
 
+    /** Fetches the list of all suppliers for the main dropdown. */
     async function loadSuppliers() {
         try {
             const suppliers = await fetchApi('/api/suppliers');
@@ -57,9 +71,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- CÁC HÀM XỬ LÝ GIAO DIỆN ---
+    /** A reusable number formatter for displaying currency values. */
     const numberFormatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+    /** Creates and appends a single, fully functional detail row to the table. */
     function createAndAppendRow(detail = {}) {
         const row = tableBody.insertRow();
         row.dataset.detailId = detail.purchaseOrderDetailId || '';
@@ -107,6 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    /** Renders the initial state of the details table from a data array. */
     function renderDetailsTable(details = []) {
         tableBody.innerHTML = '';
         if (details && details.length > 0) {
@@ -115,8 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateAllLineAmounts();
     }
 
-    // THAY THẾ hàm populateDropdownIfNeeded cũ bằng hàm này
-
+    /** Lazily populates a dropdown with data from an API call, only runs once per dropdown. */
     async function populateDropdownIfNeeded(selectElement, apiCall) {
         if (selectElement.dataset.loaded === 'true' && !apiCall) return;
 
@@ -132,7 +147,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const text = item.code || item.name || item.size;
                 const option = new Option(text, value);
 
-                // Gán price và taxRate vào dataset của option
                 if (item.price !== undefined) option.dataset.price = item.price;
                 if (item.taxRate !== undefined) option.dataset.taxRate = item.taxRate;
 
@@ -147,6 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    /** The series of cascading logic functions. */
     async function handleMaterialTypeChange(typeSelect) {
         const row = typeSelect.closest('tr');
         const codeSelect = row.querySelector('.material-code-select');
@@ -196,8 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
         await populateDropdownIfNeeded(sizeSelect, () => fetchApi(`/api/material-sizes?trimId=${materialId}&colorCode=${colorCode}`));
     }
 
-    // --- CÁC HÀM TÍNH TOÁN VÀ ĐỊNH DẠNG ---
-
+    /** Calculates the total amount for a single row. */
     function updateLineAmount(row) {
         const qty = parseFloat(row.querySelector('.qty-input').value.replace(/,/g, '')) || 0;
         const price = parseFloat(row.querySelector('.price-input').value.replace(/,/g, '')) || 0;
@@ -206,11 +220,13 @@ document.addEventListener('DOMContentLoaded', function() {
         row.querySelector('.line-amount').value = numberFormatter.format(amount);
     }
 
+    /** Recalculates all line amounts and the grand total. */
     function updateAllLineAmounts() {
         tableBody.querySelectorAll('tr').forEach(updateLineAmount);
         updateTotalAmount();
     }
 
+    /** Calculates the grand total of the entire PO. */
     function updateTotalAmount() {
         let total = 0;
         tableBody.querySelectorAll('.line-amount').forEach(input => {
@@ -219,8 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
         totalAmountInput.value = numberFormatter.format(total);
     }
 
-    // Thêm hàm này vào khu vực "CÁC HÀM XỬ LÝ GIAO DIỆN"
-
+    /** Updates the price and tax fields based on the selected option in a dropdown. */
     function updatePriceAndTaxFromSelection(selectElement) {
         const row = selectElement.closest('tr');
         const priceInput = row.querySelector('.price-input');
@@ -228,7 +243,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const selectedOption = selectElement.options[selectElement.selectedIndex];
 
-        // Nếu không chọn gì, reset giá trị
         if (!selectedOption || !selectedOption.value) {
             priceInput.value = numberFormatter.format(0);
             taxInput.value = 0;
@@ -242,10 +256,10 @@ document.addEventListener('DOMContentLoaded', function() {
         priceInput.value = numberFormatter.format(parseFloat(price));
         taxInput.value = taxRate;
 
-        // Gọi hàm tính lại tổng tiền của dòng và toàn bộ đơn hàng
         updateAllLineAmounts();
     }
 
+    /** Enables or disables all form fields based on the PO status. */
     function setFormReadOnly(readOnly) {
         poForm.querySelectorAll('input, select').forEach(el => {
             if (el.id !== 'status') el.disabled = readOnly;
@@ -262,12 +276,16 @@ document.addEventListener('DOMContentLoaded', function() {
         selectAllDetailsCheckbox.closest('th').style.display = readOnly ? 'none' : 'table-cell';
     }
 
-    // --- HÀM KHỞI TẠO CHÍNH ---
+    // --- 4. MAIN INITIALIZATION FUNCTION ---
+    /**
+     * The main function that runs on page load to set up the entire form.
+     */
     async function initializeForm() {
+        // Step 1: Asynchronously load the suppliers list for the main dropdown.
         await loadSuppliers();
         const isNew = !poData.purchaseOrderId;
 
-        // Điền dữ liệu header
+        // Step 2: Populate all header fields from the poData object.
         poNumberSpan.textContent = poData.purchaseOrderNo || '(New)';
         idInput.value = poData.purchaseOrderId || '';
         poNoInput.value = poData.purchaseOrderNo || '';
@@ -277,36 +295,39 @@ document.addEventListener('DOMContentLoaded', function() {
         statusInput.value = poData.status || 'New';
 
         if (poData.poDate) {
-            // Code này xử lý cả trường hợp backend trả về dạng chuỗi "2025-08-31"
-            // hay dạng mảng [2025, 8, 31]
             let dateValue = poData.poDate;
             if (Array.isArray(dateValue)) {
                 const [year, month, day] = dateValue;
                 dateValue = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             }
-            // Đảm bảo chỉ lấy phần YYYY-MM-DD nếu có thông tin giờ giấc đi kèm
             poDateInput.value = dateValue.split('T')[0];
         } else if (isNew) {
             poDateInput.value = new Date().toISOString().split('T')[0];
         }
 
+        // Step 3: Render the initial details table using the data from the server.
         renderDetailsTable(poData.details);
 
+        // Step 4: Determine the PO's status and set the form's interactivity.
         const status = statusInput.value;
         if (status === 'New' || status === 'Rejected') {
+            // If the PO is editable, enable fields and show relevant buttons.
             setFormReadOnly(false);
             saveBtn.style.display = 'inline-block';
             submitBtn.style.display = 'inline-block';
         } else {
+            // If the PO is submitted/approved, lock the form.
             setFormReadOnly(true);
             saveBtn.style.display = 'none';
             submitBtn.style.display = 'none';
         }
+
+        // Step 5: Show the print button only for existing POs.
         if (!isNew) {
             printBtn.style.display = 'inline-block';
         }
 
-// Thêm sự kiện click cho nút Print
+        // Step 6: Attach the click event to the Print button.
         printBtn.addEventListener('click', () => {
             const poId = idInput.value;
             if (poId) {
@@ -315,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- XỬ LÝ SỰ KIỆN ---
+    // --- 5. EVENT LISTENERS ---
 
     supplierSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
@@ -332,13 +353,11 @@ document.addEventListener('DOMContentLoaded', function() {
             await handleMaterialCodeChange(target);
         } else if (target.classList.contains('color-select')) {
             await handleColorChange(target);
-            // Với Vải (FA), giá được xác định ngay khi chọn màu
             const type = row.querySelector('.material-type-select').value;
             if (type === 'FA') {
                 updatePriceAndTaxFromSelection(target);
             }
         } else if (target.classList.contains('size-select')) {
-            // Với Phụ liệu (TR), giá được xác định khi chọn size
             updatePriceAndTaxFromSelection(target);
         }
     });
@@ -429,8 +448,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    /**
+     * Listener for the "Save" button.
+     */
     saveBtn.addEventListener('click', async () => {
-        const details = Array.from(tableBody.rows).map(row => {
+             // 1. Collect all data from the detail rows into a structured array.
+            const details = Array.from(tableBody.rows).map(row => {
             const materialType = row.querySelector('.material-type-select').value;
             const materialId = parseInt(row.querySelector('.material-code-select').value);
             const qty = parseFloat(row.querySelector('.qty-input').value.replace(/,/g, '')) || 0;
@@ -450,6 +473,7 @@ document.addEventListener('DOMContentLoaded', function() {
             };
         });
 
+        // 2. Collect all data from the header fields.
         const payload = {
             purchaseOrderId: idInput.value ? parseInt(idInput.value) : null,
             purchaseOrderNo: poNoInput.value,
@@ -462,19 +486,25 @@ document.addEventListener('DOMContentLoaded', function() {
             details: details
         };
 
+        // 3. Submit the complete payload to the save API.
         try {
             const savedPo = await fetchApi('/api/purchase_orders', {
                 method: 'POST',
                 body: JSON.stringify(payload)
             });
+            // 4. On success, show a message and reload to the edit page.
             Swal.fire('Success!', 'Purchase Order saved successfully.', 'success').then(() => {
                 window.location.href = `/purchase_orders/form?id=${savedPo.purchaseOrderId}`;
             });
         } catch (e) {
+            // 5. On failure, show an error message.
             Swal.fire('Error!', `Failed to save Purchase Order: ${e.message}`, 'error');
         }
     });
 
+    /**
+     * Listener for the "Submit for Approval" button.
+     */
     submitBtn.addEventListener('click', () => {
         const poId = idInput.value;
         if (!poId) {
@@ -491,7 +521,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    // SỬA DÒNG NÀY: Thêm /api vào trước URL
                     await fetchApi(`/api/purchase_orders/${poId}/submit`, { method: 'POST' });
                     Swal.fire('Submitted!', 'The PO has been submitted for approval.', 'success')
                         .then(() => window.location.reload());
@@ -502,7 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- CHẠY KHỞI TẠO ---
+    // --- 6. RUN INITIALIZATION ---
     initializeForm();
 });
 

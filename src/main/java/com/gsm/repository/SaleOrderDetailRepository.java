@@ -12,6 +12,14 @@ import java.util.Map;
 @Repository
 public interface SaleOrderDetailRepository extends JpaRepository<SaleOrderDetail, Long> {
 
+    /**
+     * Finds a distinct list of styles (product names) and colors for a given sale order.
+     * This query uses a JPQL "constructor expression" (`new map(...)`) to directly create a
+     * list of maps from the query result, which is more efficient than returning Object[] arrays.
+     *
+     * @param saleOrderId The ID of the sale order to query.
+     * @return A list of Maps, where each map has two keys: "style" and "color".
+     */
     @Query("SELECT DISTINCT new map(pv.product.productName as style, pv.color as color) " +
             "FROM SaleOrderDetail sod " +
             "JOIN sod.productVariant pv " +

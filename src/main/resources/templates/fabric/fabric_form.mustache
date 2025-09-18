@@ -1,6 +1,12 @@
+{{!
+    This is the Mustache template for the Fabric creation and editing form.
+    It renders the main layout, input fields for fabric information, and a dynamic
+    table for managing fabric colors.
+}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {{! Standard head elements: SweetAlert2, Bootstrap, custom CSS }}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,10 +18,17 @@
 
 <body>
 <div class="d-flex" id="wrapper">
+    {{! Import the sidebar template }}
     {{> layout/sidebar}}
     <div id="page-content-wrapper">
+        {{! Import the header template }}
         {{> layout/header}}
+
         <main class="container-fluid p-4">
+            {{!
+                Display success/error messages passed from the controller via RedirectAttributes.
+                These are dismissible alerts for a better user experience.
+            }}
             {{#successMessage}}
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     {{successMessage}}
@@ -28,10 +41,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {{/errorMessage}}
+
             {{#fabric}}
                 <div class="mb-2 d-flex align-items-center">
                     <h1 class="h5 mb-0 text-gradient-custom">
+                        {{! Conditional title: Show "Edit Fabric" if fabricId exists (edit mode) }}
                         {{#fabricId}}Edit Fabric{{/fabricId}}
+                        {{! Otherwise, show "Create New Fabric" (create mode) }}
                         {{^fabricId}}Create New Fabric{{/fabricId}}
                     </h1>
                 </div>
@@ -39,17 +55,22 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <a href="/fabrics" class="btn btn-link-custom"><i class="bi bi-arrow-left me-1"></i>Back</a>
                     <div>
+                        {{! The submit button for the form below }}
                         <button type="submit" form="fabricForm" class="btn btn-custom-gradient rounded-pill px-4 py-2">Save</button>
                     </div>
                 </div>
 
                 <form action="/fabrics/save" method="post" id="fabricForm">
+                    {{!
+                        Hidden input for CSRF protection. Spring Security provides the _csrf object.
+                    }}
                     {{#_csrf}}
                         <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
                     {{/_csrf}}
+
+                    {{! Hidden input to submit the fabricId during an update }}
                     <input type="hidden" name="fabricId" value="{{#fabricId}}{{.}}{{/fabricId}}">
 
-                    <!-- ========== FABRIC INFORMATION ========== -->
                     <div class="card mb-4">
                         <div class="card-header text-gradient-custom"><i class="bi bi-info-circle me-1"></i>Fabric Information</div>
                         <div class="card-body">
@@ -118,6 +139,7 @@
                             <div class="table-responsive">
                                 <table class="table table-bordered table-hover">
                                     <thead class="table-light">
+                                    {{! Table headers for the colors detail section }}
                                     <tr>
                                         <th style="width: 5%;" class="text-center align-middle"><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
                                         <th style="width: 20%;">Color Code <span class="text-danger">*</span></th>
@@ -130,14 +152,24 @@
                                     </thead>
 
                                     <tbody id="fabricColorTableBody">
+                                    {{!
+                                       Loop through the 'fabricColors' list within the main 'fabric' object.
+                                       This renders the existing color rows when in edit mode.
+                                   }}
                                     {{#fabricColors}}
                                         <tr>
                                             <td class="text-center align-middle">
                                                 <input class="form-check-input row-checkbox" type="checkbox">
                                             </td>
 
-                                            {{! SỬA LẠI: Dùng data-name thay vì name cho tất cả các input }}
+                                            {{!
+                                               Hidden input to hold the ID of each color row.
+                                             }}
                                             <input type="hidden" data-name="fabricColorId" value="{{#fabricColorId}}{{.}}{{/fabricColorId}}">
+                                            {{!
+                                                Inputs use 'data-name' instead of 'name'. The actual 'name' attribute
+                                                (e.g., "fabricColors[0].color") will be generated by JavaScript.
+                                            }}
                                             <td><input type="text" data-name="color" value="{{#color}}{{.}}{{/color}}" class="form-control" required></td>
                                             <td><input type="text" data-name="colorName" value="{{#colorName}}{{.}}{{/colorName}}" class="form-control"></td>
                                             <td><input type="text" data-name="width" value="{{#width}}{{.}}{{/width}}" class="form-control"></td>
@@ -154,6 +186,7 @@
                                 </table>
                             </div>
                             <div class="mt-3">
+                                {{! Buttons to dynamically add/remove rows using JavaScript }}
                                 <button type="button" id="add-color-btn" class="btn btn-custom-gradient rounded-pill px-3 py-2 me-2"><i class="bi bi-plus-circle me-1"></i> New Detail</button>
                                 <button type="button" id="delete-selected-btn" class="btn btn-delete-gradient rounded-pill px-3 py-2"><i class="bi bi-trash me-1"></i> Delete</button>
                             </div>
@@ -166,6 +199,7 @@
     </div>
 </div>
 {{> layout/scripts}}
+{{! Link to the specific JavaScript file for this page's interactivity }}
 <script src="/js/fabric-form.js"></script>
 </body>
 </html>

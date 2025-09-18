@@ -1,8 +1,10 @@
-// Hiện tại, trang danh sách Order BOM không yêu cầu JavaScript phức tạp.
-// File này được tạo để duy trì cấu trúc và có thể mở rộng trong tương lai
-// nếu có các chức năng như tìm kiếm, xóa, hoặc phân trang.
-
+/**
+ * @fileoverview JavaScript for the Order BOM list page.
+ * Currently, this page does not require complex client-side interactions.
+ * This file is created to maintain a consistent structure and can be expanded
+ * in the future if features like search, delete, or pagination are added.
+ */
 document.addEventListener('DOMContentLoaded', function() {
+    // This log confirms that the script is loaded and running.
     console.log('Order BOM list page loaded.');
-    // Sẵn sàng cho các chức năng trong tương lai.
 });

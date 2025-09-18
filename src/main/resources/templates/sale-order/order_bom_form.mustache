@@ -1,10 +1,16 @@
+{{!
+    Template for the Order BOM creation/editing form.
+    This UI is highly dynamic, built and managed by order-bom-form.js.
+}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {{! CSRF tokens are placed in meta tags for easy access by JavaScript fetch API }}
     {{#_csrf}}
         <meta name="_csrf" content="{{token}}">
         <meta name="_csrf_header" content="{{headerName}}">
     {{/_csrf}}
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create BOM - Garment Simple MES</title>
@@ -19,6 +25,8 @@
     <div id="page-content-wrapper">
         {{> layout/header}}
         <main class="container-fluid p-4">
+
+            {{! ... success/error messages ... }}
             {{#successMessage}}
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     {{successMessage}}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -31,7 +39,9 @@
             {{/errorMessage}}
 
             {{#orderBOM}}
+
                 <form action="/order-boms/save" method="post" id="orderBOMForm">
+                    {{! ... hidden inputs for CSRF, orderBOMId, saleOrderId ... }}
                     {{#_csrf}}
                         <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
                     {{/_csrf}}
@@ -55,6 +65,7 @@
                                     <input type="text" class="form-control" value="{{saleOrderNo}}" readonly>
                                 </div>
                                 <div class="col-md-4">
+                                    {{! Selecting a template will trigger a JS event to load details }}
                                     <label for="bomTemplateId" class="form-label">BOM Template</label>
                                     <select class="form-select" id="bomTemplateId" name="bomTemplateId" required>
                                         <option value="">-- Please select --</option>
@@ -73,6 +84,8 @@
                             <div class="table-responsive">
                                 <table class="table table-bordered table-hover table-modern">
                                     <thead class="table-light">
+
+                                    {{! Table headers for the extensive BOM details }}
                                     <tr>
                                         <th style="width: 2%;" class="align-middle text-center"><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
                                         <th class="col-narrow">Seq</th>
@@ -96,10 +109,14 @@
                                         <th class="col-normal text-center">Action</th>
                                     </tr>
                                     </thead>
+
+                                    {{! The table body is intentionally empty. JS will populate it. }}
                                     <tbody id="bomDetailTableBody">
                                     </tbody>
                                 </table>
                             </div>
+
+                            {{! ... Add/Delete buttons for dynamic rows ... }}
                             <div class="mt-3">
                                 <button type="button" id="addDetailBtn" class="btn btn-custom-gradient rounded-pill px-3 py-2 btn-sm me-2">
                                     <i class="bi bi-plus-circle me-1"></i> Add Detail
@@ -163,10 +180,19 @@
 </div>
 {{> layout/scripts}}
 
+{{!
+    JSON Data Island for initial details.
+    Used to "hydrate" the form with existing data when in edit mode.
+}}
+
 <script id="initial-bom-details" type="application/json">
     {{{detailsJson}}}
 </script>
 
+{{!
+    HTML <template> tags are used as client-side templates for dropdown options.
+    JS clones the content of these templates to efficiently populate selects in new rows.
+}}
 <template id="units-data-template">
     <option value="">-- Unit --</option>
     {{#units}}<option value="{{unitName}}">{{unitName}}</option>{{/units}}

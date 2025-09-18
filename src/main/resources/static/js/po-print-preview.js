@@ -1,16 +1,22 @@
+/**
+ * @fileoverview This script handles the "Export to PDF" functionality on the
+ * purchase order print preview page, using the html2canvas and jsPDF libraries.
+ */
 document.addEventListener('DOMContentLoaded', function () {
+    // --- 1. INITIALIZATION & ELEMENT SELECTORS ---
     const exportBtn = document.getElementById('exportPdfBtn');
     if (!exportBtn) return;
 
+    /**
+     * Event listener for the "Export to PDF" button.
+     */
     function handleExport() {
         const { jsPDF } = window.jspdf;
         const printArea = document.getElementById('poPrintArea');
 
-        // --- SỬA LẠI LOGIC LẤY TÊN FILE TẠI ĐÂY ---
         const poNumberElement = document.getElementById('poNumberForFileName');
         const poNumber = poNumberElement ? poNumberElement.textContent.trim() : 'UnknownPO';
         const fileName = `PO_${poNumber}.pdf`;
-        // ------------------------------------------
 
         Swal.fire({
             title: 'Generating PDF...',
@@ -19,13 +25,14 @@ document.addEventListener('DOMContentLoaded', function () {
             didOpen: () => Swal.showLoading()
         });
 
+        // Use html2canvas to capture the designated print area as an image.
         html2canvas(printArea, {
             scale: 2,
             useCORS: true,
             windowWidth: printArea.scrollWidth,
             windowHeight: printArea.scrollHeight
         }).then(canvas => {
-            // ... phần logic tạo PDF còn lại giữ nguyên ...
+            // Once captured, get the image data and dimensions.
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
             const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -35,9 +42,11 @@ document.addEventListener('DOMContentLoaded', function () {
             let heightLeft = imgHeight;
             let position = margin;
 
+            // Add the image to the first page.
             pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
             heightLeft -= pdf.internal.pageSize.getHeight();
 
+            // If the image is taller than one page, loop and add new pages.
             while (heightLeft > 0) {
                 position = heightLeft - imgHeight + margin;
                 pdf.addPage();

@@ -1,14 +1,22 @@
+/**
+ * @fileoverview A client-side script that fetches, renders, and manages the Purchase Order list page.
+ * It handles all user interactions like searching, selecting, and deleting POs.
+ */
 document.addEventListener('DOMContentLoaded', function () {
-    // --- KHAI BÁO CÁC ELEMENT ---
+    // --- 1. INITIALIZATION & ELEMENT SELECTORS ---
     const tableBody = document.getElementById('po-table-body');
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
     const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
     const searchInput = document.getElementById('searchInput'); // Element ô tìm kiếm
     const searchBtn = document.getElementById('searchBtn');     // Element nút tìm kiếm
 
-    let allPOs = []; // Biến để lưu trữ toàn bộ danh sách PO gốc
+    let allPOs = []; // A cache to store the master list of all POs to enable client-side search.
 
-    // --- HÀM GỌI API (giữ nguyên) ---
+    // --- 2. API HELPERS ---
+
+    /**
+     * A generic fetch wrapper to automatically handle CSRF headers and response parsing.
+    */
     async function fetchApi(url, options = {}) {
         try {
             const response = await fetch(url, options);
@@ -22,15 +30,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- HÀM RENDER BẢNG (giữ nguyên) ---
+    // --- 3. UI RENDERING FUNCTIONS ---
     function renderTable(pos) {
+        // 1. Clear the current table content.
         tableBody.innerHTML = '';
+        // 2. Handle the case where there is no data.
         if (!pos || pos.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="12" class="text-center p-5">No purchase orders found.</td></tr>';
             return;
         }
 
+        // 3. Loop through each Purchase Order object in the data array.
         pos.forEach((po, index) => {
+            // Determine the correct Bootstrap badge class based on the PO's status.
             let statusBadge;
             switch(po.status) {
                 case 'New':
@@ -49,13 +61,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     statusBadge = `<span class="badge bg-secondary">${po.status}</span>`;
             }
 
+            // Format the total amount into a currency string with two decimal places.
             const formattedTotalAmount = (po.totalAmount || 0).toLocaleString('en-US', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
 
+            // Determine if the row's checkbox should be enabled or disabled.
             const canBeDeleted = po.status === 'New' || po.status === 'Rejected';
 
+            // Build the final HTML string for the entire table row.
             const row = `
                 <tr>
                     <td><input class="form-check-input row-checkbox" type="checkbox" value="${po.purchaseOrderId}" ${!canBeDeleted ? 'disabled' : ''}></td>
@@ -74,63 +89,104 @@ document.addEventListener('DOMContentLoaded', function () {
                     </td>
                 </tr>
             `;
+            // Insert the newly created row HTML into the table body.
             tableBody.insertAdjacentHTML('beforeend', row);
         });
     }
 
-    // --- LOGIC MỚI CHO CHỨC NĂNG SEARCH ---
+    // --- 4. CORE LOGIC FUNCTIONS ---
+
+    /**
+     * Performs a client-side search by filtering the master `allPOs` array.
+     */
     function performSearch() {
+        // 1. Get the search term from the input, convert to lowercase.
         const searchTerm = searchInput.value.toLowerCase().trim();
 
+        // 2. If search term is empty, render the full, original list.
         if (!searchTerm) {
-            renderTable(allPOs); // Nếu ô tìm kiếm rỗng, hiển thị lại toàn bộ danh sách
+            renderTable(allPOs);
             return;
         }
 
-        // Lọc danh sách PO dựa trên searchTerm
+        // 3. Filter the `allPOs` array in memory.
         const filteredPOs = allPOs.filter(po => {
             const poNumber = po.purchaseOrderNo ? po.purchaseOrderNo.toLowerCase() : '';
             const supplier = po.supplierName ? po.supplierName.toLowerCase() : '';
 
-            // Trả về true nếu PO Number hoặc Supplier Name chứa từ khóa tìm kiếm
             return poNumber.includes(searchTerm) || supplier.includes(searchTerm);
         });
 
-        renderTable(filteredPOs); // Hiển thị kết quả đã lọc
+        // 4. Render the table with only the filtered results.
+        renderTable(filteredPOs);
     }
 
-    // --- CÁC HÀM XỬ LÝ SỰ KIỆN ---
 
-    // Gán sự kiện cho nút Search
     searchBtn.addEventListener('click', performSearch);
 
-    // Gán sự kiện để có thể tìm kiếm bằng cách nhấn Enter
     searchInput.addEventListener('keyup', function(event) {
         if (event.key === 'Enter') {
             performSearch();
         }
     });
 
-    // Các sự kiện xóa và chọn tất cả (giữ nguyên)
     deleteSelectedBtn.addEventListener('click', function() {
-        // ... code xóa giữ nguyên ...
+        const checkedBoxes = tableBody.querySelectorAll('.row-checkbox:checked');
+        const count = checkedBoxes.length;
+
+        if (count === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Items Selected',
+                text: 'Please select at least one Purchase Order to delete.',
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: `Delete ${count} Purchase Order(s)?`,
+            text: "This action cannot be undone!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Delete'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                checkedBoxes.forEach(box => {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'selectedIds';
+                    hiddenInput.value = box.value;
+                    deleteForm.appendChild(hiddenInput);
+                });
+                deleteForm.submit();
+            }
+        });
     });
 
     selectAllCheckbox.addEventListener('change', function() {
-        // ... code chọn tất cả giữ nguyên ...
+        const rowCheckboxes = tableBody.querySelectorAll('.row-checkbox:not(:disabled)');
+        rowCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
     });
 
-    // --- HÀM TẢI DỮ LIỆU ---
     async function loadPOs() {
+        // 1. Show a "Loading..." message to the user.
         tableBody.innerHTML = '<tr><td colspan="12" class="text-center p-5">Loading data...</td></tr>';
         try {
-            allPOs = await fetchApi('/api/purchase_orders'); // Lưu dữ liệu gốc vào biến allPOs
-            renderTable(allPOs); // Hiển thị lần đầu
+            // 2. Fetch all POs from the API.
+            allPOs = await fetchApi('/api/purchase_orders');
+
+            // 3. Render the full table with the fetched data.
+            renderTable(allPOs);
         } catch (error) {
+            // 4. If the API fails, show an error message in the table.
             tableBody.innerHTML = '<tr><td colspan="12" class="text-center p-5 text-danger">An error occurred while loading data.</td></tr>';
         }
     }
 
-    // --- KHỞI CHẠY ---
+    // --- INITIALIZATION ---
     loadPOs();
 });

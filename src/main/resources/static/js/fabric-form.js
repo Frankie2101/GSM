@@ -1,30 +1,43 @@
+/**
+ * @fileoverview Manages the dynamic and interactive behavior of the fabric_form.mustache page.
+ * This script handles adding/deleting fabric color rows and re-indexing input names
+ * to ensure correct data binding with Spring MVC.
+ */
 document.addEventListener('DOMContentLoaded', function () {
-    // Lấy các element cần thiết
+    // --- Element Selectors ---
+    // Caching references to DOM elements for performance and readability.
     const addBtn = document.getElementById('add-color-btn');
     const deleteSelectedBtn = document.getElementById('delete-selected-btn');
     const tableBody = document.getElementById('fabricColorTableBody');
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
 
-    // HÀM REINDEX ĐÃ SỬA LỖI HOÀN CHỈNH
+    /**
+     * Re-indexes the `name` attributes of all input fields within the fabric colors table.
+     * This is a critical function to ensure that Spring MVC can correctly bind the submitted
+     * form data to a List<FabricColorDto>. The names must follow the format `fabricColors[index].fieldName`.
+     */
     const reindexRows = () => {
-        if (!tableBody) return;
+        if (!tableBody) return; // Safety check
         const rows = tableBody.querySelectorAll('tr');
+
         rows.forEach((row, index) => {
             const inputs = row.querySelectorAll('input');
             inputs.forEach(input => {
-                // Lấy tên gốc từ thuộc tính `data-name`
                 const dataName = input.getAttribute('data-name');
                 if (dataName) {
-                    // Gán lại tên theo đúng định dạng Spring Boot yêu cầu
+                    // Dynamically constructs the name attribute, e.g., "fabricColors[0].color".
                     input.name = `fabricColors[${index}].${dataName}`;
                 }
             });
         });
     };
 
-    // --- CÁC HÀNH ĐỘNG CỦA NGƯỜI DÙNG ---
+    // --- USER ACTION HANDLERS ---
 
-    // Khi nhấn nút "New Detail"
+    /**
+     * Event listener for the "New Detail" button.
+     * It dynamically creates a new HTML row and appends it to the table body.
+     */
     if (addBtn) {
         addBtn.addEventListener('click', function () {
             const newRowHtml = `
@@ -47,13 +60,15 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
             if (tableBody) {
                 tableBody.insertAdjacentHTML('beforeend', newRowHtml);
-                // QUAN TRỌNG: Gọi lại hàm reindex để gán `name` cho dòng mới
-                reindexRows();
+                reindexRows(); // CRITICAL: Re-index rows after adding a new one
             }
         });
     }
 
-    // Khi nhấn nút "Delete" (xóa các dòng đã chọn)
+    /**
+     * Event listener for the "Delete" button (for selected rows).
+     * It finds all checked checkboxes and removes their corresponding table rows.
+     */
     if (deleteSelectedBtn) {
         deleteSelectedBtn.addEventListener('click', function () {
             if (!tableBody) return;
@@ -63,23 +78,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             checkedBoxes.forEach(checkbox => checkbox.closest('tr').remove());
-            // QUAN TRỌNG: Gọi lại hàm reindex sau khi xóa
-            reindexRows();
+            reindexRows(); // CRITICAL: Re-index rows after deletion.
         });
     }
 
-    // Xử lý nút xóa trên từng dòng
+    /**
+     * Event listener for individual delete buttons on each row.
+     * Uses event delegation to handle clicks on buttons that may be added dynamically.
+     */
     if (tableBody) {
         tableBody.addEventListener('click', function (e) {
+            // Check if the clicked element or its parent is a delete button.
             if (e.target.closest('.delete-row-btn')) {
                 e.target.closest('tr').remove();
-                // QUAN TRỌNG: Gọi lại hàm reindex sau khi xóa
-                reindexRows();
+                reindexRows(); // CRITICAL: Re-index rows after deletion.
             }
         });
     }
 
-    // Xử lý checkbox "Chọn tất cả"
+    /**
+     * Event listener for the "Select All" checkbox in the table header.
+     */
     if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', function () {
             if (!tableBody) return;
@@ -89,6 +108,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // QUAN TRỌNG: Gọi reindex một lần khi trang được tải để gán `name` cho các dòng đã có sẵn
+    // Initial re-indexing on page load to set names for pre-existing rows (in edit mode).
     reindexRows();
 });

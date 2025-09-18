@@ -17,6 +17,10 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+/**
+ * The concrete implementation of the {@link SaleOrderService} interface.
+ * Handles all business logic for Sale Orders, including the complex pivoting/un-pivoting of order details.
+ */
 @Service
 public class SaleOrderServiceImpl implements SaleOrderService {
 
@@ -34,24 +38,24 @@ public class SaleOrderServiceImpl implements SaleOrderService {
         this.productVariantRepository = productVariantRepository;
     }
 
+    /** {@inheritDoc} */
     @Override
     @Transactional
     public SaleOrderDto save(SaleOrderDto dto) {
-        // Phần kiểm tra trùng lặp và tìm/tạo mới SaleOrder giữ nguyên
+        // Validation for duplicate Sale Order number
         saleOrderRepository.findBySaleOrderNo(dto.getSaleOrderNo()).ifPresent(existing -> {
             if (dto.getSaleOrderId() == null || !existing.getSaleOrderId().equals(dto.getSaleOrderId())) {
                 throw new DuplicateResourceException("Sale Order No '" + dto.getSaleOrderNo() + "' already exists.");
             }
         });
 
-        SaleOrder order;
-        if (dto.getSaleOrderId() != null) {
-            order = saleOrderRepository.findById(dto.getSaleOrderId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Sale Order not found for ID: " + dto.getSaleOrderId()));
-        } else {
-            order = new SaleOrder();
-        }
+        // Find existing order for update, or create a new one
+        SaleOrder order = (dto.getSaleOrderId() != null)
+                ? saleOrderRepository.findById(dto.getSaleOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Sale Order not found for ID: " + dto.getSaleOrderId()))
+                : new SaleOrder();
 
+        // Automatically generate SO Number if it's a new order and the number is missing
         if (order.getSaleOrderId() == null && (dto.getSaleOrderNo() == null || dto.getSaleOrderNo().isEmpty())) {
             Customer customer = customerRepository.findById(dto.getCustomerId())
                     .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: ".concat(String.valueOf(dto.getCustomerId()))));
@@ -60,125 +64,60 @@ public class SaleOrderServiceImpl implements SaleOrderService {
             dto.setSaleOrderNo(customer.getCustomerCode() + sequence);
         }
 
-        // Map thông tin header (giữ nguyên)
+        // Map header information (customer, dates, etc.) from DTO to entity
         mapDtoToEntity(dto, order);
 
+        // Clear existing details to prepare for synchronization. `orphanRemoval` will handle deletions.z`
         order.getDetails().clear();
 
-// Bước 2: Duyệt qua các dòng DTO từ form và xử lý an toàn.
+        // --- UN-PIVOT LOGIC ---
+        // Iterate through the DTO details (one row per product/color)
         if (dto.getDetails() != null) {
             for (SaleOrderDetailDto detailDto : dto.getDetails()) {
-                // Bỏ qua nếu dòng detail này không có productId hoặc không có Map quantities.
-                if (detailDto.getProductId() == null || detailDto.getQuantities() == null) {
+               if (detailDto.getProductId() == null || detailDto.getQuantities() == null) {
                     continue;
                 }
 
-                // Vòng lặp "un-pivot": Biến các cột size thành các dòng SaleOrderDetail.
+                // Loop through the quantities map (each entry is a size) to create individual entity rows
                 for (Map.Entry<String, Integer> quantityEntry : detailDto.getQuantities().entrySet()) {
                     String size = quantityEntry.getKey();
                     Integer quantity = quantityEntry.getValue();
 
-                    // Chỉ xử lý khi số lượng > 0.
                     if (quantity != null && quantity > 0) {
-                        // Lấy ra variantId và price tương ứng với size.
-                        // Thêm các bước kiểm tra null để đảm bảo không có lỗi xảy ra.
                         if (detailDto.getVariantIds() == null || detailDto.getPrices() == null) continue;
 
                         Long variantId = detailDto.getVariantIds().get(size);
                         Double price = detailDto.getPrices().get(size);
 
-                        // Nếu không tìm thấy variantId hoặc price cho size này, bỏ qua.
                         if (variantId == null) {
-                            continue; // An toàn là trên hết
+                            continue;
                         }
 
-
-
-                        // Tìm ProductVariant từ database.
                         ProductVariant variant = productVariantRepository.findById(variantId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Product Variant not found with ID: " + variantId));
 
-                        // Tạo đối tượng SaleOrderDetail và điền đầy đủ thông tin.
+                        // Create a normalized SaleOrderDetail entity for each size
                         SaleOrderDetail detail = new SaleOrderDetail();
                         Integer shipQuantity = detailDto.getShipQuantities() != null ? detailDto.getShipQuantities().get(size) : null;
                         detail.setShipQuantity(shipQuantity);
                         detail.setProductVariant(variant);
                         detail.setOrderQuantity(quantity);
-
-                        // Nếu giá từ form là null, có thể lấy giá mặc định từ variant.
                         detail.setPrice(price != null ? price : variant.getPrice());
 
-                        // Thêm chi tiết đã hoàn chỉnh vào đơn hàng.
-                        // Phương thức addDetail sẽ tự động thiết lập mối quan hệ hai chiều.
-                        order.addDetail(detail);
+                        order.addDetail(detail); // Add the normalized row to the parent order
                     }
                 }
             }
         }
-// === KẾT THÚC PHẦN SỬA LỖI LOGIC DETAILS ===
-
 
         SaleOrder savedOrder = saleOrderRepository.saveAndFlush(order);
-
         return convertEntityToDto(savedOrder);
     }
 
-    // ... các phương thức khác không thay đổi ...
-    private void mapDtoToEntity(SaleOrderDto dto, SaleOrder order) {
-        Customer customer = customerRepository.findById(dto.getCustomerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + dto.getCustomerId()));
-
-        order.setSaleOrderNo(dto.getSaleOrderNo());
-        order.setCustomerPO(dto.getCustomerPO());
-        order.setCustomer(customer);
-        order.setCurrencyCode(dto.getCurrencyCode());
-        order.setOrderDate(dto.getOrderDate());
-        order.setProductionStartDate(dto.getProductionStartDate());
-        order.setProductionEndDate(dto.getProductionEndDate());
-        order.setShipDate(dto.getShipDate());
-        order.setStatus(dto.getStatus());
-    }
-
-    private SaleOrderDto convertEntityToDto(SaleOrder order) {
-        SaleOrderDto dto = convertEntityToDtoSimple(order);
-        dto.setCustomerPO(order.getCustomerPO());
-        dto.setCurrencyCode(order.getCurrencyCode());
-        dto.setProductionStartDate(order.getProductionStartDate());
-        dto.setProductionEndDate(order.getProductionEndDate());
-
-        if (order.getDetails() != null) {
-            Map<String, SaleOrderDetailDto> detailMap = new LinkedHashMap<>();
-            for (SaleOrderDetail detail : order.getDetails()) {
-                ProductVariant variant = detail.getProductVariant();
-                Product product = variant.getProduct();
-                String key = product.getProductId() + "_" + variant.getColor();
-
-
-                SaleOrderDetailDto detailDto = detailMap.computeIfAbsent(key, k -> {
-                    SaleOrderDetailDto newDto = new SaleOrderDetailDto();
-                    newDto.setProductId(product.getProductId());
-                    newDto.setProductName(product.getProductName());
-                    newDto.setColor(variant.getColor());
-                    newDto.setUnitName(product.getUnit().getUnitName());
-                    newDto.setQuantities(new LinkedHashMap<>());
-                    newDto.setPrices(new LinkedHashMap<>());
-                    newDto.setVariantIds(new LinkedHashMap<>());
-                    return newDto;
-                });
-
-                detailDto.getQuantities().put(variant.getSize(), detail.getOrderQuantity());
-                detailDto.getPrices().put(variant.getSize(), detail.getPrice());
-                detailDto.getVariantIds().put(variant.getSize(), variant.getProductVariantId());
-                if (detailDto.getShipQuantities() == null) {
-                    detailDto.setShipQuantities(new LinkedHashMap<>());
-                }
-                detailDto.getShipQuantities().put(variant.getSize(), detail.getShipQuantity());
-            }
-            dto.setDetails(new ArrayList<>(detailMap.values()));
-        }
-        return dto;
-    }
-
+    /**
+     * {@inheritDoc}
+     * <p><b>Use Case:</b> Called when a user clicks to view or edit an existing sale order's details.
+     */
     @Override
     @Transactional(readOnly = true)
     public SaleOrderDto findById(Long id) {
@@ -187,6 +126,11 @@ public class SaleOrderServiceImpl implements SaleOrderService {
         return convertEntityToDto(order);
     }
 
+
+    /**
+     * {@inheritDoc}
+     * <p><b>Use Case:</b> Called to display the main sale order list page.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<SaleOrderDto> findAll() {
@@ -200,6 +144,10 @@ public class SaleOrderServiceImpl implements SaleOrderService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p><b>Use Case:</b> Called from the list page when the user enters a term in the search box.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<SaleOrderDto> search(String keyword) {
@@ -215,12 +163,107 @@ public class SaleOrderServiceImpl implements SaleOrderService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p><b>REFACTORED:</b> This method was changed to iterate through IDs to ensure
+     * safe deletion of child entities (e.g., SaleOrderDetail) before deleting the parent SaleOrder.
+     * The previous `deleteAllById` was unsafe and could cause foreign key constraint violations.
+     */
     @Override
     @Transactional
     public void deleteByIds(List<Long> ids) {
-        saleOrderRepository.deleteAllById(ids);
+        for (Long id : ids) {
+            saleOrderRepository.deleteById(id);
+        }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p><b>Use Case:</b> Primarily used by APIs to quickly fetch an order's existence or basic info
+     * without loading all its details.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public SaleOrderDto findBySaleOrderNo(String saleOrderNo) {
+        SaleOrder order = saleOrderRepository.findBySaleOrderNo(saleOrderNo)
+                .orElseThrow(() -> new ResourceNotFoundException("Sale Order not found with No: " + saleOrderNo));
+        return convertEntityToDtoSimple(order);
+    }
+
+
+    /**
+     * Private helper to map data from a DTO to an existing SaleOrder entity.
+     * @param dto The source DTO.
+     * @param order The target entity.
+     */
+    private void mapDtoToEntity(SaleOrderDto dto, SaleOrder order) {
+        Customer customer = customerRepository.findById(dto.getCustomerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + dto.getCustomerId()));
+
+        order.setSaleOrderNo(dto.getSaleOrderNo());
+        order.setCustomerPO(dto.getCustomerPO());
+        order.setCustomer(customer);
+        order.setCurrencyCode(dto.getCurrencyCode());
+        order.setOrderDate(dto.getOrderDate());
+        order.setProductionStartDate(dto.getProductionStartDate());
+        order.setProductionEndDate(dto.getProductionEndDate());
+        order.setShipDate(dto.getShipDate());
+        order.setStatus(dto.getStatus());
+    }
+
+    /**
+     * Private helper to convert a SaleOrder entity to a full DTO, including pivoted details.
+     * @param order The source entity.
+     * @return A detailed SaleOrderDto.
+     */
+    private SaleOrderDto convertEntityToDto(SaleOrder order) {
+        SaleOrderDto dto = convertEntityToDtoSimple(order);
+        dto.setCustomerPO(order.getCustomerPO());
+        dto.setCurrencyCode(order.getCurrencyCode());
+        dto.setProductionStartDate(order.getProductionStartDate());
+        dto.setProductionEndDate(order.getProductionEndDate());
+
+        if (order.getDetails() != null) {
+            // Use a map to group details by product and color.
+            Map<String, SaleOrderDetailDto> detailMap = new LinkedHashMap<>();
+            for (SaleOrderDetail detail : order.getDetails()) {
+                ProductVariant variant = detail.getProductVariant();
+                Product product = variant.getProduct();
+                String key = product.getProductId() + "_" + variant.getColor();
+
+                // If a DTO for this product/color group doesn't exist, create it.
+                SaleOrderDetailDto detailDto = detailMap.computeIfAbsent(key, k -> {
+                    SaleOrderDetailDto newDto = new SaleOrderDetailDto();
+                    newDto.setProductId(product.getProductId());
+                    newDto.setProductName(product.getProductName());
+                    newDto.setColor(variant.getColor());
+                    newDto.setUnitName(product.getUnit().getUnitName());
+                    newDto.setQuantities(new LinkedHashMap<>());
+                    newDto.setPrices(new LinkedHashMap<>());
+                    newDto.setVariantIds(new LinkedHashMap<>());
+                    return newDto;
+                });
+
+                // Populate the size-specific maps within the DTO. This is the "pivot" action.
+                detailDto.getQuantities().put(variant.getSize(), detail.getOrderQuantity());
+                detailDto.getPrices().put(variant.getSize(), detail.getPrice());
+                detailDto.getVariantIds().put(variant.getSize(), variant.getProductVariantId());
+                if (detailDto.getShipQuantities() == null) {
+                    detailDto.setShipQuantities(new LinkedHashMap<>());
+                }
+                detailDto.getShipQuantities().put(variant.getSize(), detail.getShipQuantity());
+            }
+            dto.setDetails(new ArrayList<>(detailMap.values()));
+        }
+        return dto;
+    }
+
+    /**
+     * Private helper to convert a SaleOrder entity to a simple DTO for list views.
+     * This version is optimized for performance as it does not process the details collection.
+     * @param order The source entity.
+     * @return A simplified SaleOrderDto.
+     */
     private SaleOrderDto convertEntityToDtoSimple(SaleOrder order) {
         SaleOrderDto dto = new SaleOrderDto();
         dto.setSaleOrderId(order.getSaleOrderId());
@@ -233,14 +276,5 @@ public class SaleOrderServiceImpl implements SaleOrderService {
         dto.setShipDate(order.getShipDate());
         dto.setStatus(order.getStatus());
         return dto;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public SaleOrderDto findBySaleOrderNo(String saleOrderNo) {
-        SaleOrder order = saleOrderRepository.findBySaleOrderNo(saleOrderNo)
-                .orElseThrow(() -> new ResourceNotFoundException("Sale Order not found with No: " + saleOrderNo));
-        // Tái sử dụng hàm convert đã có để trả về DTO đơn giản
-        return convertEntityToDtoSimple(order);
     }
 }

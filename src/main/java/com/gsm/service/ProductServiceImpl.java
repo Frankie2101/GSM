@@ -20,14 +20,32 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+/**
+ * The concrete implementation of the {@link ProductService} interface.
+ * This class contains the core business logic for managing products. It coordinates
+ * interactions between the controllers and the repositories layer.
+ *
+ * @author ThanhDX
+ * @version 1.0.0
+ */
 @Service
 public class ProductServiceImpl implements ProductService {
 
+    // Dependencies for data access
     private final ProductRepository productRepository;
     private final ProductVariantRepository productVariantRepository;
     private final ProductCategoryRepository productCategoryRepository;
     private final UnitRepository unitRepository;
 
+
+    /**
+     * Constructs the service with all required repository dependencies.
+     *
+     * @param productRepository        Repository for Product data.
+     * @param productVariantRepository Repository for ProductVariant data.
+     * @param productCategoryRepository Repository for ProductCategory data.
+     * @param unitRepository           Repository for Unit data.
+     */
     @Autowired
     public ProductServiceImpl(ProductRepository productRepository,
                               ProductVariantRepository productVariantRepository,
@@ -39,18 +57,28 @@ public class ProductServiceImpl implements ProductService {
         this.unitRepository = unitRepository;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p><b>Use Case:</b> This method is called when a user navigates to the product detail page
+     * to view or edit an existing product's information. It fetches all necessary data to populate the form.
+     */
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true) //The transaction is set to read-only for performance optimization.
     public ProductDto findById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
         return convertEntityToDto(product);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p><b>Use Case:</b> This is used to populate the main product list view when the user
+     * first navigates to the product management page without any search criteria.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<ProductDto> findAll() {
-        AtomicInteger index = new AtomicInteger(1);
+        AtomicInteger index = new AtomicInteger(1); // *Uses an AtomicInteger to generate a client-side sequence number
         return productRepository.findAll().stream()
                 .map(product -> {
                     ProductDto dto = convertEntityToDtoSimple(product);
@@ -61,26 +89,19 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * PHẦN SỬA LỖI CHÍNH NẰM Ở ĐÂY (Phiên bản 2)
-     *
-     * Luồng xử lý mới:
-     * 1. Tiền xử lý danh sách variant DTO:
-     * - Tạo một danh sách `processedVariants` mới.
-     * - Duyệt qua từng variant DTO từ form.
-     * - Tách chuỗi `size` (VD: "S, M, L").
-     * - Size đầu tiên sẽ được coi là bản cập nhật, giữ nguyên `productVariantId` gốc.
-     * - Các size tiếp theo sẽ được coi là bản ghi mới, `productVariantId` sẽ là `null`.
-     * 2. Sử dụng danh sách `processedVariants` đã xử lý để thực hiện logic đồng bộ cũ dựa trên ID.
+     * {@inheritDoc}
+     * <p><b>Use Case:</b> This is the core logic executed when a user clicks the "Save" button
+     * on the product form. It handles both the creation of new products and the updating of existing ones.
      */
     @Override
     @Transactional
     public ProductDto save(ProductDto dto) {
-        // BƯỚC 1: Tiền xử lý danh sách variant DTO để tách chuỗi size
+        // STEP 1: Pre-process the variant DTO list to expand comma-separated sizes.
         List<ProductVariantDto> processedVariants = new ArrayList<>();
         if (dto.getVariants() != null) {
             for (ProductVariantDto variantDtoFromForm : dto.getVariants()) {
                 if (variantDtoFromForm.getSize() == null || variantDtoFromForm.getSize().trim().isEmpty()) {
-                    continue; // Bỏ qua nếu dòng không có size
+                    continue; // Skip if the size field is empty
                 }
 
                 String[] sizes = variantDtoFromForm.getSize().split("\\s*,\\s*");
@@ -96,26 +117,28 @@ public class ProductServiceImpl implements ProductService {
                     processedDto.setSize(size.trim());
 
                     if (isFirstSize) {
-                        // Size đầu tiên giữ lại ID gốc để thực hiện UPDATE
+                        // First size keeps the original ID for UPDATE operations.
                         processedDto.setProductVariantId(variantDtoFromForm.getProductVariantId());
                         isFirstSize = false;
                     } else {
-                        // Các size sau là bản ghi mới, không có ID
+                        // Subsequent sizes are new records, so they have no ID.
                         processedDto.setProductVariantId(null);
                     }
                     processedVariants.add(processedDto);
                 }
             }
         }
-        // Gán lại danh sách đã xử lý vào DTO chính
-        dto.setVariants(processedVariants);
+        dto.setVariants(processedVariants); // Replace original variants with the processed list.
 
-        // BƯỚC 2: Thực hiện logic đồng bộ như cũ, nhưng với danh sách variant đã được xử lý
-        Product product = productRepository.findById(Optional.ofNullable(dto.getProductId()).orElse(0L))
-                .orElseGet(Product::new);
+        // STEP 2: Perform the synchronization logic using the processed variant list.
+        Product product = (dto.getProductId() != null)
+                ? productRepository.findById(dto.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + dto.getProductId()))
+                : new Product();
 
         mapDtoToEntity(dto, product);
 
+        // Create a map of existing variants for quick lookups.
         Map<Long, ProductVariant> existingVariantsMap = product.getVariants().stream()
                 .collect(Collectors.toMap(ProductVariant::getProductVariantId, v -> v));
 
@@ -126,17 +149,19 @@ public class ProductServiceImpl implements ProductService {
                 Long variantId = variantDto.getProductVariantId();
 
                 if (variantId != null) {
-                    // Cập nhật variant đã có
+                    // Update an existing variant.
                     variant = existingVariantsMap.get(variantId);
                     if (variant == null) {
+                        // This case should ideally not happen if data is consistent.
                         throw new ResourceNotFoundException("ProductVariant not found with id: " + variantId);
                     }
                 } else {
-                    // Thêm variant mới
+                    // Add a new variant.
                     variant = new ProductVariant();
                     variant.setProduct(product);
                 }
 
+                // Map properties from DTO to the variant entity.
                 variant.setColor(variantDto.getColor());
                 variant.setSize(variantDto.getSize());
                 variant.setPrice(variantDto.getPrice());
@@ -147,7 +172,7 @@ public class ProductServiceImpl implements ProductService {
             }
         }
 
-        // Đồng bộ với DB: Xóa hết và thêm lại list mới, orphanRemoval sẽ tự dọn dẹp
+        // Synchronize with the database: clear the old list and add the new one.
         product.getVariants().clear();
         product.getVariants().addAll(variantsToSave);
 
@@ -155,9 +180,15 @@ public class ProductServiceImpl implements ProductService {
         return convertEntityToDto(savedProduct);
     }
 
-    // (Các phương thức helper khác giữ nguyên như file gốc)
-
+    /**
+     * A private helper method to map fields from a {@link ProductDto} to a {@link Product} entity.
+     * This encapsulates the mapping logic and ensures related entities like Category and Unit are fetched.
+     *
+     * @param dto     The source DTO.
+     * @param product The target entity to be updated.
+     */
     private void mapDtoToEntity(ProductDto dto, Product product) {
+        // Fetch related entities. Throws ResourceNotFoundException if they don't exist.
         ProductCategory category = productCategoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + dto.getCategoryId()));
         Unit unit = unitRepository.findById(dto.getUnitId())
@@ -171,25 +202,13 @@ public class ProductServiceImpl implements ProductService {
         product.setStatus(dto.getStatus());
     }
 
-    private void validateProductUniqueness(ProductDto dto) {
-        productRepository.findByProductCode(dto.getProductCode()).ifPresent(existingProduct -> {
-            if (dto.getProductId() == null || !existingProduct.getProductId().equals(dto.getProductId())) {
-                throw new DuplicateResourceException("Product Code '" + dto.getProductCode() + "' already exists.");
-            }
-        });
 
-        if (dto.getVariants() != null) {
-            Set<String> skusInRequest = new HashSet<>();
-            for (ProductVariantDto variant : dto.getVariants()) {
-                // SKU được tạo thủ công để validate, logic này không thay đổi
-                String sku = dto.getProductCode() + "-" + variant.getColor() + "-" + variant.getSize();
-                if (!skusInRequest.add(sku)) {
-                    throw new DuplicateResourceException("Duplicate SKU '" + sku + "' found in the request.");
-                }
-            }
-        }
-    }
-
+    /**
+     * Converts a Product entity to a fully detailed DTO, including its variants.
+     *
+     * @param product The source entity.
+     * @return The fully populated {@link ProductDto}.
+     */
     private ProductDto convertEntityToDto(Product product) {
         ProductDto dto = convertEntityToDtoSimple(product);
         dto.setSeason(product.getSeason());
@@ -203,6 +222,13 @@ public class ProductServiceImpl implements ProductService {
         return dto;
     }
 
+    /**
+     * Converts a Product entity to a simplified DTO, intended for list views.
+     * This version does not include the list of variants for better performance.
+     *
+     * @param product The source entity.
+     * @return A simplified {@link ProductDto}.
+     */
     private ProductDto convertEntityToDtoSimple(Product product) {
         ProductDto dto = new ProductDto();
         dto.setProductId(product.getProductId());
@@ -222,6 +248,12 @@ public class ProductServiceImpl implements ProductService {
         return dto;
     }
 
+    /**
+     * Converts a ProductVariant entity to its corresponding DTO.
+     *
+     * @param variant The source entity.
+     * @return The {@link ProductVariantDto}.
+     */
     private ProductVariantDto convertVariantEntityToDto(ProductVariant variant) {
         ProductVariantDto dto = new ProductVariantDto();
         dto.setProductVariantId(variant.getProductVariantId());
@@ -233,9 +265,15 @@ public class ProductServiceImpl implements ProductService {
         return dto;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p><b>Use Case:</b> This method is triggered from the product list page when the user
+     * types a keyword into the search box or selects a category to filter the list.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<ProductDto> search(String keyword, String categoryName) {
+        // Ensure that empty strings are treated as null to match the JPQL query logic.
         String effectiveKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim().trim() : null;
         String effectiveCategory = (categoryName != null && !categoryName.trim().isEmpty()) ? categoryName.trim() : null;
 
@@ -251,87 +289,21 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * Deletes product variants first to respect foreign key constraints, then deletes the product itself.
+     */
     @Override
     @Transactional
     public void deleteByIds(List<Long> ids) {
+        // It's better to iterate and handle each deletion individually to ensure existence.
         for (Long id : ids) {
             if (productRepository.existsById(id)) {
+                // Important: Delete children before deleting the parent.
                 productVariantRepository.deleteByProduct_ProductId(id);
                 productRepository.deleteById(id);
             }
         }
     }
 
-    // Các phương thức helper không dùng đến vẫn được giữ lại để không thay đổi cấu trúc file
-    private List<ProductVariantDto> processAndValidateVariants(ProductDto dto) {
-        String productCode = dto.getProductCode();
-        if (dto.getVariants() == null) {
-            return Collections.emptyList();
-        }
-
-        return dto.getVariants().stream()
-                .flatMap(variantDto -> {
-                    String[] sizes = variantDto.getSize().split("\\s*,\\s*");
-                    return Arrays.stream(sizes)
-                            .filter(size -> !size.trim().isEmpty())
-                            .map(size -> {
-                                ProductVariantDto newVariantDto = new ProductVariantDto();
-                                newVariantDto.setProductVariantId(variantDto.getProductVariantId());
-                                newVariantDto.setColor(variantDto.getColor());
-                                newVariantDto.setSize(size.trim());
-                                newVariantDto.setPrice(variantDto.getPrice());
-                                newVariantDto.setCurrency(variantDto.getCurrency());
-                                newVariantDto.setSku(productCode + "-" + variantDto.getColor() + "-" + size.trim());
-                                return newVariantDto;
-                            });
-                })
-                .collect(Collectors.toList());
-    }
-
-    private Product findOrCreateAndSaveProduct(ProductDto dto) {
-        Product product;
-        if (dto.getProductId() != null) {
-            product = productRepository.findById(dto.getProductId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Cannot update. Product not found with id: " + dto.getProductId()));
-        } else {
-            product = new Product();
-        }
-        mapDtoToEntity(dto, product);
-        return productRepository.save(product);
-    }
-
-    private void synchronizeVariants(ProductDto dto, Product savedProduct) {
-        Set<ProductVariant> existingVariants = new HashSet<>(savedProduct.getVariants());
-        Map<String, ProductVariant> existingVariantsMap = existingVariants.stream()
-                .collect(Collectors.toMap(ProductVariant::getSku, variant -> variant));
-
-        Set<String> updatedSkus = new HashSet<>();
-        List<ProductVariant> variantsToSave = new ArrayList<>();
-
-        if (dto.getVariants() != null) {
-            for (ProductVariantDto variantDto : dto.getVariants()) {
-                updatedSkus.add(variantDto.getSku());
-                ProductVariant variant = existingVariantsMap.getOrDefault(variantDto.getSku(), new ProductVariant());
-
-                variant.setProduct(savedProduct);
-                variant.setColor(variantDto.getColor());
-                variant.setSize(variantDto.getSize());
-                variant.setSku(variantDto.getSku());
-                variant.setPrice(variantDto.getPrice());
-                variant.setCurrency(variantDto.getCurrency());
-
-                variantsToSave.add(variant);
-            }
-        }
-
-        Set<ProductVariant> variantsToRemove = existingVariants.stream()
-                .filter(v -> !updatedSkus.contains(v.getSku()))
-                .collect(Collectors.toSet());
-
-        if (!variantsToRemove.isEmpty()) {
-            productVariantRepository.deleteAll(variantsToRemove);
-        }
-
-        productVariantRepository.saveAll(variantsToSave);
-    }
 }

@@ -1,6 +1,11 @@
+{{!
+    This is the Mustache template for the Sale Order list page.
+    It displays a search bar and a table of all sale orders.
+}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {{! Standard head elements: SweetAlert2, Bootstrap, custom CSS }}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,8 +24,14 @@
                 <h1 class="h3 m-0"><i class="bi bi-cart-fill me-2"></i>Sale Order</h1>
             </div>
 
+            {{! Search and actions card }}
             <div class="card mb-4">
                 <div class="card-body">
+
+                    {{!
+                        The search form submits a GET request to the same page (/sale-orders)
+                        to filter the results.
+                    }}
                     <form action="/sale-orders" method="get" id="searchForm">
                         <div class="row align-items-end gy-3">
                             <div class="col-md-7">
@@ -37,9 +48,13 @@
                 </div>
             </div>
 
+            {{! Results card }}
             <div class="card">
                 <div class="card-header">Result</div>
                 <div class="card-body">
+                    {{!
+                        This form targets the delete endpoint. It is triggered by JavaScript after a user confirmation.
+                    }}
                     <form action="/sale-orders/delete" method="post" id="deleteForm">
                         <div class="table-responsive">
                             <table class="table table-hover">
@@ -56,13 +71,20 @@
                                 </tr>
                                 </thead>
                                 <tbody>
+
+                                {{!
+                                    Loop through the 'orders' list provided by the Controller.
+                                }}
                                 {{#orders}}
                                     <tr>
+                                        {{! The checkbox value is the saleOrderId, which will be submitted for deletion. }}
                                         <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox" name="selectedIds" value="{{saleOrderId}}"></td>
                                         <td class="p-3 align-middle">{{sequenceNumber}}</td>
                                         <td class="p-3 align-middle">{{saleOrderNo}}</td>
                                         <td class="py-3 ps-2 align-middle">{{customerName}}</td>
                                         <td class="py-3 ps-2 align-middle">{{orderDate}}</td>
+
+                                        {{! Uses the DTO helper method to display a nicely formatted date }}
                                         <td class="py-3 ps-2 align-middle">{{formattedShipDate}}</td>
                                         <td class="py-3 ps-2 align-middle">{{status}}</td>
                                         <td class="p-3 align-middle">
@@ -70,6 +92,9 @@
                                         </td>
                                     </tr>
                                 {{/orders}}
+                                {{!
+                                    Inverted section: This is displayed ONLY if the 'orders' list is empty.
+                                }}
                                 {{^orders}}
                                     <tr>
                                         <td colspan="8" class="text-center text-muted p-4">No sale orders found. Click 'Create' to add one.</td>

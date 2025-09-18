@@ -9,7 +9,10 @@ import java.util.List;
 @Repository
 public interface MaterialGroupRepository extends JpaRepository<MaterialGroup, Long> {
 
-    // Spring Data JPA sẽ tự động tạo ra các phương thức tìm kiếm dựa trên tên.
-    // Ví dụ, tìm các MaterialGroup theo loại (FA hoặc TR).
+    /**
+     * Finds all MaterialGroups of a specific type.
+     * @param materialType The type to filter by (e.g., "FA" for Fabric, "TR" for Trim).
+     * @return A list of matching {@link MaterialGroup}s.
+     */
     List<MaterialGroup> findByMaterialType(String materialType);
 }

@@ -24,20 +24,16 @@
                 <h1 class="h3 m-0"><i class="bi bi-box-seam-fill me-2"></i>Product</h1>
             </div>
 
-            <!-- ========== KHỐI TÌM KIẾM & HÀNH ĐỘNG ========== -->
             <div class="card mb-4">
                 <div class="card-body">
-                    <!-- Form tìm kiếm -->
                     <form action="/products" method="get" id="searchForm">
-                        <div class="row align-items-end gy-3"> {{! Thêm gy-3 để tạo khoảng cách dọc trên mobile }}
+                        <div class="row align-items-end gy-3">
 
-                            {{! Cột 1: Ô tìm kiếm }}
                             <div class="col-md-4">
                                 <label for="keyword" class="form-label">Search</label>
                                 <input type="text" class="form-control" id="keyword" name="keyword" placeholder="Enter code or name..." value="{{#keyword}}{{.}}{{/keyword}}">
                             </div>
 
-                            {{! Cột 2: Lựa chọn Category }}
                             <div class="col-md-3">
                                 <label for="category" class="form-label">Product Category</label>
                                 <select class="form-select" id="category" name="category">
@@ -48,7 +44,6 @@
                                 </select>
                             </div>
 
-                            {{! Cột 3: Các nút hành động }}
                             <div class="col-md-5 d-flex justify-content-start justify-content-md-end">
                                 <button type="submit" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-search me-1"></i> Search</button>
                                 <a href="/products/form" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-plus-circle me-1"></i> Create</a>
@@ -59,13 +54,11 @@
                 </div>
             </div>
 
-            <!-- ========== KHỐI HIỂN THỊ KẾT QUẢ ========== -->
             <div class="card">
                 <div class="card-header">
                     Result
                 </div>
                 <div class="card-body">
-                    <!-- Form để xóa sản phẩm -->
                     <form action="/products/delete" method="post" id="deleteForm">
                         <div class="table-responsive">
                             <table class="table table-hover">
@@ -81,12 +74,16 @@
                                 </tr>
                                 </thead>
                                 <tbody>
+
+                                {{!
+                                    Loop through the 'products' list provided by the Controller.
+                                    The block inside will be rendered for each product object in the list.
+                                }}
                                 {{#products}}
                                     <tr>
                                         <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox" name="selectedIds" value="{{productId}}"></td>
                                         <td class="p-3 align-middle">{{sequenceNumber}}</td>
                                         <td class="p-3 align-middle">{{productCode}}</td>
-                                        {{! YÊU CẦU 4 (MỚI): Căn giữa các cột này }}
                                         <td class="py-3 ps-2 align-middle">{{productName}}</td>
                                         <td class="py-3 ps-2 align-middle">{{unitName}}</td>
                                         <td class="py-3 ps-2 align-middle">{{unitName}}</td>
@@ -96,6 +93,10 @@
                                         </td>
                                     </tr>
                                 {{/products}}
+
+                                {{!
+                                    The content inside will ONLY be displayed if the 'products' list is null, false, or empty.
+                                }}
                                 {{^products}}
                                     <tr>
                                         <td colspan="7" class="text-center text-muted p-4">No products found.</td>
@@ -114,7 +115,6 @@
 </div>
 
 {{> layout/scripts}}
-<!-- THÊM MỚI: Link tới file JS riêng cho trang này -->
 <script src="/js/product-list.js"></script>
 </body>
 </html>

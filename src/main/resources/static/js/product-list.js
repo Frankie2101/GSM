@@ -1,27 +1,32 @@
+/**
+ * @fileoverview This script provides interactivity for the product_list.mustache page.
+ * It handles the "select all" checkbox functionality and triggers a confirmation
+ * dialog (using SweetAlert2) before submitting the bulk delete form.
+ */
 document.addEventListener('DOMContentLoaded', function() {
+    // --- Element Selectors ---
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
     const rowCheckboxes = document.querySelectorAll('.row-checkbox');
-
-    // Giữ lại việc khai báo các biến quan trọng ở đây
     const deleteForm = document.getElementById('deleteForm');
     const deleteBtn = document.getElementById('deleteBtn');
 
-    // Xử lý checkbox "Chọn tất cả"
+    // --- Event Listener for "Select All" checkbox ---
     if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', function() {
+            // Set the state of all row checkboxes to match the "select all" checkbox.
             rowCheckboxes.forEach(checkbox => {
                 checkbox.checked = selectAllCheckbox.checked;
             });
         });
     }
 
-    // Gán sự kiện click nếu cả hai element đều tồn tại
+    // --- Event Listener for the main "Delete" button ---
     if (deleteBtn && deleteForm) {
         deleteBtn.addEventListener('click', function() {
             const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
             const count = checkedBoxes.length;
 
-            // Xử lý khi chưa chọn sản phẩm
+            // 1. Validate if at least one product is selected.
             if (count === 0) {
                 Swal.fire({
                     icon: 'error',
@@ -29,10 +34,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     text: 'Please select at least one product to delete.',
                     confirmButtonColor: '#384295'
                 });
-                return;
+                return; // Stop the function here.
             }
 
-            // Hiển thị hộp thoại xác nhận
+            // 2. Display a confirmation dialog to the user.
             Swal.fire({
                 title: `Delete ${count} Product?`,
                 text: `This action is cannot be undone.`,
@@ -43,9 +48,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 confirmButtonText: 'Delete',
                 reverseButtons: true,
                 customClass: {
-                    container: 'swal2-container-custom' // Thêm class tùy chỉnh cho container
+                    container: 'swal2-container-custom'
                 }
             }).then((result) => {
+                // 3. If the user confirms, submit the delete form.
                 if (result.isConfirmed) {
                     deleteForm.submit();
                 }

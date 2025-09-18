@@ -8,5 +8,11 @@ import java.util.Optional;
 
 @Repository
 public interface ProductCategoryRepository extends JpaRepository<ProductCategory, Long> {
+
+    /**
+     * Finds a ProductCategory by its unique name.
+     * @param categoryName The name of the category to find.
+     * @return An {@link Optional} containing the found category.
+     */
     Optional<ProductCategory> findByCategoryName(String categoryName);
 }

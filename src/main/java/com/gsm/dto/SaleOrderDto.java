@@ -5,17 +5,26 @@ import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat; // THÊM IMPORT NÀY
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+/**
+ * DTO for the SaleOrder entity. Carries data for the create/edit form.
+ */
 @Data
 public class SaleOrderDto {
     private Long saleOrderId;
     private Long sequenceNumber;
+
+    @NotBlank(message = "Sale Order Number cannot be blank")
     private String saleOrderNo;
 
-    // THÊM ANNOTATION ĐỂ SỬA LỖI
+    /**
+     * The @DateTimeFormat annotation helps Spring MVC correctly parse the date
+     */
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate orderDate;
 
@@ -33,13 +42,18 @@ public class SaleOrderDto {
 
     private SaleOrderStatus status;
 
+    @NotNull(message = "Customer is required")
     private Long customerId;
+
     private String customerName;
 
     @Valid
     private List<SaleOrderDetailDto> details;
 
-    // THÊM MỚI: Phương thức để định dạng ngày tháng cho view
+    /**
+     * A helper method to provide a formatted date string directly to the view (template).
+     * @return The ship date formatted as "MM/dd/yyyy", or an empty string if null.
+     */
     public String getFormattedShipDate() {
         if (this.shipDate != null) {
             return this.shipDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));

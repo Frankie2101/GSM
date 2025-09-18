@@ -1,5 +1,10 @@
+{{!
+    This is the Mustache template for the Fabric list page.
+    It displays a search/filter bar and a table of all fabrics.
+}}
 <!DOCTYPE html>
 <html lang="en">
+{{! Standard head elements: SweetAlert2, Bootstrap, custom CSS }}
 <head>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta charset="UTF-8">
@@ -21,10 +26,18 @@
 
             <div class="card mb-4">
                 <div class="card-body">
+                    {{!
+                        The search form submits a GET request to the same page (/fabrics)
+                        to filter the results.
+                    }}
                     <form action="/fabrics" method="get" id="searchForm">
                         <div class="row align-items-end gy-3">
                             <div class="col-md-7">
                                 <label for="keyword" class="form-label">Search</label>
+                                {{!
+                                    The 'value' attribute is pre-filled with the keyword from the model.
+                                    This keeps the search term visible after the form is submitted.
+                                }}
                                 <input type="text" class="form-control" id="keyword" name="keyword" placeholder="Enter fabric code or name..." value="{{#keyword}}{{.}}{{/keyword}}">
                             </div>
                             <div class="col-md-5 d-flex justify-content-start justify-content-md-end">
@@ -40,6 +53,10 @@
             <div class="card">
                 <div class="card-header">Result</div>
                 <div class="card-body">
+                    {{!
+                        This form targets the /fabrics/delete endpoint and is controlled by JavaScript.
+                        It will only be submitted when the user confirms the deletion.
+                    }}
                     <form action="/fabrics/delete" method="post" id="deleteForm">
                         <div class="table-responsive">
                             <table class="table table-hover">
@@ -58,6 +75,7 @@
                                 <tbody>
                                 {{#fabrics}}
                                     <tr>
+                                        {{! The checkbox value is the fabricId, which will be submitted for deletion. }}
                                         <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox" name="selectedIds" value="{{fabricId}}"></td>
                                         <td class="p-3 align-middle">{{sequenceNumber}}</td>
                                         <td class="p-3 align-middle">{{fabricCode}}</td>
@@ -70,6 +88,9 @@
                                         </td>
                                     </tr>
                                 {{/fabrics}}
+                                {{!
+                                    Inverted section: This is displayed ONLY if the 'fabrics' list is empty.
+                                }}
                                 {{^fabrics}}
                                     <tr>
                                         <td colspan="8" class="text-center text-muted p-4">No fabrics found. Click 'Create' to add one.</td>
