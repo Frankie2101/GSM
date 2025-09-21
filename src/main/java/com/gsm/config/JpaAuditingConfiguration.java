@@ -10,6 +10,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 
+
+/**
+ * Configures JPA Auditing for the application.
+ * The @EnableJpaAuditing annotation turns on auditing, allowing Spring Data JPA
+ * to automatically populate fields like @CreatedBy, @LastModifiedBy, etc.
+ */
 @Configuration
 @EnableJpaAuditing(auditorAwareRef = "auditorProvider")
 public class JpaAuditingConfiguration {
@@ -17,18 +23,18 @@ public class JpaAuditingConfiguration {
     @Bean
     public AuditorAware<Long> auditorProvider() {
         return () -> {
-            // Lấy thông tin xác thực từ Spring Security
+            // Get authentication information from Spring Security.
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-            // Kiểm tra xem người dùng đã đăng nhập hay chưa
+            // Check if a user is logged in. If not, return empty.
             if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
-                return Optional.empty(); // Trả về empty nếu chưa đăng nhập
+                return Optional.empty();
             }
 
-            // Lấy principal và ép kiểu về CustomUserDetails
+            // Get the principal and cast it to our custom user details class.
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-            // Trả về UserId
+            // Return the user's ID, wrapped in an Optional.
             return Optional.of(userDetails.getUserId());
         };
     }

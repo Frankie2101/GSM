@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.gsm.model.MaterialGroup;
+import com.gsm.repository.MaterialGroupRepository;
 
 /**
  * Controller for handling all HTTP requests for the Trim management feature.
@@ -30,6 +32,7 @@ public class TrimController {
     @Autowired private TrimService trimService;
     @Autowired private UnitRepository unitRepository;
     @Autowired private SupplierRepository supplierRepository;
+    @Autowired private MaterialGroupRepository materialGroupRepository;
 
     /**
      * Displays the list of all trims, with an optional keyword search.
@@ -61,7 +64,7 @@ public class TrimController {
             trim = trimService.findById(id);
         } else {
             trim = new TrimDto();
-            trim.setVariants(new ArrayList<>()); // Khởi tạo list rỗng
+            trim.setVariants(new ArrayList<>());
         }
 
         // Logic for preparing dropdown data...
@@ -89,10 +92,23 @@ public class TrimController {
             supplierOptions.add(option);
         }
 
+        List<MaterialGroup> allGroups = materialGroupRepository.findByMaterialType("TR");
+        List<Map<String, Object>> groupOptions = new ArrayList<>();
+        for (MaterialGroup group : allGroups) {
+            Map<String, Object> option = new HashMap<>();
+            option.put("id", group.getMaterialGroupId());
+            option.put("name", group.getMaterialGroupName());
+            if (trim.getMaterialGroupId() != null && trim.getMaterialGroupId().equals(group.getMaterialGroupId())) {
+                option.put("selected", true);
+            }
+            groupOptions.add(option);
+        }
+
         model.addAttribute("trim", trim);
         model.addAttribute("isTrimPage", true);
         model.addAttribute("units", unitOptions);
         model.addAttribute("suppliers", supplierOptions);
+        model.addAttribute("materialGroups", groupOptions);
         model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));
 
         return "trim/trim_form";

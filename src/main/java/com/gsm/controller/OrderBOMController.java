@@ -26,6 +26,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Handles all web requests related to the Order Bill of Materials (BOM).
+ * This includes displaying the BOM list, showing the creation/edit form, and saving data.
+ */
 @Controller
 @RequestMapping("/order-boms")
 public class OrderBOMController {
@@ -36,6 +40,9 @@ public class OrderBOMController {
     private final UnitRepository unitRepository;
     private final MaterialGroupRepository materialGroupRepository; // Thêm
 
+    /**
+     * Constructor for dependency injection of required services and repositories.
+     */
     @Autowired
     public OrderBOMController(OrderBOMService orderBOMService, BOMTemplateService bomTemplateService, UnitRepository unitRepository, SupplierRepository supplierRepository, MaterialGroupRepository materialGroupRepository) {
         this.orderBOMService = orderBOMService;
@@ -45,56 +52,83 @@ public class OrderBOMController {
         this.materialGroupRepository = materialGroupRepository;
     }
 
-    // ===============================================
-    // === ENDPOINT MỚI ĐỂ HIỂN THỊ DANH SÁCH BOM ===
-    // ===============================================
+    /**
+     * Displays the list of all Order BOMs.
+     * @param model The Spring Model to pass data to the view.
+     * @return The name of the Order BOM list view template.
+     */
     @GetMapping
     public String showOrderBomList(Model model) {
         List<OrderBOMDto> orderBOMs = orderBOMService.findAll();
         model.addAttribute("orderBOMs", orderBOMs);
-        model.addAttribute("isBomPage", true); // Để highlight menu sidebar
+        model.addAttribute("isBomPage", true);
         return "bom/order_bom_list";
     }
 
+    /**
+     * Displays the Order BOM form for a specific Sale Order.
+     * It will find an existing BOM or create a new one if it doesn't exist.
+     * It also prepares all necessary data for dropdowns and serializes details to JSON for the frontend.
+     * @param saleOrderId The ID of the Sale Order to create/edit the BOM for.
+     * @param model The Spring Model to pass data to the view.
+     * @param request The HttpServletRequest to access the CSRF token.
+     * @return The name of the Order BOM form view template.
+     * @throws JsonProcessingException If there is an error serializing the details list to JSON.
+     */
     @GetMapping("/form")
     public String showOrderBomForm(@RequestParam Long saleOrderId, Model model, HttpServletRequest request) throws JsonProcessingException { // Thêm throws
         OrderBOMDto orderBOM = orderBOMService.findOrCreateBySaleOrderId(saleOrderId);
         List<BOMTemplateDto> bomTemplates = bomTemplateService.findAll();
 
-        // Lấy danh sách Unit và Supplier để truyền ra cho các dropdown
         List<Unit> allUnits = unitRepository.findAll();
         List<Supplier> allSuppliers = supplierRepository.findAll();
         List<Map<String, Object>> supplierOptions = new ArrayList<>();
+        List<Map<String, Object>> templateOptions = new ArrayList<>();
+        Long selectedTemplateId = orderBOM.getBomTemplateId();
         for (Supplier supplier : allSuppliers) {
             Map<String, Object> option = new HashMap<>();
             option.put("supplierId", supplier.getSupplierId());
             option.put("supplierName", supplier.getSupplierName());
-            // Thêm currencyCode vào đây
             option.put("currencyCode", supplier.getCurrencyCode());
             supplierOptions.add(option);
         }
 
-        // === THÊM MỚI: Chuyển đổi details thành JSON cho JavaScript ===
+        for (BOMTemplateDto template : bomTemplates) {
+            Map<String, Object> option = new HashMap<>();
+            option.put("bomTemplateId", template.getBomTemplateId());
+            option.put("bomTemplateName", template.getBomTemplateName());
+
+            if (selectedTemplateId != null && selectedTemplateId.equals(template.getBomTemplateId())) {
+                option.put("selected", true);
+            }
+            templateOptions.add(option);
+        }
+
         ObjectMapper mapper = new ObjectMapper();
-        String detailsJson = "[]"; // Mặc định là một mảng rỗng
+        String detailsJson = "[]";
         if (orderBOM.getDetails() != null && !orderBOM.getDetails().isEmpty()) {
             detailsJson = mapper.writeValueAsString(orderBOM.getDetails());
         }
-        // ==========================================================
 
         model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));
         model.addAttribute("orderBOM", orderBOM);
-        model.addAttribute("bomTemplates", bomTemplates);
-        model.addAttribute("units", allUnits); // Truyền danh sách Unit
+        model.addAttribute("bomTemplates", templateOptions);
+        model.addAttribute("units", allUnits);
         model.addAttribute("suppliers", supplierOptions);
-        model.addAttribute("detailsJson", detailsJson); // TRUYỀN CHUỖI JSON RA VIEW
+        model.addAttribute("detailsJson", detailsJson);
         model.addAttribute("isBomPage", true);
-        model.addAttribute("materialGroups", materialGroupRepository.findAll()); // Thêm dòng này
+        model.addAttribute("materialGroups", materialGroupRepository.findAll());
 
         return "sale-order/order_bom_form";
     }
 
 
+    /**
+     * Handles the submission of the Order BOM form.
+     * @param orderBOMDto The DTO containing the form data.
+     * @param redirectAttributes Used to pass success or error messages after a redirect.
+     * @return A redirect command to the Sale Order form.
+     */
     @PostMapping("/save")
     public String saveOrderBom(@ModelAttribute OrderBOMDto orderBOMDto, RedirectAttributes redirectAttributes) {
         try {

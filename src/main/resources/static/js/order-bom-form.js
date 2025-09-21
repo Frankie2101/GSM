@@ -51,7 +51,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    const fetchMaterialList = (type) => fetchApi(`/api/materials?type=${type}`);
+    const fetchMaterialList = (type, materialGroupId) => {
+        if (!type || !materialGroupId) return Promise.resolve([]);
+        return fetchApi(`/api/materials?type=${type}&materialGroupId=${materialGroupId}`);
+    };
     const fetchMaterialDetails = (id, type) => fetchApi(`/api/material-details/${id}?type=${type}`);
     const fetchMaterialColors = (type, materialId) => fetchApi(`/api/material-colors?type=${type}&materialId=${materialId}`);
     const fetchMaterialSizes = (trimId, colorCode) => fetchApi(`/api/material-sizes?trimId=${trimId}&colorCode=${colorCode}`);
@@ -89,8 +92,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <input type="hidden" name="details[${index}].seq">
             <input type="hidden" name="details[${index}].fabricId" value="${detail.fabricId || ''}">
             <input type="hidden" name="details[${index}].trimId" value="${detail.trimId || ''}">
-            <td><select class="form-select form-select-sm material-group-select" name="details[${index}].materialGroupId">${materialGroupOptionsHtml}</select></td>
             <td><select class="form-select form-select-sm material-type-select" name="details[${index}].materialType"><option value=""></option><option value="FA" ${detail.materialType === 'FA' ? 'selected' : ''}>Fabric</option><option value="TR" ${detail.materialType === 'TR' ? 'selected' : ''}>Trim</option></select></td>
+            <td><select class="form-select form-select-sm material-group-select" name="details[${index}].materialGroupId">${materialGroupOptionsHtml}</select></td>
             <td><select class="form-select form-select-sm material-code-select" name="details[${index}].materialCode"></select></td>
             <td><input type="text" class="form-control form-control-sm material-name-input" name="details[${index}].materialName" value="${detail.materialName || ''}" readonly></td>
             <td><select class="form-select form-select-sm color-code-select" name="details[${index}].colorCode"></select></td>
@@ -124,9 +127,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const codeSelect = row.querySelector('.material-code-select');
-        if (detail.materialType) {
-            //Get the material list based on material type
-            const materials = await fetchMaterialList(detail.materialType);
+        if (detail.materialGroupId && detail.materialType) {
+            //Get the material list based on material type and material group
+            const materials = await fetchMaterialList(detail.materialType, detail.materialGroupId);
             codeSelect.innerHTML = '<option value=""></option>'; //Clear previous selected option
             materials.forEach(m => {
                 const rmId = detail.fabricId || detail.trimId;
@@ -142,13 +145,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 const colorSelect = row.querySelector('.color-code-select');
                 colorSelect.innerHTML = '<option value=""></option>';
                 colors.forEach(c => {
-                    const option = new Option(c.name ? `${c.code} - ${c.name}` : c.code, c.code);
+                    const option = new Option(c.code, c.code);
                     option.dataset.name = c.name;
                     option.dataset.price = c.price;
                     if(detail.colorCode && c.code === detail.colorCode) { option.selected = true; }
                     colorSelect.add(option);
                 });
                 colorSelect.dispatchEvent(new Event('change'));
+            }
+
+            if (detail.materialType === 'FA') {
+                const sizeSelect = row.querySelector('.size-select');
+                sizeSelect.disabled = true;
+                sizeSelect.value = '';
+                sizeSelect.innerHTML = '';
             }
         }
     }
@@ -203,30 +213,58 @@ document.addEventListener('DOMContentLoaded', function() {
         const row = target.closest('tr');
         if (!row) return;
 
+        const materialGroup = row.querySelector('.material-group-select').value;
         const type = row.querySelector('.material-type-select').value;
         const materialId = row.querySelector('.material-code-select').value;
         const colorSelect = row.querySelector('.color-code-select');
         const sizeSelect = row.querySelector('.size-select');
         const priceInput = row.querySelector('.price-input');
 
-        //Once change Material Type, call API to get the Material Code list and clear the previous reference
-        //value such as Material Name, UOM, ...
-        if (target.classList.contains('material-type-select')) {
-            const codeSelect = row.querySelector('.material-code-select');
-            const materials = await fetchMaterialList(type);
-            codeSelect.innerHTML = '<option value=""></option>';
-            materials.forEach(m => codeSelect.add(new Option(m.code, m.id)));
+        //Reset related field to Material Code
+        const resetMaterialFields = () => {
             row.querySelector('.material-name-input').value = '';
             row.querySelector('.uom-select').value = '';
             row.querySelector('.supplier-select').value = '';
-            colorSelect.innerHTML = '';
-            sizeSelect.innerHTML = '';
+            row.querySelector('.color-code-select').innerHTML = '';
+            row.querySelector('.size-select').innerHTML = '';
+            const fabricIdInput = row.querySelector('input[name$=".fabricId"]');
+            const trimIdInput = row.querySelector('input[name$=".trimId"]');
             priceInput.value = '';
+        };
+
+        //Once change Material Type or Material Group, call API to get the Material Code list and clear the previous reference
+        //value such as Material Name, UOM, ...
+        if (target.classList.contains('material-group-select') || target.classList.contains('material-type-select')) {
+            const codeSelect = row.querySelector('.material-code-select');
+            codeSelect.innerHTML = '<option value=""></option>';
+            resetMaterialFields();
+
+            if (materialGroup && type) {
+                const materials = await fetchMaterialList(type, materialGroup);
+                materials.forEach(m => codeSelect.add(new Option(m.code, m.id)));
+            }
+
+            if (type === 'FA') {
+                sizeSelect.disabled = true;
+                sizeSelect.value = '';
+                sizeSelect.innerHTML = '';
+            } else {
+                sizeSelect.disabled = false;
+            }
         }
+
 
         //Once change Material Code, automatically populate Material Name, Supplier, UOM
         if (target.classList.contains('material-code-select')) {
+            fabricIdInput.value = '';
+            trimIdInput.value = '';
             if (materialId) {
+                if (type === 'FA') {
+                    fabricIdInput.value = materialId;
+                } else if (type === 'TR') {
+                    trimIdInput.value = materialId;
+                }
+
                 const details = await fetchMaterialDetails(materialId, type);
                 if (details) {
                     row.querySelector('.material-name-input').value = details.name || '';
@@ -412,39 +450,80 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
+     * Helper function to gather all data from the form and structure it into a JSON payload.
+     */
+    function getBomDataAsPayload() {
+        const details = Array.from(tableBody.querySelectorAll('tr')).map(row => {
+            const getInputValue = (selector) => row.querySelector(selector)?.value;
+            const getNumericValue = (selector) => parseFloat(getInputValue(selector)) || 0;
+
+            return {
+                orderBOMDetailId: getInputValue('input[name$=".orderBOMDetailId"]') || null,
+                seq: parseInt(getInputValue('input[name$=".seq"]')),
+                materialGroupId: getInputValue('select[name$=".materialGroupId"]'),
+                materialType: getInputValue('select[name$=".materialType"]'),
+                fabricId: getInputValue('input[name$=".fabricId"]') || null,
+                trimId: getInputValue('input[name$=".trimId"]') || null,
+                materialCode: getInputValue('select[name$=".materialCode"] option:checked')?.textContent || '',
+                materialName: getInputValue('input[name$=".materialName"]'),
+                colorCode: getInputValue('select[name$=".colorCode"]'),
+                colorName: getInputValue('input[name$=".colorName"]'),
+                size: getInputValue('select[name$=".size"]'),
+                uom: getInputValue('select[name$=".uom"]'),
+                supplier: getInputValue('select[name$=".supplier"]'),
+                price: getNumericValue('input[name$=".price"]'),
+                currency: getInputValue('input[name$=".currency"]'),
+                usageValue: getNumericValue('input[name$=".usageValue"]'),
+                waste: getNumericValue('input[name$=".waste"]'),
+                soQty: getNumericValue('input[name$=".soQty"]'),
+                demandQty: getNumericValue('input[name$=".demandQty"]'),
+                inventoryQty: getNumericValue('input[name$=".inventoryQty"]'),
+                purchaseQty: getNumericValue('input[name$=".purchaseQty"]')
+            };
+        });
+
+        return {
+            orderBOMId: document.querySelector('input[name="orderBOMId"]').value || null,
+            saleOrderId: saleOrderIdInput.value,
+            bomTemplateId: bomTemplateSelect.value,
+            details: details
+        };
+    }
+
+    /**
      * Handles the final confirmation click in the PO generation modal.
      */
     if (confirmPoGenerationBtn) {
         confirmPoGenerationBtn.addEventListener('click', async function() {
-            // 1. Show a "Processing..." popup.
-            Swal.fire({ title: 'Processing...', text: 'System is saving BOM and generating Purchase Orders.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+            Swal.fire({
+                title: 'Processing...',
+                text: 'System is saving BOM and generating Purchase Orders.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
 
-            // 2. Collect all data from the main BOM form.
-            const formData = new FormData(orderBOMForm);
+            const payload = getBomDataAsPayload();
+
             try {
-                // 3. Submit the data to the PO generation API endpoint.
                 const response = await fetch('/api/order-boms/generate-pos', {
                     method: 'POST',
                     headers: {
+                        'Content-Type': 'application/json',
                         [csrfHeader]: csrfToken
                     },
-                    body: new URLSearchParams(formData)
+                    body: JSON.stringify(payload)
                 });
 
                 const result = await response.json();
 
-                // 4. Handle the API response.
                 if (response.ok) {
-                    // On success, show a success message and redirect.
                     Swal.fire({ icon: 'success', title: 'Success!', text: result.message, }).then(() => {
                         window.location.href = `/sale-orders/form?id=${saleOrderIdInput.value}`;
                     });
                 } else {
-                    // On failure, throw an error to be caught below.
                     throw new Error(result.message || 'An unknown error occurred.');
                 }
             } catch (error) {
-                // 5. Display a generic error message if the API call fails.
                 Swal.fire({ icon: 'error', title: 'Operation Failed', text: error.message, });
             }
         });

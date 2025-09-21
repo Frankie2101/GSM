@@ -44,7 +44,7 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
      * @return A {@code List<Object[]>}, where each array contains the color code (e.g., ["White"], ["Black"]).
      */
     @Query("SELECT DISTINCT v.color FROM ProductVariant v WHERE v.product.productId = :productId ORDER BY v.color")
-    List<Object[]> findDistinctColorsByProductId(@Param("productId") Long productId); //The reason for `Object[]` is that the query selects individual fields, not a full entity.
+    List<String> findDistinctColorsByProductId(@Param("productId") Long productId);
 
     /**
      * Deletes all variants associated with a specific parent product ID.

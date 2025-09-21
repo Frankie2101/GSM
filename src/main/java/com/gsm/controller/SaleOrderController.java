@@ -110,7 +110,7 @@ public class SaleOrderController {
             String detailsJson = mapper.writeValueAsString(order.getDetails());
             model.addAttribute("detailsJson", detailsJson);
         } else {
-            model.addAttribute("detailsJson", "[]"); // Trả về mảng rỗng nếu không có details
+            model.addAttribute("detailsJson", "[]");
         }
 
         model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));

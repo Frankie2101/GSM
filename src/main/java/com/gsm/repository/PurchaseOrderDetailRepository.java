@@ -19,4 +19,9 @@ public interface PurchaseOrderDetailRepository extends JpaRepository<PurchaseOrd
      */
     boolean existsByOrderBOMDetail(OrderBOMDetail orderBOMDetail);
 
+    /**
+     * Checks if a PurchaseOrderDetail exists by the ID of its associated OrderBOMDetail.
+     */
+    boolean existsByorderBOMDetail_OrderBOMDetailId(Long orderBOMDetailId);
+
 }

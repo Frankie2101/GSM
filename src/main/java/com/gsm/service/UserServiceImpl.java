@@ -12,7 +12,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,16 +19,23 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.springframework.security.core.userdetails.UserDetails; // THÊM IMPORT
 
+/**
+ * The concrete implementation of the UserService interface.
+ * Contains all business logic for user management and integrates with Spring Security.
+ */
 @Service
 public class UserServiceImpl implements UserService {
 
     @Autowired private UserRepository userRepository;
     @Autowired private PasswordEncoder passwordEncoder; // <-- TIÊM PasswordEncoder VÀO
 
+    /**
+     * Saves a user. This handles both creation of new users and updates to existing ones.
+     * It includes logic to check for duplicate phone numbers and to hash the password.
+     */
     @Override
     @Transactional
     public UserDto save(UserDto dto) {
-        // Kiểm tra trùng lặp
         userRepository.findByPhoneNumber(dto.getPhoneNumber()).ifPresent(existing -> {
             if (dto.getUserId() == null || !existing.getUserId().equals(dto.getUserId())) {
                 throw new DuplicateResourceException("Phone number '" + dto.getPhoneNumber() + "' already exists.");
@@ -75,7 +81,10 @@ public class UserServiceImpl implements UserService {
         return convertEntityToDto(user);
     }
 
-    // Helper methods
+    /**
+     * Maps the data from a UserDto to a User entity.
+     * If a new password is provided in the DTO, it will be encoded before being set.
+     */
     private void mapDtoToEntity(UserDto dto, User user) {
         user.setUserName(dto.getUserName());
         user.setDepartment(dto.getDepartment());
@@ -103,15 +112,22 @@ public class UserServiceImpl implements UserService {
         return dto;
     }
 
+    /**
+     * This method is required by Spring Security's UserDetailsService.
+     * It loads a user by their username and returns a UserDetails object.
+     * We return our CustomUserDetails to include the user's database ID.
+     * @param username The username to look for.
+     * @return A CustomUserDetails object for Spring Security.
+     * @throws UsernameNotFoundException if the user is not found.
+     */
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         com.gsm.model.User user = userRepository.findByUserName(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
-        // THAY ĐỔI Ở ĐÂY: Trả về CustomUserDetails thay vì User mặc định
         return new CustomUserDetails(
-                user.getUserId(),      // <-- Truyền vào UserId
+                user.getUserId(),
                 user.getUserName(),
                 user.getPassword(),
                 new ArrayList<>()

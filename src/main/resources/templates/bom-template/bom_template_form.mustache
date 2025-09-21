@@ -41,6 +41,7 @@
                     </div>
                 </div>
 
+                {{! ... header part ... }}
                 <form action="/bom-templates/save" method="post" id="bomTemplateForm">
                     {{#_csrf}}
                         <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
@@ -74,7 +75,10 @@
                         </div>
                     </div>
 
-                    <!-- ========== BOM DETAILS (DETAIL) ========== -->
+                    {{!
+                      BOM Details section with a dynamic table.
+                      The table body is managed by bom-template-form.js.
+                    }}
                     <div class="card mb-4">
                         <div class="card-header text-gradient-custom"><i class="bi bi-list-ul me-1"></i> BOM Details</div>
                         <div class="card-body">
@@ -86,16 +90,22 @@
                                             <input class="form-check-input" type="checkbox" id="selectAllCheckbox">
                                         </th>
                                         <th style="width: 5%;">Seq</th>
-                                        <th style="width: 15%;">RM Type</th>
-                                        <th style="width: 20%;">RM Code</th>
+                                        <th style="width: 10%;">RM Type</th>
+                                        <th style="width: 17%;">Material Group</th>
+                                        <th style="width: 15%;">RM Code</th>
                                         <th style="width: 20%;">RM Name</th>
                                         <th style="width: 10%;">Unit</th>
                                         <th style="width: 10%;">Usage</th>
-                                        <th style="width: 10%;">Waste %</th>
+                                        <th style="width: 8%;">Waste %</th>
                                         <th style="width: 5%;" class="text-center">Action</th>
                                     </tr>
                                     </thead>
                                     <tbody id="detailTableBody">
+                                    {{!
+                                       This block loops through existing details (on edit mode).
+                                       The inputs use 'data-name' attributes, which JavaScript will
+                                       use to generate the final 'name' attribute (e.g., "details[0].rmType").
+                                     }}
                                     {{#details}}
                                         <tr>
                                             <td class="text-center align-middle">
@@ -110,6 +120,9 @@
                                                     <option value="FA" {{#isFa}}selected{{/isFa}}>Fabric</option>
                                                     <option value="TR" {{#isTr}}selected{{/isTr}}>Trim</option>
                                                 </select>
+                                            </td>
+                                            <td>
+                                                <select class="form-select material-group-select" data-name="materialGroupId" data-selected-id="{{materialGroupId}}"></select>
                                             </td>
                                             <td>
                                                 <select class="form-select rm-code-select" data-name="rmId" data-selected-id="{{rmId}}"></select>
@@ -140,6 +153,14 @@
     </div>
 </div>
 {{> layout/scripts}}
+
+<template id="material-groups-data-template">
+    <option value="">-- Select Group --</option>
+    {{#materialGroups}}
+        <option value="{{materialGroupId}}">{{materialGroupName}}</option>
+    {{/materialGroups}}
+</template>
+
 <script src="/js/bom-template-form.js"></script>
 </body>
 </html>

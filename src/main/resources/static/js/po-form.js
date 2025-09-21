@@ -5,7 +5,8 @@
  */
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- 1. INITIALIZATION: Get elements and initial data from the JSON data island ---    const poData = JSON.parse(document.getElementById('po-data').textContent);
+    // --- 1. INITIALIZATION: Get elements and initial data from the JSON data island ---
+    const poData = JSON.parse(document.getElementById('po-data').textContent);
     console.log("Loaded PO Data from Server:", poData);
 
     // ... element selectors ..

@@ -76,6 +76,15 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-4 mb-3">
+                                    <label for="materialGroupId" class="form-label">Material Group <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="materialGroupId" name="materialGroupId" required>
+                                        <option value="">-- Select a Group --</option>
+                                        {{#materialGroups}}
+                                            <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
+                                        {{/materialGroups}}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
                                     <label for="fabricCode" class="form-label">Fabric Code <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="fabricCode" name="fabricCode" value="{{#fabricCode}}{{.}}{{/fabricCode}}" required>
                                 </div>

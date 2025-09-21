@@ -1,7 +1,8 @@
-// --- Phan khoi tao khi trang da tai xong ---
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Phan khai bao bien ---
+    /**
+     * Variable declarations and caching of DOM elements.
+     */
     const form = document.getElementById('outputForm');
     const saleOrderNoInput = document.getElementById('saleOrderNo');
     const styleSelect = document.getElementById('style');
@@ -19,10 +20,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const toastContent = document.getElementById('toast-content');
     let toastTimeout;
 
-    // --- Ham xu ly giao dien ---
+    /**
+     * Shows the loading overlay.
+     */
     const showLoading = () => loadingOverlay.classList.remove('hidden');
+
+    /**
+     * Hides the loading overlay.
+     */
     const hideLoading = () => loadingOverlay.classList.add('hidden');
 
+    /**
+     * Displays a toast notification message.
+     * @param {string} message - The message to display.
+     * @param {boolean} [isSuccess=true] - Determines if the toast is for success or error.
+     */
     function showToast(message, isSuccess = true) {
         clearTimeout(toastTimeout);
         const icon = isSuccess
@@ -35,6 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
         toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 3000);
     }
 
+    /**
+     * Populates a <select> element with a list of options.
+     * @param {HTMLElement} select - The select element to populate.
+     * @param {Array<string>} options - An array of strings to use as options.
+     * @param {string} placeholder - The placeholder text for the first option.
+     */
     function populateSelect(select, options, placeholder) {
         select.innerHTML = `<option value="">${placeholder}</option>`;
         options.forEach(opt => {
@@ -45,7 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Cac ham logic ---
+    /**
+     * Loads the current user's data from the server and populates the relevant form fields.
+     */
     async function loadCurrentUser() {
         if (currentUser) {
             departmentInput.value = currentUser.department || '';
@@ -66,6 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Fetches details for the entered Sale Order number and populates the Style dropdown.
+     */
     async function handleSaleOrderNoChange() {
         const soNo = saleOrderNoInput.value.trim();
         styleSelect.innerHTML = '<option value="">Style</option>';
@@ -95,6 +118,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Populates the Color dropdown based on the selected Style from cached data.
+     */
     function handleStyleChange() {
         const selectedStyle = styleSelect.value;
         colorSelect.innerHTML = '<option value="">Color</option>';
@@ -110,6 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Handles the form submission event. Validates the form and sends the data to the server.
+     * @param {Event} event - The form submission event.
+     */
     async function handleSubmit(event) {
         event.preventDefault();
         if (!form.checkValidity()) {
@@ -153,16 +183,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Gan su kien ---
     form.addEventListener('submit', handleSubmit);
     saleOrderNoInput.addEventListener('blur', handleSaleOrderNoChange);
     styleSelect.addEventListener('change', handleStyleChange);
 
-    // --- Khoi chay ---
     loadCurrentUser();
 });
 
-// --- Dang ky Service Worker (nam ngoai event DOMContentLoaded) ---
+/**
+ * Registers the Service Worker for Progressive Web App (PWA) capabilities.
+ */
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')

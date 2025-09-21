@@ -3,12 +3,15 @@ package com.gsm.dto;
 
 import lombok.Data;
 
-@Data // <-- Thêm annotation này
+/**
+ * A Data Transfer Object for the Zalo login flow. It carries the Zalo User ID
+ * from the Mini App to the backend for authentication.
+ */
+@Data
 public class ZaloLoginRequestDto {
-    private String zaloUserId;
 
-    // Lưu ý: Trong luồng đăng nhập bằng zaloUserId mới,
-    // trường phoneNumberToken không còn cần thiết nữa.
-    // Bạn có thể xóa nó đi để code gọn gàng hơn.
-    // private String phoneNumberToken;
+    /**
+     * The unique identifier of the Zalo user attempting to log in.
+     */
+    private String zaloUserId;
 }

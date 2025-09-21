@@ -5,22 +5,25 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A DTO that holds all data for the "Performance" tab on the dashboard.
+ */
 @Data
 @NoArgsConstructor
 public class PerformanceTabDto {
-    // KPI: Tỷ lệ hoàn thành đúng hạn
-    private double onTimeCompletionRate;
 
-    // KPI: Thời gian sản xuất trung bình (ngày)
+    private double onTimeCompletionRate;
     private double averageLeadTime;
 
-    // Dữ liệu cho biểu đồ năng suất theo ngày (Daily Throughput)
-    // Key: Ngày (String), Value: Số lượng (Integer)
+    /**
+     * Data for the daily throughput chart.
+     */
     private DailyThroughputChartDto dailyThroughputChart;
 
-    // Dữ liệu cho biểu đồ S-Curve
+    /**
+     * Data for the S-Curve chart (plan vs. actual).
+     */
     private SCurveChartDto sCurveChart;
 
-    // Dữ liệu cho bảng rủi ro vật tư
     private List<MaterialRiskDto> materialRiskTable;
 }

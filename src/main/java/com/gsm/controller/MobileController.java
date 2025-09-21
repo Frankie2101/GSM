@@ -8,36 +8,35 @@ import org.springframework.web.bind.annotation.GetMapping;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * Controller này chịu trách nhiệm phục vụ các trang HTML
- * dành riêng cho giao diện di động (PWA).
+ * This controller is responsible for serving the HTML pages
+ * dedicated to the mobile interface (PWA).
  */
 @Controller
 public class MobileController {
 
     /**
-     * Phục vụ trang nhập liệu chính cho di động.
-     * Nếu người dùng chưa đăng nhập, Spring Security sẽ tự động chuyển hướng
-     * họ đến trang login được định nghĩa trong SecurityConfig.
-     * @param model Model để truyền dữ liệu tới view.
-     * @param request HttpServletRequest để lấy CSRF token.
-     * @return Tên của template view.
+     * Serves the main data input page for the mobile interface.
+     * If the user is not logged in, Spring Security will automatically redirect
+     * them to the login page defined in SecurityConfig.
+     * @param model Model to pass data to the view.
+     * @param request HttpServletRequest to retrieve the CSRF token.
+     * @return The name of the view template.
      */
     @GetMapping("/mobile-output")
     public String showMobileInputPage(Model model, HttpServletRequest request) {
-        // Gửi CSRF token để Javascript có thể thực hiện các request POST tới API
         model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));
-        return "mobile/mobile_output"; // Trỏ tới file: templates/mobile/input.mustache
+        return "mobile/mobile_output";
     }
 
     /**
-     * Phục vụ trang đăng nhập cho di động.
-     * @param model Model để truyền dữ liệu tới view.
-     * @param request HttpServletRequest để lấy CSRF token.
-     * @return Tên của template view.
+     * Serves the login page for the mobile interface.
+     * @param model Model to pass data to the view.
+     * @param request HttpServletRequest to retrieve the CSRF token.
+     * @return The name of the view template.
      */
     @GetMapping("/mobile-login")
     public String showMobileLoginPage(Model model, HttpServletRequest request) {
         model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));
-        return "mobile/mobile_login"; // Trỏ tới file: templates/mobile/login.mustache
+        return "mobile/mobile_login";
     }
 }

@@ -33,13 +33,17 @@ public class MaterialApiController {
      * @return A list of simplified material info.
      */
     @GetMapping("/materials")
-    public ResponseEntity<List<MaterialSelectionInfo>> getMaterialList(@RequestParam String type) {
+    public ResponseEntity<List<MaterialSelectionInfo>> getMaterialList(@RequestParam String type, @RequestParam(required = false) Long materialGroupId) {
+        if (materialGroupId == null) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
         if ("FA".equalsIgnoreCase(type)) {
-            return ResponseEntity.ok(fabricRepository.findAll().stream()
+            return ResponseEntity.ok(fabricRepository.findByMaterialGroup_MaterialGroupId(materialGroupId).stream()
                     .map(f -> new MaterialSelectionInfo(f.getFabricId(), f.getFabricCode()))
                     .collect(Collectors.toList()));
         } else if ("TR".equalsIgnoreCase(type)) {
-            return ResponseEntity.ok(trimRepository.findAll().stream()
+            return ResponseEntity.ok(trimRepository.findByMaterialGroup_MaterialGroupId(materialGroupId).stream()
                     .map(t -> new MaterialSelectionInfo(t.getTrimId(), t.getTrimCode()))
                     .collect(Collectors.toList()));
         }

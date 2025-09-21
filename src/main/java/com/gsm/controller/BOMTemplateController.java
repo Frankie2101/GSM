@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.gsm.model.MaterialGroup;
+import com.gsm.repository.MaterialGroupRepository;
 
 /**
  * Controller for handling all user-facing HTTP requests for the BOM Template feature.
@@ -27,6 +29,7 @@ public class BOMTemplateController {
 
     @Autowired private BOMTemplateService bomTemplateService;
     @Autowired private ProductCategoryRepository categoryRepository;
+    @Autowired private MaterialGroupRepository materialGroupRepository;
 
     /**
      * Displays the form for creating a new BOM Template or editing an existing one.
@@ -55,6 +58,9 @@ public class BOMTemplateController {
             categoryOptions.add(option);
         }
 
+        List<MaterialGroup> allMaterialGroups = materialGroupRepository.findAll();
+
+        model.addAttribute("materialGroups", allMaterialGroups);
         model.addAttribute("template", template);
         model.addAttribute("isBomTemplatePage", true);
         model.addAttribute("categories", categoryOptions);

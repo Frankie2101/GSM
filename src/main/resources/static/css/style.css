@@ -1,8 +1,11 @@
+/*
+  CSS Variable definitions for theme colors and layout sizes.
+*/
 :root {
     --main-bg-color: #F8F9FD;
     --sidebar-width: 260px;
-    --primary-blue: #4e73df; /* Màu xanh chính của theme */
-    --edit-button-color: #3159e1; /* Ví dụ màu xanh đậm cho chữ nút Search/AddNew */
+    --primary-blue: #4e73df;
+    --edit-button-color: #3159e1;
 }
 
 body {
@@ -11,6 +14,9 @@ body {
     overflow-x: hidden;
 }
 
+/*
+  Main layout styles using Flexbox for the sidebar and page content.
+*/
 #wrapper {
     display: flex;
     transition: all 0.3s ease;
@@ -39,7 +45,9 @@ main.container-fluid {
     flex-grow: 1;
 }
 
-/* Toggled state for sidebar */
+/*
+  Styles for the toggled (collapsed) state of the sidebar.
+*/
 #wrapper.toggled #sidebar-wrapper {
     margin-left: calc(-1 * var(--sidebar-width));
 }
@@ -49,9 +57,8 @@ main.container-fluid {
     margin-left: 0;
 }
 
-/* YÊU CẦU 1: Tăng kích thước và nâng vị trí logo */
 .sidebar-heading {
-    padding: 1rem 1rem 1.5rem 1rem; /* Giảm padding trên để logo cao lên */
+    padding: 1rem 1rem 1.5rem 1rem;
     font-size: 1.2rem;
     font-weight: bold;
     border-bottom: 1px solid #dee2e6;
@@ -59,10 +66,8 @@ main.container-fluid {
 }
 
 .sidebar-heading img {
-    height: 130px; /* Tăng chiều cao logo gấp đôi (105px * 2) */
+    height: 130px;
 }
-
-/* --- HẾT YÊU CẦU 1 --- */
 
 .list-group-item {
     border: 0;
@@ -72,43 +77,40 @@ main.container-fluid {
     font-weight: 600;
 }
 
-/* Đảm bảo các mục bị vô hiệu hóa (disabled) có cùng màu */
 .list-group-item.disabled, .list-group-item:disabled {
-    color: #5a6a85; /* Ghi đè màu mặc định của Bootstrap */
-    opacity: 1; /* Bỏ hiệu ứng làm mờ để màu sắc đồng nhất */
+    color: #5a6a85;
+    opacity: 1;
     background-color: transparent;
 }
 
-/* YÊU CẦU 2, 3, 4: Chỉnh sửa mục menu đang được chọn */
+/*
+  Styles for the active (selected) menu item in the sidebar.
+  Includes background color, left border, and a gradient text color.
+*/
 .list-group-item.active {
-    background-color: #F2F7FF; /* Yêu cầu 2: Đổi màu nền */
-
-    /* Yêu cầu 4: Tăng width và đổi màu thanh bên trái */
+    background-color: #F2F7FF;
     border-left: 6px solid #5584CE;
-
     font-weight: 700;
-
-    /* Yêu cầu 3: Đổi màu chữ thành dạng gradient */
     background-image: linear-gradient(90deg, #0EADD6, #384295);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
 }
 
-/* Áp dụng màu gradient cho cả icon trong menu */
 .list-group-item.active i {
     background-image: linear-gradient(90deg, #0EADD6, #384295);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
 }
-/* --- HẾT YÊU CẦU 2, 3, 4 --- */
 
 .list-group-item-action:hover, .list-group-item-action:focus {
     background-color: #f2f7ff;
 }
 
-/* Custom Card style to match Figma */
+/*
+  Custom styling for card elements to match the design.
+*/
 .card {
     border-radius: 20px;
     border: none;
@@ -124,7 +126,6 @@ main.container-fluid {
     border-top-right-radius: 20px;
 }
 
-/* Custom button styles to match Figma */
 .btn-create {
     background: linear-gradient(90deg, #0EADD6, #384295);
     border: none;
@@ -143,7 +144,6 @@ main.container-fluid {
     padding: 0.5rem 1.5rem;
 }
 
-/* Custom style for "View" link in table */
 .action-link {
     color: #3949AB;
     text-decoration: none;
@@ -154,23 +154,23 @@ main.container-fluid {
     text-decoration: underline;
 }
 
-/* YÊU CẦU 5: Đổi màu icon trên header của trang */
 h1.h3 i {
     background-image: linear-gradient(90deg, #0EADD6, #384295);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
 }
-/* --- HẾT YÊU CẦU 5 --- */
 
 .user-avatar-img {
     height: 32px;
     width: 32px;
-    border-radius: 50%; /* Đây là thuộc tính chính để tạo ảnh tròn */
-    object-fit: cover; /* Đảm bảo ảnh không bị méo */
+    border-radius: 50%;
+    object-fit: cover;
 }
 
-/* Custom Button Styles */
+/*
+  Custom button styles with gradient backgrounds.
+*/
 .btn-custom-gradient {
     background-image: linear-gradient(to right, #14ADD6, #384295);
     /*background-image: linear-gradient(to right, #384295, #384295); */
@@ -194,15 +194,13 @@ h1.h3 i {
     color: #14ADD6;
 }
 
-/* --- CSS cho màu chữ Gradient --- */
 .text-gradient-custom {
     background-image: linear-gradient(to right, #14ADD6, #384295);
-    -webkit-background-clip: text; /* Dành cho các trình duyệt Webkit (Chrome, Safari) */
+    -webkit-background-clip: text;
     background-clip: text;
-    color: transparent; /* Làm cho màu chữ gốc trở nên trong suốt */
+    color: transparent;
 }
 
-/* YÊU CẦU 4: Style cho nút Delete mới */
 .btn-delete-gradient {
     background-image: linear-gradient(to right, #F57474, #FF0000);
     border: none;
@@ -217,70 +215,72 @@ h1.h3 i {
     opacity: 0.9;
 }
 
+/*
+  Custom styles for form inputs and select boxes, including focus effects.
+*/
 .form-control,
 .form-select {
-    border: 1px solid #dee2e6; /* Màu viền nhạt hơn */
-    border-radius: 0.5rem; /* Bo góc mềm hơn một chút */
-    box-shadow: none; /* Bỏ shadow mặc định */
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    box-shadow: none;
     transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
 }
 
 .form-control:focus,
 .form-select:focus {
-    border-color: #8ab5f1; /* Màu viền khi focus */
+    border-color: #8ab5f1;
     outline: 0;
-    /* Sử dụng box-shadow với màu gradient của theme */
     box-shadow: 0 0 0 0.2rem rgba(56, 66, 149, 0.2);
 }
 
-/* Tùy chỉnh màu mũi tên của select box cho nhất quán */
 .form-select {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23384295' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }
 
-/* YÊU CẦU 3: Áp dụng màu gradient cho cả icon trong card-header */
 .card-header.text-gradient-custom i {
-    /* Dùng lại biến hoặc định nghĩa màu gradient */
     background-image: linear-gradient(to right, #14ADD6, #384295);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
 }
 
-/* YÊU CẦU 5 (MỚI): Bo tròn thanh trượt cho hiện đại hơn */
-/* Áp dụng cho các trình duyệt Webkit (Chrome, Safari, Edge) */
+/*
+Styles for a scrollbar.
+Applies to Webkit-based browsers (Chrome, Safari, Edge).
+*/
 ::-webkit-scrollbar {
-    width: 10px; /* Chiều rộng thanh trượt */
+    width: 10px;
     height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f1f1; /* Màu của rãnh trượt */
+    background: #f1f1f1;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #c1c1c1; /* Màu của con trượt */
-    border-radius: 10px; /* Đây là thuộc tính bo tròn */
+    background: #c1c1c1;
+    border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8; /* Màu con trượt khi hover */
+    background: #a8a8a8;
 }
 
 .swal2-container-custom .swal2-popup {
-    max-height: 250px; /* Điều chỉnh giá trị này theo ý muốn /
-overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
+    max-height: 250px;
+    overflow-y: auto;
 }
 
 .table-soft-bordered,
 .table-soft-bordered th,
 .table-soft-bordered td {
-    border-color: #dee2e6 !important; /* Màu viền mặc định của Bootstrap, rất dịu mắt */
+    border-color: #dee2e6 !important;
 }
 
-/* --- CSS Cho Giao Diện Size Matrix Hiện Đại --- */
-
-/* Container chính của grid */
+/*
+  CSS for the Size Matrix Grid layout.
+  Uses CSS Grid to create a compact table for size/quantity input.
+*/
 .size-grid-container {
     display: grid;
     border: 1px solid #ced4da;
@@ -289,7 +289,6 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
     background-color: #fff;
 }
 
-/* Định dạng chung cho tất cả các ô */
 .size-grid-container > div {
     padding: 0.25rem 0.75rem;
     display: flex;
@@ -299,12 +298,9 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
     border-bottom: 1px solid #dee2e6;
 }
 
-/* Bỏ viền phải và viền dưới của các ô cuối cùng */
 .size-grid-container > div:last-child { border-right: none; }
 .size-grid-container > div.grid-row-end { border-bottom: none; }
 
-
-/* Header (XS, S, M...) */
 .grid-header {
     font-weight: 600;
     color: #6c757d;
@@ -312,27 +308,24 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
     background-color: #f8f9fa;
 }
 
-/* Nhãn (Qty, Price...) */
 .grid-label {
     font-weight: 600;
     font-size: 0.8rem;
     background-color: #f8f9fa;
 }
 
-/* Ô chứa input */
 .grid-input-cell {
-    padding: 0; /* Xóa padding để input chiếm toàn bộ ô */
+    padding: 0;
 }
 
-/* Input bên trong grid */
 .grid-input-cell input {
     width: 100%;
     height: 100%;
     border: none;
     background: transparent;
     text-align: center;
-    box-shadow: none !important; /* Xóa hết shadow mặc định */
-    outline: none !important; /* Xóa outline mặc định */
+    box-shadow: none !important;
+    outline: none !important;
     border-radius: 0;
     padding: 0.25rem;
     font-size: 0.7rem;
@@ -340,49 +333,44 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
 }
 .grid-input-cell input::-webkit-outer-spin-button,
 .grid-input-cell input::-webkit-inner-spin-button {
-    -webkit-appearance: none; /* Dành cho Chrome, Safari, Edge */
+    -webkit-appearance: none;
     margin: 0;
 }
 
-/* Hiệu ứng focus giống hệt Bootstrap */
 .grid-input-cell input:focus {
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
     position: relative;
     z-index: 1;
 }
 
-/* Thêm margin-top cho các ô input/select ở hàng thông tin chính */
 .detail-card .d-flex > div > .form-control,
 .detail-card .d-flex > div > .form-select {
     margin-top: 5px;
 }
 
-/* --- Cải tiến cho bảng BOM Details --- */
-
-/* 1. Kích hoạt thanh trượt ngang */
 .table-responsive > .table {
-    min-width: 1000px; /* Đặt chiều rộng tối thiểu lớn để bảng không bị co lại */
+    min-width: 1000px;
 }
 
-/* --- Cải tiến cho bảng BOM Details --- */
 
-/* 1. Kích hoạt thanh trượt ngang */
+/*
+  Styles for the wide and horizontally scrollable tables (e.g., BOM table).
+  Uses table-layout: fixed to enforce column widths.
+*/
 .table-responsive > .table-modern {
     min-width: 2800px;
 }
 
-/* 2. Style chung cho bảng */
 .table-modern {
     border-color: #dee2e6;
-    table-layout: fixed; /* QUAN TRỌNG: Buộc bảng tuân theo chiều rộng đã định */
+    table-layout: fixed;
 }
 
 .table-modern th,
 .table-modern td {
     vertical-align: middle;
     padding: 0.5rem;
-    /* FIX: Bỏ nowrap và xử lý text dài bằng text-overflow */
-    white-space: normal; /* Cho phép text xuống dòng nếu cần */
+    white-space: normal;
 }
 
 .table-modern thead th {
@@ -398,7 +386,6 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
     cursor: pointer;
 }
 
-/* 3. Căn chỉnh input và select trong bảng */
 .table-modern td .form-control,
 .table-modern td .form-select {
     padding: 0.25rem 0.5rem;
@@ -406,12 +393,11 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
     min-width: 80px;
 }
 
-/* Nút xóa trên từng dòng */
 .delete-row-btn {
-    background-color: #dc3545; /* Màu nền đỏ */
+    background-color: #dc3545;
     border-color: #dc3545;
-    color: white; /* Icon màu trắng */
-    border-radius: 50%; /* Bo tròn */
+    color: white;
+    border-radius: 50%;
     width: 30px;
     height: 30px;
     display: inline-flex;
@@ -426,8 +412,9 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
     color: white;
 }
 
-/* 5. FIX: Hợp nhất và sửa lỗi các lớp tiện ích cho chiều rộng cột */
-/* Xóa bỏ các định nghĩa cũ và chỉ sử dụng bộ quy tắc này */
+/*
+  For setting fixed column widths in modern tables.
+*/
 .col-max { width: 300px !important; }
 .col-super { width: 250px !important; }
 .col-wide { width: 170px !important; }
@@ -437,33 +424,22 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
 .col-midSmall { width: 30px !important; }
 .col-small { width: 20px !important; }
 
-
-
-/* Dấu } bị lỗi ở cuối file cũ đã được xóa bỏ */
-
-/* === Tăng kích thước cho Modal Preview PO === */
 #generatePoModal .modal-dialog {
-    /* Chiều rộng tối đa là 95% chiều rộng màn hình */
     max-width: 95%;
 }
 
 #generatePoModal .modal-content {
-    /* Chiều cao là 90% chiều cao màn hình */
     height: 90vh;
 }
 
-/* === THÊM MỚI: CSS GHI ĐÈ CHỈ DÀNH CHO BẢNG PREVIEW TRONG POP-UP === */
-/* Bằng cách thêm #generatePoModal ở trước, quy tắc này sẽ mạnh hơn và chỉ áp dụng cho bảng nằm trong pop-up */
 #generatePoModal .table-responsive > .table-modern {
-    min-width: 2100px; /* <<-- Bạn có thể điều chỉnh con số này cho hợp lý */
+    min-width: 2100px;
 }
 
 .table-responsive > .table-po-details {
-    min-width: 1700px; /* <<-- Chỉnh lại con số này cho phù hợp với bạn */
+    min-width: 1700px;
 }
 
-/* 2. Định nghĩa chiều rộng cho từng cột trong bảng mới */
-/* Bằng cách đặt .table-bpo-details ở trước, các class này chỉ có hiệu lực bên trong bảng của bạn */
 .table-po-details .col-type {
     width: 7%;
 }
@@ -473,7 +449,7 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
 }
 
 .table-po-details .col-name {
-    width: 15%; /* <<-- Tăng chiều rộng cho cột Material Name */
+    width: 15%;
 }
 
 .table-po-details .col-code {
@@ -484,8 +460,9 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
     width: 15%;
 }
 
-/* === CSS CHO DASHBOARD === */
-
+/*
+  CSS for Dashboard components like KPI cards and charts..
+*/
 .kpi-card {
     border-left: 5px solid;
 }
@@ -508,8 +485,6 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
 .chart-container {
     min-height: 300px;
 }
-
-/* === CSS CHO DASHBOARD (Thêm vào cuối file) === */
 
 .kpi-card {
     border-left: 5px solid;
@@ -538,65 +513,58 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
     position: relative;
 }
 
-/* === YÊU CẦU MỚI: Style cho các Tab trên Dashboard === */
-
-/* 1. Bỏ đường viền dưới của container chứa các tab */
 .nav-tabs {
     border-bottom: none;
 }
 
-/* 2. Style cho từng nút tab (trạng thái không được chọn) */
+/*
+  Styles for the tab navigation on the Dashboard.
+*/
 .nav-tabs .nav-link {
-    border: none; /* Bỏ viền xung quanh */
-    border-radius: 0.5rem; /* Bo góc mềm mại */
-    background-color: #e9ecef; /* Màu nền xám nhạt */
-    color: #495057; /* Màu chữ tối */
+    border: none;
+    border-radius: 0.5rem;
+    background-color: #e9ecef;
+    color: #495057;
     font-weight: 600;
-    margin-right: 10px; /* Tạo khoảng cách giữa 2 nút */
-    transition: all 0.3s ease; /* Hiệu ứng chuyển màu mượt mà */
+    margin-right: 10px;
+    transition: all 0.3s ease;
     padding: 0.5rem 1rem;
 }
 
-/* 3. Style cho nút tab KHI ĐƯỢC CHỌN (active) hoặc KHI DI CHUỘT VÀO (hover) */
+/*
+  Styles for the tab navigation on the Dashboard.
+*/
 .nav-tabs .nav-link.active,
 .nav-tabs .nav-link:hover {
-    /* Dùng lại màu gradient từ nút Search */
     background-image: linear-gradient(to right, #14ADD6, #384295);
-    color: white; /* Chữ màu trắng */
+    color: white;
 }
 
-/* Thêm các định nghĩa CSS này vào file style.css của bạn */
-
-/* Dùng màu đen hoặc màu tối cho tiêu đề khi in */
 .po-title-print {
-    color: #333 !important; /* Màu đen */
-    /* Nếu bạn có định nghĩa font-size hay font-weight cho text-gradient-custom
-       thì cũng có thể sao chép chúng vào đây */
-    font-size: 2.5rem; /* Ví dụ: Giữ nguyên kích thước hoặc tùy chỉnh */
+    color: #333 !important;
+    font-size: 2.5rem;
     font-weight: bold;
 }
 
 .po-details-title-print {
-    color: #333 !important; /* Màu đen */
-    font-size: 1.5rem; /* Ví dụ: Giữ nguyên kích thước hoặc tùy chỉnh */
+    color: #333 !important;
+    font-size: 1.5rem;
     font-weight: bold;
 }
 
 .table-sm th {
-    /* Đặt chiều rộng cố định cho các cột size, đủ cho 5 ký tự */
     min-width: 80px;
     text-align: center;
 }
 
-/* Style cho Header đầu tiên (nhãn Qty, Price...) */
 .table-sm th:first-child {
     min-width: 100px;
     text-align: left;
 }
 
-/* Bạn có thể cần ẩn các nút "Back" và "Export to PDF"
-   trong trang preview khi in ra giấy thật (nếu người dùng bấm Ctrl+P)
-   Thêm đoạn này vào cuối file CSS của bạn
+/*
+  Print-specific styles.
+  These rules are applied only when the user prints the page.
 */
 @media print {
     #exportPdfBtn,
@@ -605,26 +573,84 @@ overflow-y: auto; / Nếu nội dung quá dài vẫn có thể cuộn */
     }
 }
 
-/* --- SỬA LỖI LAYOUT CHO BẢNG SIZE MATRIX TRONG SALE ORDER --- */
-
-/* Áp dụng cho container để kích hoạt thanh trượt ngang */
 .size-matrix-container {
     overflow-x: auto;
 }
 
-/* Đặt chiều rộng tối thiểu cho toàn bộ bảng để nó không bị co lại */
 .size-matrix-container .table-sm {
-    min-width: 500px; /* Bạn có thể tăng giá trị này nếu có nhiều size hơn */
+    min-width: 500px;
 }
 
-/* Đặt chiều rộng cố định cho các cột size (header) */
 .size-matrix-container .table-sm thead th {
     min-width: 85px;
     text-align: center;
 }
 
-/* Đặt chiều rộng cố định cho cột nhãn đầu tiên (Order Qty, Price...) */
 .size-matrix-container .table-sm th:first-child {
     min-width: 100px;
     text-align: left;
+}
+
+/*
+  Mobile PWA specific styles.
+*/
+.body-mobile-login {
+    height: 100vh;
+    background-color: #f0f2f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.login-card {
+    max-width: 450px;
+    width: 100%;
+}
+
+.body-mobile-output {
+    background-color: #f0f2f5;
+}
+
+.body-mobile-output input[type=number]::-webkit-inner-spin-button,
+.body-mobile-output input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.body-mobile-output input[type=number] {
+    -moz-appearance: textfield;
+}
+
+#toast {
+    z-index: 1056;
+}
+
+.form-control-lg-mobile {
+    padding: 1rem 1rem;
+    font-size: 1.1rem;
+    border-radius: .5rem;
+    border-color: #ced4da;
+}
+
+.form-select-lg-mobile {
+    padding: 1rem 1rem;
+    font-size: 1.1rem;
+    border-radius: .5rem;
+    border-color: #ced4da;
+}
+
+/*
+  Styles for the Desktop Login Page
+*/
+body.body-login {
+    background-color: #f0f2f5;
+}
+
+.login-container {
+    min-height: 100vh;
+}
+
+.login-card {
+    max-width: 450px;
+    width: 100%;
 }

@@ -4,9 +4,11 @@ import com.gsm.enums.UserType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import javax.persistence.*;
 
+/**
+ * Represents a user of the application.
+ */
 @Entity
 @Table(name = "Users")
 @Getter
@@ -41,9 +43,15 @@ public class User extends AuditableEntity {
     @Column(name = "ActiveFlag", nullable = false)
     private boolean activeFlag = true;
 
+    /**
+     * The user's hashed password.
+     */
     @Column(name = "Password", nullable = false)
     private String password;
 
+    /**
+     * The unique ID provided by Zalo, used for linking accounts.
+     */
     @Column(name = "ZaloUserId", unique = true)
     private String zaloUserId;
 }

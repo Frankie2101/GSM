@@ -16,6 +16,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 @Service
 public class OrderBOMServiceImpl implements OrderBOMService {
@@ -25,13 +27,16 @@ public class OrderBOMServiceImpl implements OrderBOMService {
     private final BOMTemplateRepository bomTemplateRepository;
     private final FabricRepository fabricRepository;
     private final TrimRepository trimRepository;
-    private final MaterialGroupRepository materialGroupRepository; // <-- THÊM DÒNG NÀY
+    private final MaterialGroupRepository materialGroupRepository;
     private final PurchaseOrderDetailRepository purchaseOrderDetailRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final SupplierRepository supplierRepository;
     private final OrderBOMDetailRepository orderBOMDetailRepository;
 
-
+    /**
+     * The concrete implementation of the OrderBOMService interface.
+     * Contains all business logic for managing Order BOMs and generating Purchase Orders.
+     */
     @Autowired
     public OrderBOMServiceImpl(OrderBOMRepository orderBOMRepository,
                                SaleOrderRepository saleOrderRepository,
@@ -56,93 +61,16 @@ public class OrderBOMServiceImpl implements OrderBOMService {
         this.orderBOMDetailRepository = orderBOMDetailRepository;
     }
 
-    // === THAY THẾ HOÀN TOÀN PHƯƠNG THỨC NÀY ===
-    @Override
-    @Transactional
-    public Map<String, Object> saveAndGeneratePOs(OrderBOMDto bomDtoFromForm) {
-        // BƯỚC 1: LƯU BOM (sử dụng logic save đã có)
-        OrderBOMDto savedBom = this.save(bomDtoFromForm);
-
-        // BƯỚC 2: KẾT HỢP DỮ LIỆU ĐỂ LẤY ĐÚNG PURCHASE QTY
-        Map<Integer, OrderBOMDetailDto> originalDetailsMap = bomDtoFromForm.getDetails().stream()
-                .collect(Collectors.toMap(OrderBOMDetailDto::getSeq, Function.identity()));
-        savedBom.getDetails().forEach(savedDetailDto -> {
-            OrderBOMDetailDto originalDetailDto = originalDetailsMap.get(savedDetailDto.getSeq());
-            if (originalDetailDto != null) {
-                savedDetailDto.setPurchaseQty(originalDetailDto.getPurchaseQty());
-            }
-        });
-
-        // BƯỚC 3: LỌC RA CÁC DÒNG HỢP LỆ ĐỂ TẠO PO
-        List<OrderBOMDetailDto> validDetailsForPO = savedBom.getDetails().stream()
-                .filter(d -> {
-                    // Điều kiện 1: Phải có số lượng mua > 0 và thông tin cơ bản
-                    boolean hasBasicInfo = d.getPurchaseQty() != null && d.getPurchaseQty() > 0 &&
-                            d.getSupplier() != null && !d.getSupplier().isEmpty() &&
-                            d.getPrice() != null && d.getPrice() > 0;
-                    if (!hasBasicInfo) return false;
-
-                    // Điều kiện 2: Dòng này CHƯA được tạo PO trước đó
-                    OrderBOMDetail tempDetail = new OrderBOMDetail();
-                    tempDetail.setOrderBOMDetailId(d.getOrderBOMDetailId());
-                    boolean alreadyInPO = purchaseOrderDetailRepository.existsByOrderBOMDetail(tempDetail);
-
-                    return !alreadyInPO; // Chỉ lấy những dòng chưa có trong PO
-                })
-                .collect(Collectors.toList());
-
-        if (validDetailsForPO.isEmpty()) {
-            throw new IllegalStateException("No new valid items found to generate Purchase Orders.");
-        }
-
-        // BƯỚC 4: GOM NHÓM VÀ TẠO PO (Logic này giữ nguyên)
-        Map<String, List<OrderBOMDetailDto>> groupedBySupplierAndCurrency = validDetailsForPO.stream()
-                .collect(Collectors.groupingBy(d -> d.getSupplier() + ":" + d.getCurrency()));
-
-        SaleOrder saleOrder = saleOrderRepository.findById(bomDtoFromForm.getSaleOrderId()).orElseThrow();
-        long existingPoCount = purchaseOrderRepository.countBySaleOrderId(saleOrder.getSaleOrderId());
-        AtomicLong poSequence = new AtomicLong(existingPoCount + 1);
-        int generatedPoCount = 0;
-
-        for (Map.Entry<String, List<OrderBOMDetailDto>> entry : groupedBySupplierAndCurrency.entrySet()) {
-            List<OrderBOMDetailDto> detailsForThisPO = entry.getValue();
-            Supplier supplier = supplierRepository.findBySupplierName(detailsForThisPO.get(0).getSupplier()).orElseThrow();
-
-            PurchaseOrder po = new PurchaseOrder();
-            String poNumber = String.format("%s-%02d", saleOrder.getSaleOrderNo(), poSequence.getAndIncrement());
-            po.setPurchaseOrderNo(poNumber);
-            po.setSupplier(supplier);
-            po.setPoDate(LocalDate.now());
-            po.setCurrencyCode(detailsForThisPO.get(0).getCurrency());
-            po.setDeliveryTerm(supplier.getDeliveryTerm());
-            po.setPaymentTerm(supplier.getPaymentTerm());
-            po.setStatus("New");
-
-            for (OrderBOMDetailDto detailDto : detailsForThisPO) {
-                PurchaseOrderDetail poDetail = new PurchaseOrderDetail();
-                OrderBOMDetail bomDetailRef = orderBOMDetailRepository.findById(detailDto.getOrderBOMDetailId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Order BOM Detail not found: " + detailDto.getOrderBOMDetailId()));
-                poDetail.setOrderBOMDetail(bomDetailRef);
-                poDetail.setPurchaseQuantity((double) Math.round(detailDto.getPurchaseQty()));
-                poDetail.setNetPrice(detailDto.getPrice());
-                po.addDetail(poDetail);
-            }
-
-            purchaseOrderRepository.save(po);
-            generatedPoCount++;
-        }
-
-        return Map.of("message", "Successfully generated " + generatedPoCount + " new Purchase Order(s).");
-    }
-
-    // ==========================================================
-    // === PHƯƠNG THỨC MỚI ĐỂ LẤY DANH SÁCH BOM ===
-    // ==========================================================
     @Transactional(readOnly = true)
     @Override
     public List<OrderBOMDto> findAll() {
+        AtomicInteger index = new AtomicInteger(1);
         return orderBOMRepository.findAll().stream()
-                .map(this::convertEntityToDtoSimple) // Chỉ cần chuyển đổi đơn giản
+                .map(orderBOM -> {
+                    OrderBOMDto dto = convertEntityToDtoSimple(orderBOM);
+                    dto.setSequenceNumber(index.getAndIncrement());
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -177,7 +105,6 @@ public class OrderBOMServiceImpl implements OrderBOMService {
         orderBOMDto.setSaleOrderNo(saleOrder.getSaleOrderNo());
         orderBOMDto.setBomTemplateId(bomTemplateId);
 
-        // === LOGIC MỚI: ÁNH XẠ 1-1 TỪ BOM TEMPLATE DETAIL ===
         List<OrderBOMDetailDto> detailDtos = template.getDetails().stream().map(templateDetail -> {
             OrderBOMDetailDto dto = new OrderBOMDetailDto();
             dto.setSeq(templateDetail.getSeq());
@@ -186,7 +113,9 @@ public class OrderBOMServiceImpl implements OrderBOMService {
             dto.setWaste(templateDetail.getWaste());
             dto.setSoQty(totalSoQty);
 
-            // Lấy thông tin từ Fabric hoặc Trim gốc
+            if (templateDetail.getMaterialGroup() != null) {
+                dto.setMaterialGroupId(templateDetail.getMaterialGroup().getMaterialGroupId());
+            }
             if ("FA".equals(templateDetail.getRmType()) && templateDetail.getFabric() != null) {
                 Fabric fabric = templateDetail.getFabric();
                 dto.setFabricId(fabric.getFabricId());
@@ -203,13 +132,11 @@ public class OrderBOMServiceImpl implements OrderBOMService {
                 if (trim.getSupplier() != null) dto.setSupplier(trim.getSupplier().getSupplierName());
             }
 
-            // Để trống Color, Size, Price để người dùng chọn
-            // Tính toán các loại số lượng
             double demandQty = totalSoQty * dto.getUsageValue() * (1 + dto.getWaste() / 100.0);
             BigDecimal roundedDemandQty = new BigDecimal(demandQty).setScale(2, RoundingMode.HALF_UP);
 
             dto.setDemandQty(roundedDemandQty.doubleValue());
-            dto.setInventoryQty(0.0); // Mặc định
+            dto.setInventoryQty(0.0);
             dto.setPurchaseQty(demandQty);
 
             return dto;
@@ -219,86 +146,57 @@ public class OrderBOMServiceImpl implements OrderBOMService {
         return orderBOMDto;
     }
 
-    private OrderBOMDetailDto createDetailDtoBase(BOMTemplateDetail templateDetail, int totalSoQty) {
-        OrderBOMDetailDto dto = new OrderBOMDetailDto();
-        dto.setMaterialType(templateDetail.getRmType());
-        dto.setUsageValue(templateDetail.getUsageValue());
-        dto.setWaste(templateDetail.getWaste());
-        dto.setSoQty(totalSoQty);
-
-        // Công thức mới cho Demand Qty
-        double usage = dto.getUsageValue();
-        double waste = dto.getWaste();
-        double demandQty = totalSoQty * usage * (1 + waste / 100.0);
-        BigDecimal roundedDemandQty = new BigDecimal(demandQty).setScale(2, RoundingMode.HALF_UP);
-
-        dto.setDemandQty(roundedDemandQty.doubleValue());
-
-        // Công thức mới cho Purchase Qty
-        double inventoryQty = 0.0; // Mặc định là 0
-        dto.setInventoryQty(inventoryQty);
-        double purchaseQty = demandQty - inventoryQty;
-        dto.setPurchaseQty(purchaseQty > 0 ? purchaseQty : 0.0);
-
-        return dto;
-    }
-
-
-
+    /**
+     * Saves an Order BOM with an intelligent synchronization strategy for its details.
+     * It updates existing lines, adds new ones, and safely removes deleted lines
+     * (only if they haven't been used in a Purchase Order).
+     */
     @Override
     @Transactional
     public OrderBOMDto save(OrderBOMDto dto) {
-        // 1. Lấy các đối tượng cha
         SaleOrder saleOrder = saleOrderRepository.findById(dto.getSaleOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Sale Order not found with ID: " + dto.getSaleOrderId()));
         BOMTemplate bomTemplate = bomTemplateRepository.findById(dto.getBomTemplateId())
                 .orElseThrow(() -> new ResourceNotFoundException("BOM Template not found with ID: " + dto.getBomTemplateId()));
 
-        // 2. Tìm hoặc tạo mới OrderBOM
         OrderBOM orderBOM = orderBOMRepository.findBySaleOrder_SaleOrderId(dto.getSaleOrderId())
                 .orElse(new OrderBOM());
         orderBOM.setSaleOrder(saleOrder);
         orderBOM.setBomTemplate(bomTemplate);
 
-        // --- LOGIC ĐỒNG BỘ HÓA MỚI THÔNG MINH HƠN ---
-
-        // 3. Lấy danh sách ID các chi tiết được gửi từ form
         Set<Long> idsFromDto = dto.getDetails().stream()
                 .map(OrderBOMDetailDto::getOrderBOMDetailId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        // 4. Xác định các chi tiết cần xóa một cách an toàn
         List<OrderBOMDetail> detailsToRemove = new ArrayList<>();
+        // Determine which details to safely remove.
         for (OrderBOMDetail existingDetail : orderBOM.getDetails()) {
             if (!idsFromDto.contains(existingDetail.getOrderBOMDetailId())) {
-                // Dòng này đã bị người dùng xóa trên form.
-                // KIỂM TRA: Chỉ thêm vào danh sách xóa nếu nó CHƯA được dùng trong PO.
+                // Only add to the removal list if it has not been used in a PO.
                 if (!purchaseOrderDetailRepository.existsByOrderBOMDetail(existingDetail)) {
                     detailsToRemove.add(existingDetail);
                 }
-                // Nếu đã được dùng trong PO, chúng ta sẽ im lặng bỏ qua yêu cầu xóa.
             }
         }
-        // Xóa các dòng an toàn khỏi collection
+
         if (!detailsToRemove.isEmpty()) {
             orderBOM.getDetails().removeAll(detailsToRemove);
         }
 
-        // 5. Cập nhật các dòng hiện có và thêm các dòng mới
         Map<Long, OrderBOMDetail> existingDetailsMap = orderBOM.getDetails().stream()
                 .collect(Collectors.toMap(OrderBOMDetail::getOrderBOMDetailId, Function.identity()));
 
+        // Update existing lines and add new ones.
         for (OrderBOMDetailDto detailDto : dto.getDetails()) {
             OrderBOMDetail detail = (detailDto.getOrderBOMDetailId() != null)
                     ? existingDetailsMap.get(detailDto.getOrderBOMDetailId())
                     : null;
 
-            if (detail == null) { // Nếu là dòng mới
+            if (detail == null) {
                 detail = new OrderBOMDetail();
-                orderBOM.addDetail(detail); // Thêm vào collection của cha
+                orderBOM.addDetail(detail);
             }
-            // Ánh xạ toàn bộ dữ liệu từ DTO sang Entity
             mapDtoToDetailEntity(detailDto, detail);
         }
 
@@ -306,7 +204,6 @@ public class OrderBOMServiceImpl implements OrderBOMService {
         return convertEntityToDto(savedOrderBOM);
     }
 
-    // Thêm phương thức helper này vào trong class OrderBOMServiceImpl
     private void mapDtoToDetailEntity(OrderBOMDetailDto detailDto, OrderBOMDetail detail) {
         detail.setSeq(detailDto.getSeq());
         detail.setMaterialType(detailDto.getMaterialType());

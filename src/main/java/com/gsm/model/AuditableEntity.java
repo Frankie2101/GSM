@@ -1,5 +1,6 @@
 package com.gsm.model;
 
+import com.gsm.config.JpaAuditingConfiguration;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -12,27 +13,46 @@ import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 
+/**
+ * An abstract base class for entities that require auditing information.
+ * By extending this class, an entity will automatically inherit fields for tracking
+ * creation and modification details.
+ * <p>
+ * This is enabled by the {@link JpaAuditingConfiguration}.
+ */
 @Getter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 public abstract class AuditableEntity {
 
-    // Sửa lại name="CreatedBy" để khớp với Database
+    /**
+     * The ID of the user who created this entity.
+     * Set automatically on creation by JPA Auditing.
+     */
     @CreatedBy
     @Column(name = "CreatedBy", nullable = false, updatable = false)
     protected Long createdBy;
 
-    // Sửa lại name="LastModifiedBy" (DB của bạn là LastModUser)
+    /**
+     * The ID of the user who last modified this entity.
+     * Set automatically on update by JPA Auditing.
+     */
     @LastModifiedBy
     @Column(name = "LastModUser", nullable = false)
     private Long lastModifiedBy;
 
-    // Sửa lại name="CreatedDate" (DB của bạn là CreateDate)
+    /**
+     * The timestamp when this entity was created.
+     * Set automatically on creation.
+     */
     @CreatedDate
     @Column(name = "CreateDate", nullable = false, updatable = false)
     private LocalDateTime createdDate;
 
-    // Sửa lại name="LastModifiedDate" (DB của bạn là LastModTime)
+    /**
+     * The timestamp when this entity was last modified.
+     * Set automatically on update.
+     */
     @LastModifiedDate
     @Column(name = "LastModTime", nullable = false)
     private LocalDateTime lastModifiedDate;

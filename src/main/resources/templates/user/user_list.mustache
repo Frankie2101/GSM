@@ -20,6 +20,9 @@
                 <h1 class="h3 m-0"><i class="bi bi-people-fill me-2"></i>User Management</h1>
             </div>
 
+            {{!
+              Search and action button section.
+            }}
             <div class="card mb-4">
                 <div class="card-body">
                     <div class="row align-items-end gy-3">
@@ -56,6 +59,10 @@
                                 <th style="width: 10%;">Action</th>
                             </tr>
                             </thead>
+                            {{!
+                              The table body is a container that will be dynamically populated
+                              with user data by the user-list.js script.
+                            }}
                             <tbody id="userTableBody">
                             </tbody>
                         </table>
@@ -67,6 +74,10 @@
     </div>
 </div>
 
+{{!
+  Modal dialog for creating a new user or editing an existing one.
+  Its content is populated and managed by user-list.js.
+}}
 <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

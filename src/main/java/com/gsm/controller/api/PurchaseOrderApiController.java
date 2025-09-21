@@ -7,6 +7,8 @@ import com.gsm.service.PurchaseOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -57,7 +59,7 @@ public class PurchaseOrderApiController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePurchaseOrder(@PathVariable Long id) {
         try {
-            purchaseOrderService.deleteById(id);
+            purchaseOrderService.deleteByIds(Collections.singletonList(id));
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

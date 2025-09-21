@@ -1,24 +1,27 @@
 package com.gsm.service;
 
+import com.gsm.dto.OrderBOMDetailDto;
 import com.gsm.dto.OrderBOMDto;
 import com.gsm.dto.PurchaseOrderDetailDto;
 import com.gsm.dto.PurchaseOrderDto;
 import com.gsm.exception.ResourceNotFoundException;
-import com.gsm.model.OrderBOMDetail;
-import com.gsm.model.PurchaseOrder;
-import com.gsm.model.PurchaseOrderDetail;
-import com.gsm.model.Supplier;
+import com.gsm.model.*;
 import com.gsm.repository.OrderBOMDetailRepository;
 import com.gsm.repository.PurchaseOrderRepository;
+import com.gsm.repository.PurchaseOrderDetailRepository;
 import com.gsm.repository.SupplierRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.gsm.repository.SaleOrderRepository;
+import com.gsm.repository.PurchaseOrderDetailRepository;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -30,12 +33,83 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final SupplierRepository supplierRepository;
     private final OrderBOMDetailRepository orderBOMDetailRepository;
+    private final SaleOrderRepository saleOrderRepository;
+    private final PurchaseOrderDetailRepository purchaseOrderDetailRepository;
 
     @Autowired
-    public PurchaseOrderServiceImpl(PurchaseOrderRepository purchaseOrderRepository, SupplierRepository supplierRepository, OrderBOMDetailRepository orderBOMDetailRepository) {
+    public PurchaseOrderServiceImpl(PurchaseOrderRepository purchaseOrderRepository, SupplierRepository supplierRepository, OrderBOMDetailRepository orderBOMDetailRepository, SaleOrderRepository saleOrderRepository, PurchaseOrderDetailRepository purchaseOrderDetailRepository) {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.supplierRepository = supplierRepository;
-        this.orderBOMDetailRepository = orderBOMDetailRepository; // Gán giá trị
+        this.orderBOMDetailRepository = orderBOMDetailRepository;
+        this.saleOrderRepository = saleOrderRepository;
+        this.purchaseOrderDetailRepository = purchaseOrderDetailRepository;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional
+    public Map<String, Object> generatePOsFromOrderBOM(OrderBOMDto bomDto) {
+        // A line is valid if it has a purchase quantity > 0 and is NOT already in another PO.
+        List<OrderBOMDetailDto> validDetailsForPO = bomDto.getDetails().stream()
+                .filter(d -> {
+                    boolean hasPurchaseData = d.getPurchaseQty() != null && d.getPurchaseQty() > 0 &&
+                            d.getSupplier() != null && !d.getSupplier().isEmpty();
+                    if (!hasPurchaseData) return false;
+
+                    return !purchaseOrderDetailRepository.existsByorderBOMDetail_OrderBOMDetailId(d.getOrderBOMDetailId());
+                })
+                .collect(Collectors.toList());
+
+        if (validDetailsForPO.isEmpty()) {
+            throw new IllegalStateException("No new valid items found to generate Purchase Orders.");
+        }
+
+        // 2. GROUP by supplier code
+        Map<String, List<OrderBOMDetailDto>> groupedBySupplier = validDetailsForPO.stream()
+                .collect(Collectors.groupingBy(OrderBOMDetailDto::getSupplier));
+
+        // 3. CREATE: Create a PO for each supplier
+        SaleOrder saleOrder = saleOrderRepository.findById(bomDto.getSaleOrderId()).orElseThrow();
+        long existingPoCount = purchaseOrderRepository.countBySaleOrderId(saleOrder.getSaleOrderId());
+        AtomicLong poSequence = new AtomicLong(existingPoCount + 1);
+        List<String> newPoNumbers = new ArrayList<>();
+
+        for (Map.Entry<String, List<OrderBOMDetailDto>> entry : groupedBySupplier.entrySet()) {
+            String supplierName = entry.getKey();
+            List<OrderBOMDetailDto> detailsForThisPO = entry.getValue();
+
+            Supplier supplier = supplierRepository.findBySupplierName(supplierName).orElseThrow();
+            PurchaseOrder po = new PurchaseOrder();
+
+            // Generate PO Number
+            String poNumber = String.format("%s-%02d", saleOrder.getSaleOrderNo(), poSequence.getAndIncrement());
+            po.setPurchaseOrderNo(poNumber);
+
+            // Set header information
+            po.setSupplier(supplier);
+            po.setPoDate(LocalDate.now());
+            po.setCurrencyCode(detailsForThisPO.get(0).getCurrency());
+            po.setDeliveryTerm(supplier.getDeliveryTerm());
+            po.setPaymentTerm(supplier.getPaymentTerm());
+            po.setStatus("New");
+
+            // Add detail lines
+            for (OrderBOMDetailDto detailDto : detailsForThisPO) {
+                PurchaseOrderDetail poDetail = new PurchaseOrderDetail();
+                OrderBOMDetail bomDetailRef = orderBOMDetailRepository.findById(detailDto.getOrderBOMDetailId()).orElseThrow();
+                poDetail.setOrderBOMDetail(bomDetailRef);
+                poDetail.setPurchaseQuantity(detailDto.getPurchaseQty());
+                poDetail.setNetPrice(detailDto.getPrice());
+                po.addDetail(poDetail);
+            }
+
+            purchaseOrderRepository.save(po);
+            newPoNumbers.add(po.getPurchaseOrderNo());
+        }
+
+        return Map.of("message", "Successfully generated " + newPoNumbers.size() + " new Purchase Order(s).", "poNumbers", newPoNumbers);
     }
 
     /** {@inheritDoc} */
@@ -201,7 +275,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             }
         }
 
-        // Step 6: Save the parent PO. JPA will automatically handle all INSERTs, UPDATEs, and DELETEs.
+        // Step 6: Save the parent PO. JPA will automatically handle all INSERT, UPDATE, and DELETE.
         PurchaseOrder savedPO = purchaseOrderRepository.save(po);
         // Step 7: Convert the saved entity back to a DTO to return to the client.
         return convertEntityToDto(savedPO);

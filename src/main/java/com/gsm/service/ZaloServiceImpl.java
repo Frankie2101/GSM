@@ -26,18 +26,24 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import com.gsm.dto.ZaloSaleOrderInfoDto; // Thêm import
 
+/**
+ * The concrete implementation of the ZaloService interface.
+ * Handles all business logic related to Zalo Mini App integration.
+ */
 @Service
 public class ZaloServiceImpl implements ZaloService {
 
     private static final Logger log = LoggerFactory.getLogger(ZaloServiceImpl.class);
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SaleOrderRepository saleOrderRepository;
     private final SaleOrderDetailRepository saleOrderDetailRepository;
     private final ProductionOutputRepository productionOutputRepository;
-    private final JdbcTemplate jdbcTemplate; // Thêm trường này
+    private final JdbcTemplate jdbcTemplate;
 
+    /**
+     * Constructor-based dependency injection.
+     */
     @Autowired
     public ZaloServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, SaleOrderRepository saleOrderRepository, SaleOrderDetailRepository saleOrderDetailRepository, ProductionOutputRepository productionOutputRepository, JdbcTemplate jdbcTemplate) {
         this.userRepository = userRepository;
@@ -48,13 +54,20 @@ public class ZaloServiceImpl implements ZaloService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    /**
+     * Attempts to log in a user using their Zalo ID.
+     * Contains extensive logging and a direct JDBC query for debugging potential issues with the JPA layer.
+     * @param zaloUserId The user's unique Zalo identifier.
+     * @return A UserDto if the user is found and linked.
+     * @throws ResourceNotFoundException if no account is linked to the Zalo ID.
+     */
     @Override
     @Transactional(readOnly = true)
     public UserDto loginByZaloId(String zaloUserId) {
         log.info("--- Starting loginByZaloId ---");
         log.info("Attempting to find user with Zalo User ID: [{}]", zaloUserId);
 
-        // BƯỚC KIỂM TRA QUAN TRỌNG: Dùng JDBC để truy vấn trực tiếp vào DB
+        // Use JDBC to query the DB directly for verification.
         try {
             String sql = "SELECT UserId, UserName, zaloUserId FROM Users WHERE zaloUserId = ?";
             List<Map<String, Object>> users = jdbcTemplate.queryForList(sql, zaloUserId);
@@ -70,7 +83,6 @@ public class ZaloServiceImpl implements ZaloService {
 
         log.info("Now attempting to find user with Spring Data JPA...");
         try {
-            // Dòng code gốc gây ra lỗi
             User user = userRepository.findByZaloUserId(zaloUserId)
                     .orElseThrow(() -> new ResourceNotFoundException("Zalo user ID not linked to any account: " + zaloUserId));
 
@@ -78,12 +90,19 @@ public class ZaloServiceImpl implements ZaloService {
             return mapUserToDto(user);
 
         } catch (Exception e) {
-            // Ghi log lỗi thực sự trước khi Spring ném ra lỗi 500
             log.error("!!! EXCEPTION CAUGHT during userRepository.findByZaloUserId !!!", e);
             throw e;
         }
     }
 
+    /**
+     * Links a Zalo account to a system user account after validating credentials.
+     * @param linkRequest DTO with Zalo ID, username, and password.
+     * @return A UserDto of the linked account.
+     * @throws ResourceNotFoundException if the username does not exist.
+     * @throws IllegalStateException if the Zalo account is already linked to another user.
+     * @throws SecurityException if the password is incorrect.
+     */
     @Override
     @Transactional
     public UserDto linkAccount(ZaloLinkRequestDto linkRequest) {
@@ -105,9 +124,14 @@ public class ZaloServiceImpl implements ZaloService {
         return mapUserToDto(user);
     }
 
+    /**
+     * Finds distinct style/color combinations for a given Sale Order number.
+     * @param saleOrderNo The business number of the Sale Order.
+     * @return A DTO containing the sale order's ID and the list of styles/colors.
+     */
     @Override
     @Transactional(readOnly = true)
-    public ZaloSaleOrderInfoDto findStylesAndColorsBySaleOrderNo(String saleOrderNo) { // <-- Sửa kiểu trả về
+    public ZaloSaleOrderInfoDto findStylesAndColorsBySaleOrderNo(String saleOrderNo) {
         SaleOrder saleOrder = saleOrderRepository.findBySaleOrderNo(saleOrderNo)
                 .orElseThrow(() -> new ResourceNotFoundException("Sale Order not found with number: " + saleOrderNo));
 
@@ -117,11 +141,15 @@ public class ZaloServiceImpl implements ZaloService {
                 .map(result -> new ZaloStyleColorDto(result.get("style"), result.get("color")))
                 .collect(Collectors.toList());
 
-        // Trả về đối tượng mới chứa cả ID và danh sách
         return new ZaloSaleOrderInfoDto(saleOrder.getSaleOrderId(), styles);
     }
 
-
+    /**
+     * Saves a list of production output records.
+     * It validates the input, finds the associated user and sale order, maps DTOs to entities,
+     * and performs a batch save operation.
+     * @param outputDtos The list of production output data to save.
+     */
     @Override
     @Transactional
     public void saveProductionOutputs(List<ProductionOutputDto> outputDtos) {
@@ -166,6 +194,12 @@ public class ZaloServiceImpl implements ZaloService {
         }
     }
 
+    /**
+     * A private helper method to map a User entity to a UserDto.
+     * This ensures that only necessary, non-sensitive data is exposed.
+     * @param user The User entity to map.
+     * @return The resulting UserDto.
+     */
     private UserDto mapUserToDto(User user) {
         UserDto dto = new UserDto();
         dto.setUserId(user.getUserId());

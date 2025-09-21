@@ -1,16 +1,20 @@
 document.addEventListener("DOMContentLoaded", function() {
-    // Đăng ký plugin hiển thị số liệu một lần duy nhất
+    /**
+     * Register the Chart.js datalabels plugin globally once.
+     */
     Chart.register(ChartDataLabels);
 
-    // --- Hàm khởi tạo biểu đồ cho Tab 1: WIP ---
+    /**
+     * Initializes the Donut Chart for the WIP (Work in Progress) tab.
+     */
     function initWipChart() {
         const chartCanvas = document.getElementById('wipDonutChart');
         if (!chartCanvas) return;
 
-        // Lấy dữ liệu từ thẻ script ẩn trong file dashboard.mustache
         const dataElement = document.getElementById('wipChartData');
         if (!dataElement) return;
 
+        // Get data from the hidden script tag.
         const wipData = JSON.parse(dataElement.textContent || '{}');
         const labels = Object.keys(wipData);
         const data = Object.values(wipData);
@@ -24,6 +28,7 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
+        // Logic to show "No data" message if data is empty.
         new Chart(chartCanvas.getContext('2d'), {
             type: 'doughnut',
             data: {
@@ -51,45 +56,44 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // --- Hàm khởi tạo các biểu đồ cho Tab 2: Performance ---
+    /**
+     * Initializes all charts for the Performance tab (Throughput and S-Curve).
+     */
     function initPerformanceCharts() {
-        // Biểu đồ Daily Throughput
-
+        // Daily Throughput Chart
         const throughputCanvas = document.getElementById('dailyThroughputChart');
         if (throughputCanvas) {
             const dataElement = document.getElementById('throughputChartData');
             const throughputData = JSON.parse(dataElement.textContent || '{}');
 
-            // Kiểm tra nếu không có dữ liệu thì hiển thị thông báo
             if (!throughputData.labels || throughputData.labels.length === 0) {
                 showNoDataMessage(throughputCanvas);
             } else {
+                // ... get data and check if empty ...
                 new Chart(throughputCanvas.getContext('2d'), {
                     type: 'bar',
+                    // ... Chart.js configuration for a grouped bar chart ...
                     data: {
-                        labels: throughputData.labels, // Lấy nhãn từ DTO
+                        labels: throughputData.labels,
                         datasets: [
-                            // Dataset cho Cutting
                             {
                                 label: 'Cutting',
                                 data: throughputData.cuttingData,
-                                backgroundColor: 'rgba(54, 162, 235, 0.8)', // Màu xanh dương
+                                backgroundColor: 'rgba(54, 162, 235, 0.8)',
                                 borderColor: 'rgba(54, 162, 235, 1)',
                                 borderWidth: 1
                             },
-                            // Dataset cho Sewing
                             {
                                 label: 'Sewing',
                                 data: throughputData.sewingData,
-                                backgroundColor: 'rgba(255, 206, 86, 0.8)', // Màu vàng
+                                backgroundColor: 'rgba(255, 206, 86, 0.8)',
                                 borderColor: 'rgba(255, 206, 86, 1)',
                                 borderWidth: 1
                             },
-                            // Dataset cho Packing
                             {
                                 label: 'Packing',
                                 data: throughputData.packingData,
-                                backgroundColor: 'rgba(75, 192, 192, 0.8)', // Màu xanh lá
+                                backgroundColor: 'rgba(75, 192, 192, 0.8)',
                                 borderColor: 'rgba(75, 192, 192, 1)',
                                 borderWidth: 1
                             }
@@ -99,7 +103,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                stacked: false // Đặt là false để có biểu đồ cột nhóm
+                                stacked: false
                             },
                             x: {
                                 stacked: false
@@ -107,7 +111,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         },
                         plugins: {
                             legend: {
-                                position: 'top' // Hiển thị chú thích ở trên
+                                position: 'top'
                             }
                         }
                     }
@@ -115,7 +119,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
-        // Biểu đồ S-Curve
+        // S-Curve Chart
         const sCurveCanvas = document.getElementById('sCurveChart');
         if (sCurveCanvas) {
             const dataElement = document.getElementById('sCurveChartData');
@@ -124,6 +128,7 @@ document.addEventListener("DOMContentLoaded", function() {
             if (!sCurveData.labels || sCurveData.labels.length === 0) {
                 showNoDataMessage(sCurveCanvas);
             } else {
+                // ... get data and check if empty ...
                 new Chart(sCurveCanvas.getContext('2d'), {
                     type: 'line',
                     data: {
@@ -136,7 +141,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                 backgroundColor: 'rgba(28, 200, 138, 0.1)',
                                 fill: false,
                                 tension: 0.1,
-                                pointRadius: 1 // Làm cho các điểm dữ liệu nhỏ hơn
+                                pointRadius: 1
                             },
                             {
                                 label: 'Actual',
@@ -145,7 +150,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                 backgroundColor: 'rgba(78, 115, 223, 0.1)',
                                 fill: false,
                                 tension: 0.1,
-                                pointRadius: 1 // Làm cho các điểm dữ liệu nhỏ hơn
+                                pointRadius: 1
                             }
                         ]
                     },
@@ -154,12 +159,9 @@ document.addEventListener("DOMContentLoaded", function() {
                         plugins: {
                             legend: {position: 'top'},
 
-                            // --- THÊM VÀO ĐÂY ---
-                            // Tắt plugin hiển thị số trên biểu đồ
                             datalabels: {
                                 display: false
                             }
-                            // --- KẾT THÚC PHẦN THÊM ---
                         }
                     }
                 });
@@ -169,8 +171,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 
-    // --- Xử lý sự kiện chuyển tab ---
-    // Khởi tạo biểu đồ cho tab đầu tiên (WIP) ngay khi tải trang
+    /**
+     * Handles the tab switching logic.
+     * The WIP chart is initialized on page load. The performance charts are initialized
+     * only once, the first time their tab is shown, for performance optimization.
+     */
     initWipChart();
 
     const performanceTab = document.getElementById('performance-tab');
@@ -178,7 +183,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (performanceTab) {
         performanceTab.addEventListener('shown.bs.tab', function (event) {
-            // Chỉ khởi tạo các biểu đồ của tab performance một lần duy nhất
             if (!performanceChartsInitialized) {
                 initPerformanceCharts();
                 performanceChartsInitialized = true;

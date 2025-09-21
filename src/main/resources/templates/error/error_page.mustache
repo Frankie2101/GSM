@@ -1,10 +1,17 @@
-{{! Gọi file layout chính làm khung sườn }}
+{{!
+  This template inherits from the main layout (_layout.mustache).
+}}
 {{> layout/_layout}}
 
-{{! Định nghĩa nội dung cho pageTitle trong layout }}
+{{!
+  Overrides the "pageTitle" block in the layout.
+}}
 {{#partial "pageTitle"}}Error{{/partial}}
 
-{{! Định nghĩa nội dung cho phần content chính trong layout }}
+{{!
+  Overrides the "content" block in the layout to display the error information.
+  The errorStatus and errorMessage variables are passed from the GlobalExceptionHandler.
+}}
 {{#partial "content"}}
     <div class="container text-center mt-5">
         <h1 class="display-1">{{errorStatus}}</h1>

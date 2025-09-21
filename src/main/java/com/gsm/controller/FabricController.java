@@ -2,6 +2,7 @@ package com.gsm.controller;
 
 import com.gsm.dto.FabricDto;
 import com.gsm.exception.DuplicateResourceException;
+import com.gsm.model.MaterialGroup;
 import com.gsm.model.Supplier;
 import com.gsm.model.Unit;
 import com.gsm.repository.SupplierRepository;
@@ -19,6 +20,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.gsm.model.MaterialGroup;
+import com.gsm.repository.MaterialGroupRepository;
 
 /**
  * Controller for handling all HTTP requests for the Fabric management feature.
@@ -31,6 +34,7 @@ public class FabricController {
     @Autowired private FabricService fabricService;
     @Autowired private UnitRepository unitRepository;
     @Autowired private SupplierRepository supplierRepository;
+    @Autowired private MaterialGroupRepository materialGroupRepository;
 
     /**
      * Displays the list of all fabrics, with an optional keyword search.
@@ -72,7 +76,7 @@ public class FabricController {
             fabric = fabricService.findById(id);
         } else {
             fabric = new FabricDto();
-            fabric.setFabricColors(new ArrayList<>()); // Khởi tạo list rỗng
+            fabric.setFabricColors(new ArrayList<>());
         }
 
         List<Unit> allUnits = unitRepository.findAll();
@@ -99,10 +103,23 @@ public class FabricController {
             supplierOptions.add(option);
         }
 
+        List<MaterialGroup> allGroups = materialGroupRepository.findByMaterialType("FA");
+        List<Map<String, Object>> groupOptions = new ArrayList<>();
+        for (MaterialGroup group : allGroups) {
+            Map<String, Object> option = new HashMap<>();
+            option.put("id", group.getMaterialGroupId());
+            option.put("name", group.getMaterialGroupName());
+            if (fabric.getMaterialGroupId() != null && fabric.getMaterialGroupId().equals(group.getMaterialGroupId())) {
+                option.put("selected", true);
+            }
+            groupOptions.add(option);
+        }
+
         model.addAttribute("fabric", fabric);
         model.addAttribute("isFabricPage", true);
         model.addAttribute("units", unitOptions);
         model.addAttribute("suppliers", supplierOptions);
+        model.addAttribute("materialGroups", groupOptions);
         model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));
 
         return "fabric/fabric_form";
@@ -124,12 +141,10 @@ public class FabricController {
             return "redirect:/fabrics/form?id=" + savedFabric.getFabricId();
         } catch (DuplicateResourceException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            redirectAttributes.addFlashAttribute("fabric", fabricDto); // Giữ lại dữ liệu đã nhập
-            // Nếu là tạo mới và bị lỗi, quay lại form rỗng
+            redirectAttributes.addFlashAttribute("fabric", fabricDto);
             if (fabricDto.getFabricId() == null) {
                 return "redirect:/fabrics/form";
             }
-            // Nếu là cập nhật và bị lỗi, quay lại form edit
             return "redirect:/fabrics/form?id=" + fabricDto.getFabricId();
         }
     }

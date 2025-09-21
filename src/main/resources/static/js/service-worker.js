@@ -1,13 +1,27 @@
-// sw.js - Service Worker
+/**
+ * Service Worker script for the Garment Simple MES mobile application.
+ * This script enables Progressive Web App (PWA) features like offline caching
+ * and improved performance.
+ */
 
+/**
+ * A unique name for the cache.
+ */
 const CACHE_NAME = 'gsm-prod-input-cache-v1';
-// Cac tai nguyen cot loi cua ung dung can duoc luu vao cache
+
+/**
+ * An array of core application shell URLs that should be pre-cached
+ * as soon as the service worker is installed.
+ */
 const urlsToCache = [
     '/mobile-login',
     '/mobile-input'
 ];
 
-// Su kien 'install': duoc kich hoat khi service worker duoc cai dat
+/**
+ * The 'install' event is fired when the service worker is first installed.
+ * It's used to open the cache and add the core application files to it.
+ */
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
@@ -19,8 +33,9 @@ self.addEventListener('install', event => {
     self.skipWaiting();
 });
 
-// Su kien 'activate': duoc kich hoat khi service worker duoc active
-// Thuong duoc dung de don dep cac cache cu
+/**
+ * The 'activate' event is fired when the service worker becomes active.
+ */
 self.addEventListener('activate', event => {
     const cacheWhitelist = [CACHE_NAME];
     event.waitUntil(
@@ -38,21 +53,31 @@ self.addEventListener('activate', event => {
     return self.clients.claim();
 });
 
-// Su kien 'fetch': can thiep vao moi request cua trang web
+/**
+ * The 'fetch' event intercepts every network request made by the page.
+ * This allows the service worker to control how requests are handled,
+ * enabling offline functionality.
+ */
 self.addEventListener('fetch', event => {
-    // Bo qua cac request khong phai la GET
-    // Bo qua cac request toi API de luon lay du lieu moi
+    /**
+     * Ignore non-GET requests (like POST) and API calls.
+     * API calls should always fetch fresh data from the network.
+     */
     if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
-        return; // De trinh duyet tu xu ly
+        return;
     }
 
+    /**
+     * Implements the "Stale-While-Revalidate" caching strategy.
+     * 1. Respond immediately with the cached version if available (stale).
+     * 2. In the background, fetch a fresh version from the network to update the cache (revalidate).
+     */
     event.respondWith(
         caches.open(CACHE_NAME).then(cache => {
             return cache.match(event.request).then(response => {
-                // Neu tim thay response trong cache, tra ve no
-                // Dong thoi, van fetch request moi tu network de cap nhat cache
+                // Fetch a fresh response from the network in the background.
                 const fetchPromise = fetch(event.request).then(networkResponse => {
-                    // Neu request thanh cong, cap nhat cache
+                    // If the fetch is successful, update the cache with the new version.
                     if (networkResponse.ok) {
                         cache.put(event.request, networkResponse.clone());
                     }
@@ -61,7 +86,7 @@ self.addEventListener('fetch', event => {
                     console.error('Fetch failed; returning offline page instead.', err);
                 });
 
-                // Tra ve phan hoi tu cache ngay lap tuc neu co, neu khong thi doi fetch
+                // Return the cached response immediately if it exists, otherwise wait for the network fetch.
                 return response || fetchPromise;
             });
         })

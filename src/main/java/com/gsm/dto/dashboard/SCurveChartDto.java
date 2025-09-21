@@ -4,13 +4,25 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.List;
 
+/**
+ * A DTO that structures the data needed for the S-Curve chart.
+ */
 @Data
 @NoArgsConstructor
 public class SCurveChartDto {
-    // Chứa các nhãn ngày tháng cho trục X
+
+    /**
+     * Labels for the X-axis (e.g., dates).
+     */
     private List<String> labels;
-    // Chứa dữ liệu sản lượng cộng dồn theo kế hoạch
+
+    /**
+     * The planned cumulative production data (the target curve).
+     */
     private List<Long> plannedData;
-    // Chứa dữ liệu sản lượng cộng dồn thực tế
+
+    /**
+     * The actual cumulative production data (the actual progress curve).
+     */
     private List<Long> actualData;
 }

@@ -260,7 +260,7 @@ public class SaleOrderServiceImpl implements SaleOrderService {
 
     /**
      * Private helper to convert a SaleOrder entity to a simple DTO for list views.
-     * This version is optimized for performance as it does not process the details collection.
+     * This version is optimized for performance as it does not process the detail collection.
      * @param order The source entity.
      * @return A simplified SaleOrderDto.
      */

@@ -1,22 +1,35 @@
+/**
+ * @file Manages the Production Output list page.
+ * Handles fetching, displaying, creating, editing, and deleting production output records.
+ */
 document.addEventListener('DOMContentLoaded', function () {
-    // --- Khai báo các biến ---
+
+    // --- Elements Caching ---
+    // Caching DOM elements for better performance and easier access.
+    /**
+     * @class ProductionOutputPage
+     * @description An object to encapsulate all functionality for the page.
+     */
     const createBtn = document.getElementById('createBtn');
     const outputTableBody = document.getElementById('outputTableBody');
     const outputModal = new bootstrap.Modal(document.getElementById('outputModal'));
     const outputForm = document.getElementById('outputForm');
-
     const saleOrderNoInput = document.getElementById('saleOrderNo');
     const styleSelect = document.getElementById('style');
     const colorSelect = document.getElementById('color');
     const departmentInput = document.getElementById('modalDepartment');
     const productionLineInput = document.getElementById('modalProductionLine');
 
+    // --- State Management ---
     let saleOrderDetailsCache = [];
-    let currentUser = null; // Biến lưu thông tin user
+    let currentUser = null;
 
-    // --- FUNCTIONS ---
+    // --- LOGIC FUNCTIONS ---
 
-    // Hàm tải thông tin user đang đăng nhập
+    /**
+     * Fetches the current logged-in user's information and caches it.
+     * This function is designed to run only once to avoid unnecessary API calls.
+     */
     async function loadCurrentUser() {
         if (currentUser) return; // Chỉ tải 1 lần
         try {
@@ -31,7 +44,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Hàm xử lý khi người dùng nhập SO No
+    /**
+     * Handles the logic when the Sale Order No. input loses focus (on blur).
+     * It fetches SO details, populates the 'Style' dropdown, and can trigger a callback.
+     * @param {Function} callback - A function to execute after the details have been loaded, used for the edit flow.
+     */
     async function handleSaleOrderNoChange(callback) {
         const soNo = saleOrderNoInput.value.trim();
         styleSelect.innerHTML = '<option value="">-- Loading... --</option>';
@@ -43,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         try {
+            // Fetch all style/color combinations for the given SO.
             const response = await fetch(`/api/sale-orders/${soNo}/details`);
             const details = await response.json();
             saleOrderDetailsCache = details;
@@ -51,12 +69,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
             populateSelect(styleSelect, styles, 'Select Style');
 
-            // YÊU CẦU MỚI: Tự động chọn nếu chỉ có 1 style
+            // Automatically select if there is only one style.
             if (styles.length === 1) {
                 styleSelect.value = styles[0];
-                handleStyleChange(); // Tự động kích hoạt thay đổi để load color
+                handleStyleChange();
             }
 
+            // If a callback was passed (e.g., from openEditModal), execute it.
             if (callback) callback();
         } catch (error) {
             console.error('Error fetching SO details:', error);
@@ -64,7 +83,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Hàm xử lý khi người dùng chọn Style
+    /**
+     * Handles the logic when the 'Style' dropdown selection changes.
+     * It populates the 'Color' dropdown based on the selected style using the cached data.
+     */
     function handleStyleChange() {
         const selectedStyle = styleSelect.value;
         if (!selectedStyle) {
@@ -72,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // Filter the cached details to get colors for the selected style.
         const colors = saleOrderDetailsCache
             .filter(d => d.style === selectedStyle)
             .map(d => d.color);
@@ -79,7 +102,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         populateSelect(colorSelect, uniqueColors, 'Select Color');
 
-        // YÊU CẦU MỚI: Tự động chọn nếu chỉ có 1 color
         if (uniqueColors.length === 1) {
             colorSelect.value = uniqueColors[0];
         }
@@ -87,16 +109,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Event Listeners ---
 
-    // Sự kiện khi bấm nút "Create"
+    /**
+     * Event listener for the "Create" button.
+     * It resets the modal form, sets default values, pre-fills user info, and shows the modal.
+     */
     createBtn.addEventListener('click', async () => {
         outputForm.reset();
         styleSelect.innerHTML = '<option value="">-- Type SO No first --</option>';
         colorSelect.innerHTML = '<option value="">-- Select Style first --</option>';
         document.getElementById('outputModalLabel').textContent = 'Create Production Output';
         document.getElementById('productionOutputId').value = '';
-        document.getElementById('outputDate').valueAsDate = new Date();
+        document.getElementById('outputDate').valueAsDate = new Date(); // Default to today.
 
-        // YÊU CẦU MỚI: Tải và điền thông tin user
+        // Load and pre-fill user's department and production line.
         await loadCurrentUser();
         if (currentUser) {
             departmentInput.value = currentUser.department || '';
@@ -106,13 +131,16 @@ document.addEventListener('DOMContentLoaded', function () {
         outputModal.show();
     });
 
+    // Add event listeners for the chained select functionality.
     saleOrderNoInput.addEventListener('blur', () => handleSaleOrderNoChange(null));
     styleSelect.addEventListener('change', handleStyleChange);
 
-
-    // --- Helper Functions and other parts of the script ---
-    // (Toàn bộ các hàm fetchOutputs, renderTable, openEditModal, saveOutput, deleteSelectedOutputs và các event listener khác giữ nguyên như file trước)
-
+    /**
+     * A helper function to populate a <select> element with options.
+     * @param {HTMLElement} selectElement - The <select> element to populate.
+     * @param {Array<string>} options - An array of strings for the options.
+     * @param {string} placeholder - The placeholder text for the default option.
+     */
     function populateSelect(selectElement, options, placeholder) {
         selectElement.innerHTML = `<option value="">-- ${placeholder} --</option>`;
         options.forEach(option => {
@@ -123,8 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // --- Các hàm còn lại từ lần trước ---
-
+    // --- Other Functions and Event Listeners ---
     const searchBtn = document.getElementById('searchBtn');
     const deleteBtn = document.getElementById('deleteBtn');
     const saveBtn = document.getElementById('saveBtn');
@@ -133,6 +160,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const csrfHeader = csrfTokenInput ? csrfTokenInput.getAttribute('name') : '_csrf';
     const csrfToken = csrfTokenInput ? csrfTokenInput.getAttribute('value') : '';
 
+    /**
+     * Fetches production outputs from the server based on search criteria and renders them.
+     */
     async function fetchOutputs() {
         const keyword = document.getElementById('keyword').value;
         const outputDateFrom = document.getElementById('outputDateFrom').value;
@@ -154,6 +184,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    /**
+     * Renders an array of output objects into the main table.
+     * @param {Array} outputs - The array of production output data.
+     */
     function renderTable(outputs) {
         outputTableBody.innerHTML = '';
         if (outputs.length === 0) {
@@ -182,6 +216,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    /**
+     * Opens the modal to edit an existing record, fetching its data first.
+     * @param {number} id - The ID of the record to edit.
+     */
     async function openEditModal(id) {
         try {
             const response = await fetch(`/api/production-outputs/${id}`);
@@ -197,9 +235,11 @@ document.addEventListener('DOMContentLoaded', function () {
             departmentInput.value = data.department || '';
             productionLineInput.value = data.productionLine || '';
 
+            // Load the SO details, then set style, then load colors, then set color.
             await handleSaleOrderNoChange(() => {
                 styleSelect.value = data.style;
                 handleStyleChange();
+                // A timeout is used to ensure the color dropdown is populated by the 'change' event before setting its value.
                 setTimeout(() => { colorSelect.value = data.color; }, 100);
             });
 
@@ -210,6 +250,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    /**
+     * Saves the data from the modal form (both for create and update).
+     */
     async function saveOutput() {
         const dto = {
             productionOutputId: document.getElementById('productionOutputId').value || null,
@@ -243,6 +286,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+
+    /**
+     * Deletes all selected records after a confirmation dialog.
+     */
     async function deleteSelectedOutputs() {
         const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
         if (selectedIds.length === 0) {
@@ -267,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     body: JSON.stringify(selectedIds)
                 });
                 if (response.ok) {
-                    await fetchOutputs();
+                    await fetchOutputs(); // Refresh the table.
                     Swal.fire('Deleted!', 'The selected items have been deleted.', 'success');
                 } else {
                     const error = await response.json();
@@ -279,14 +326,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Assign event listeners to the main action buttons and the table.
     searchBtn.addEventListener('click', fetchOutputs);
     saveBtn.addEventListener('click', saveOutput);
     deleteBtn.addEventListener('click', deleteSelectedOutputs);
+
+    // Use event delegation for the edit buttons inside the table.
     outputTableBody.addEventListener('click', function(e) {
         if (e.target && e.target.classList.contains('edit-btn')) {
             openEditModal(e.target.dataset.id);
         }
     });
+
+    // Listener for the "select all" checkbox.
     selectAllCheckbox.addEventListener('change', function() {
         document.querySelectorAll('.row-checkbox').forEach(checkbox => checkbox.checked = this.checked);
     });

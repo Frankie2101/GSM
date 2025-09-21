@@ -33,6 +33,13 @@ public class BOMTemplateDetail extends AuditableEntity {
     private BOMTemplate bomTemplate;
 
     /**
+     * Link to a MaterialGroup entity.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaterialGroupId", nullable = true)
+    private MaterialGroup materialGroup;
+
+    /**
      * The sequence number for ordering the details in the list.
      */
     @Column(name = "Seq", nullable = false)

@@ -1,7 +1,10 @@
-package com.gsm.dto.dashboard; // Đảm bảo đúng package
+package com.gsm.dto.dashboard;
 
 import lombok.Data;
 
+/**
+ * A DTO representing a single row in the WIP details table on the dashboard.
+ */
 @Data
 public class WIPDetailDto {
     private String saleOrderNo;

@@ -13,7 +13,8 @@ import java.util.List;
 public interface ProductionOutputRepository extends JpaRepository<ProductionOutput, Long> {
 
     /**
-     * Hàm tìm kiếm nâng cao cho chức năng Production Output List
+     * Performs an advanced search for production outputs based on multiple criteria.
+     * Searches by keyword across SO number, style, and color. Also filters by department, production line, and a date range.
      */
     @Query("SELECT po FROM ProductionOutput po JOIN po.saleOrder so WHERE " +
             "(:keyword IS NULL OR :keyword = '' OR so.saleOrderNo LIKE %:keyword% OR po.style LIKE %:keyword% OR po.color LIKE %:keyword%) AND " +
@@ -29,10 +30,11 @@ public interface ProductionOutputRepository extends JpaRepository<ProductionOutp
             @Param("productionLine") String productionLine
     );
 
-    // --- CÁC PHƯƠMNG THỨC CHO DASHBOARD ---
+    // --- DASHBOARD-RELATED METHODS ---
 
     /**
-     * Interface định nghĩa cấu trúc dữ liệu trả về của câu query tổng hợp cho dashboard.
+     * Projection interface for aggregated production output data.
+     * Defines the structure for query results that group outputs by order, style, color, and department.
      */
     interface ProductionOutputGroup {
         Long getSaleOrderId();
@@ -42,26 +44,36 @@ public interface ProductionOutputRepository extends JpaRepository<ProductionOutp
         Long getTotalOutput();
     }
 
-    // Interface để nhận kết quả từ query Daily Throughput
+    /**
+     * Projection for daily throughput results.
+     */
     interface DailyThroughputResult {
         LocalDate getDate();
         Long getTotalQuantity();
     }
 
-    // Query để lấy tổng sản lượng hoàn thành (Pack Qty) theo từng ngày
+    /**
+     * Calculates the total packing output quantity for each day within a given date range.
+     * Used to track daily factory throughput.
+     */
     @Query("SELECT po.outputDate as date, SUM(po.outputQuantity) as totalQuantity " +
             "FROM ProductionOutput po " +
             "WHERE po.department = 'PCK' AND po.outputDate BETWEEN :startDate AND :endDate " +
             "GROUP BY po.outputDate ORDER BY po.outputDate ASC")
     List<DailyThroughputResult> findDailyThroughput(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-    // Interface để nhận kết quả cho S-Curve
+    /**
+     * Projection for cumulative output results, typically used for S-Curve charts.
+     */
     interface CumulativeOutputResult {
         LocalDate getDate();
         Long getCumulativeQuantity();
     }
 
-    // Query để lấy sản lượng MAY cộng dồn theo từng ngày cho các đơn hàng InProgress
+    /**
+     * Calculates the cumulative daily sewing output for all 'InProgress' sale orders.
+     * This native query is optimized for building S-curve charts.
+     */
     @Query(value = "SELECT T.OutputDate AS date, SUM(T.TotalQuantity) OVER (ORDER BY T.OutputDate) AS cumulativeQuantity " +
             "FROM ( " +
             "  SELECT po.OutputDate, SUM(po.OutputQuantity) AS TotalQuantity " +
@@ -72,8 +84,8 @@ public interface ProductionOutputRepository extends JpaRepository<ProductionOutp
     List<CumulativeOutputResult> findCumulativeSewnOutputForInProgressOrders();
 
     /**
-     * Query tính tổng sản lượng theo từng (Đơn hàng, Mã hàng, Màu, Công đoạn)
-     * chỉ dành cho các đơn hàng có trạng thái "InProgress" để tối ưu hiệu năng.
+     * Aggregates the total production output for each combination of Sale Order, Style, Color, and Department.
+     * This query is optimized to only include orders with the 'InProgress' status to improve performance for dashboards.
      */
     @Query("SELECT " +
             "po.saleOrder.saleOrderId AS saleOrderId, " +
@@ -86,13 +98,20 @@ public interface ProductionOutputRepository extends JpaRepository<ProductionOutp
             "GROUP BY po.saleOrder.saleOrderId, po.style, po.color, po.department")
     List<ProductionOutputGroup> getAggregatedOutputForInProgressOrders();
 
+    /**
+     * Projection interface for daily throughput results grouped by department.
+     * Defines the return type for queries that aggregate total daily output for each department.
+     */
     public interface DailyThroughputByDeptResult {
         LocalDate getDate();
         String getDepartment();
         Long getTotalQuantity();
     }
 
-    // Thêm phương thức truy vấn mới này
+    /**
+     * Calculates the total daily production output for each department within a given date range.
+     * Useful for creating detailed throughput charts broken down by department.
+     */
     @Query("SELECT po.outputDate AS date, po.department AS department, SUM(po.outputQuantity) AS totalQuantity " +
             "FROM ProductionOutput po " +
             "WHERE po.outputDate BETWEEN :startDate AND :endDate " +

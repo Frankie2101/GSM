@@ -7,6 +7,7 @@ import lombok.Setter;
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import com.gsm.model.MaterialGroup;
 
 /**
  * Represents the core Fabric entity.
@@ -76,6 +77,13 @@ public class Fabric extends AuditableEntity {
      */
     @OneToMany(mappedBy = "fabric", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<FabricColor> fabricColors = new ArrayList<>();
+
+    /**
+     * A Material group of Fabric
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaterialGroupId", referencedColumnName = "MaterialGroupId")
+    private MaterialGroup materialGroup;
 
     /**
      * Helper method to synchronize the bidirectional relationship with FabricColor.

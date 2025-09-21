@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const tableBody = document.getElementById('po-table-body');
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
     const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
-    const searchInput = document.getElementById('searchInput'); // Element ô tìm kiếm
-    const searchBtn = document.getElementById('searchBtn');     // Element nút tìm kiếm
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
 
     let allPOs = []; // A cache to store the master list of all POs to enable client-side search.
 

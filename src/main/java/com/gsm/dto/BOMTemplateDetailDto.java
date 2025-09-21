@@ -15,6 +15,8 @@ public class BOMTemplateDetailDto {
     private Long bomTemplateDetailId;
     private Integer seq;
 
+    private Long materialGroupId;
+
     @NotBlank(message = "Material Type (FA/TR) is required")
     private String rmType; // Raw Material Type (FA = Fabric, TR = Trim)
 

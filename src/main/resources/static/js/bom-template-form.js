@@ -3,9 +3,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableBody = document.getElementById('detailTableBody');
     const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const materialGroupTemplate = document.getElementById('material-groups-data-template');
 
-    const materialCache = { FA: null, TR: null };
+    /**
+     * An object to cache material lists (Fabric, Trim) to avoid redundant API calls.
+     */
+    const materialCache = {};
 
+    /**
+     * Re-calculates sequence numbers and updates the 'name' attribute of all form inputs in the table.
+     * This is crucial for Spring MVC to correctly bind the list of details on form submission.
+     * Example: details[0].rmType, details[1].rmType, etc.
+     */
     const reindexAndNameRows = () => {
         if (!tableBody) return;
         const rows = tableBody.querySelectorAll('tr');
@@ -24,20 +33,29 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
-    const fetchMaterials = async (type, selectElement, selectedId) => {
-        if (!type) {
-            selectElement.innerHTML = '<option value="">-- Select RM Type First --</option>';
+    /**
+     * Fetches a list of materials (Fabric or Trim) from the API and populates a select dropdown.
+     * Uses the materialCache to serve cached data if available.
+     * @param {string} type - The material type ('FA' or 'TR').
+     * @param {HTMLElement} selectElement - The <select> element to populate.
+     * @param {string|null} selectedId - The ID of the item to be pre-selected.
+     */
+    const fetchMaterials = async (type, materialGroupId, selectElement, selectedId) => {
+        if (!type || !materialGroupId) {
+            selectElement.innerHTML = '<option value="">-- Select RM Type and Material Group First --</option>';
             return;
         }
-        if (materialCache[type]) {
+
+        const cacheKey = `${type}_${materialGroupId}`;
+        if (materialCache[cacheKey]) {
             populateRmCodeSelect(selectElement, materialCache[type], selectedId);
             return;
         }
         try {
-            const response = await fetch(`/api/materials?type=${type}`);
+            const response = await fetch(`/api/materials?type=${type}&materialGroupId=${materialGroupId}`);
             if (!response.ok) throw new Error('Network response was not ok');
             const materials = await response.json();
-            materialCache[type] = materials;
+            materialCache[cacheKey] = materials;
             populateRmCodeSelect(selectElement, materials, selectedId);
         } catch (error) {
             console.error('Failed to fetch materials:', error);
@@ -51,16 +69,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const option = document.createElement('option');
             option.value = material.id;
             option.textContent = material.code;
-            // Dữ liệu 'name' và 'unit' không có ở API này, sẽ được lấy ở một API khác
             if (selectedId && material.id.toString() === selectedId.toString()) {
                 option.selected = true;
             }
             selectElement.appendChild(option);
         });
-        // Kích hoạt sự kiện 'change' để xử lý cho các dòng đã có sẵn khi tải trang
         selectElement.dispatchEvent(new Event('change', { 'bubbles': true }));
     };
 
+    /**
+     * Event listener for the 'Add Detail' button, which adds a new blank row to the table.
+     */
     if (addBtn) {
         addBtn.addEventListener('click', function() {
             const newRowHtml = `
@@ -78,6 +97,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         <option value="TR">Trim</option>
                     </select>
                 </td>
+                <td>
+                    <select class="form-select material-group-select" data-name="materialGroupId">
+                        ${materialGroupTemplate.innerHTML}
+                    </select>
+                </td>
                 <td><select class="form-select rm-code-select" data-name="rmId"></select></td>
                 <td><input type="text" class="form-control rm-name-input" readonly></td>
                 <td><input type="text" class="form-control rm-unit-input" readonly></td>
@@ -88,6 +112,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 </td>
             </tr>
         `;
+
+            /**
+             * Event delegation for 'change' events within the table body.
+             * Handles the chained select logic:
+             * - When RM Type changes, it fetches the corresponding material codes.
+             * - When RM Code changes, it fetches that material's details (name, unit).
+             */
             if (tableBody) {
                 tableBody.insertAdjacentHTML('beforeend', newRowHtml);
                 reindexAndNameRows();
@@ -101,19 +132,20 @@ document.addEventListener('DOMContentLoaded', function() {
             const row = target.closest('tr');
             if (!row) return;
 
-            // Khi người dùng thay đổi RM Type
-            if (target.classList.contains('rm-type-select')) {
+            if (target.classList.contains('rm-type-select') || target.classList.contains('material-group-select')) {
                 const rmCodeSelect = row.querySelector('.rm-code-select');
                 row.querySelector('.rm-name-input').value = '';
                 row.querySelector('.rm-unit-input').value = '';
-                fetchMaterials(target.value, rmCodeSelect, null);
+
+                const type = row.querySelector('.rm-type-select').value;
+                const groupId = row.querySelector('.material-group-select').value;
+
+                fetchMaterials(type, groupId, rmCodeSelect, null);
             }
-            // Khi người dùng thay đổi RM Code
             else if (target.classList.contains('rm-code-select')) {
                 const rmNameInput = row.querySelector('.rm-name-input');
                 const rmUnitInput = row.querySelector('.rm-unit-input');
 
-                // Luôn xóa dữ liệu cũ trước khi fetch
                 rmNameInput.value = '';
                 rmUnitInput.value = '';
 
@@ -122,12 +154,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (rmId && rmType) {
                     try {
-                        // **FIX: Gọi API thứ 2 để lấy chi tiết material**
                         const response = await fetch(`/api/material-details/${rmId}?type=${rmType}`);
                         if (!response.ok) throw new Error('Material details not found');
                         const details = await response.json();
 
-                        // Cập nhật giá trị vào các ô input
                         rmNameInput.value = details.name || '';
                         rmUnitInput.value = details.unitName || '';
                     } catch (error) {
@@ -167,13 +197,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Khởi tạo các dòng đã có sẵn khi tải trang
-    document.querySelectorAll('.rm-type-select').forEach(select => {
-        const row = select.closest('tr');
-        const rmCodeSelect = row.querySelector('.rm-code-select');
-        const selectedId = rmCodeSelect.getAttribute('data-selected-id');
-        if (select.value) {
-            fetchMaterials(select.value, rmCodeSelect, selectedId);
+    document.querySelectorAll('#detailTableBody tr').forEach(row => {
+        const groupSelect = row.querySelector('.material-group-select');
+        const typeSelect = row.querySelector('.rm-type-select');
+        const codeSelect = row.querySelector('.rm-code-select');
+
+        groupSelect.innerHTML = materialGroupTemplate.innerHTML;
+        const selectedGroupId = groupSelect.getAttribute('data-selected-id');
+        if (selectedGroupId) {
+            groupSelect.value = selectedGroupId;
+        }
+
+        const typeValue = typeSelect.value;
+        const groupIdValue = groupSelect.value;
+        const selectedRmId = codeSelect.getAttribute('data-selected-id');
+
+        if (typeValue && groupIdValue) {
+            fetchMaterials(typeValue, groupIdValue, codeSelect, selectedRmId);
         }
     });
 

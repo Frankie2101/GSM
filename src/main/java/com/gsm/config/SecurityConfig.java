@@ -15,6 +15,11 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.config.Customizer;
 
+/**
+ * Configures the application's security settings using Spring Security.
+ * This class defines multiple ordered SecurityFilterChains to handle different
+ * parts of the application (Zalo API, Mobile App, Web App) with distinct security rules.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -36,8 +41,9 @@ public class SecurityConfig {
     }
 
     /**
-     * [ƯU TIÊN 0 - CAO NHẤT]
-     * Chuỗi bộ lọc này CHỈ dùng để Zalo xác thực domain. (GIỮ NGUYÊN)
+     * [PRIORITY 0 - HIGHEST]
+     * This filter chain is ONLY for Zalo's domain verification file.
+     * It has the highest priority to ensure it's processed first.
      */
     @Bean
     @Order(0)
@@ -50,14 +56,14 @@ public class SecurityConfig {
     }
 
     /**
-     * [ƯU TIÊN 1]
-     * Chuỗi bộ lọc cho TẤT CẢ các API của Zalo Mini App. (GIỮ NGUYÊN)
+     * [PRIORITY 1]
+     * This filter chain is for ALL Zalo Mini App APIs.
+     * It permits all requests under /api/zalo/** and disables CSRF.
      */
     @Bean
     @Order(1)
     public SecurityFilterChain zaloApiFilterChain(HttpSecurity http) throws Exception {
         http
-                // SỬA LẠI: Dùng antMatcher() cho Spring Boot 2.7
                 .antMatcher("/api/zalo/**")
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()
@@ -68,9 +74,9 @@ public class SecurityConfig {
     }
 
     /**
-     * [ƯU TIÊN 2 - MỚI]
-     * Chuỗi bộ lọc cho ứng dụng di động (PWA).
-     * Xử lý đăng nhập và truy cập cho giao diện /mobile-*.
+     * [PRIORITY 2]
+     * This filter chain is for the mobile application (PWA).
+     * It handles authentication and access for the /mobile-* interface.
      */
     @Bean
     @Order(2)
@@ -79,10 +85,9 @@ public class SecurityConfig {
                 .antMatcher("/mobile-**")
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
-                        // === THAY ĐỔI QUAN TRỌNG ===
-                        // Thêm "/mobile-login" vào danh sách cho phép truy cập công khai.
+                        // Allow public access to the login page and PWA assets.
                         .antMatchers("/mobile-login", "/manifest.json", "/service-worker.js", "/icons/**").permitAll()
-                        // Tất cả các request khác bắt đầu bằng /mobile-** đều phải được xác thực
+                        // All other requests starting with /mobile-** must be authenticated.
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -109,8 +114,9 @@ public class SecurityConfig {
     }
 
     /**
-     * [ƯU TIÊN 3 - THẤP NHẤT] - Đã đổi Order từ 2 -> 3
-     * Chuỗi bộ lọc mặc định cho ứng dụng web nội bộ (GSM). (GIỮ NGUYÊN LOGIC)
+     * [PRIORITY 3 - LOWEST]
+     * The default filter chain for the internal web application (GSM).
+     * This acts as a catch-all for any requests not matched by higher-priority chains.
      */
     @Bean
     @Order(3)

@@ -4,6 +4,9 @@ import javax.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Represents a unit of measure (e.g., PCS, YDS, MTR).
+ */
 @Entity
 @Table(name = "Unit")
 @Getter

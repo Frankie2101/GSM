@@ -7,6 +7,7 @@ import lombok.Setter;
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import com.gsm.model.MaterialGroup;
 
 @Entity
 @Table(name = "Trim")
@@ -42,6 +43,13 @@ public class Trim extends AuditableEntity {
      */
     @OneToMany(mappedBy = "trim", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<TrimVariant> variants = new ArrayList<>();
+
+    /**
+     * A Material group of trim
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaterialGroupId", referencedColumnName = "MaterialGroupId")
+    private MaterialGroup materialGroup;
 
     // Helper method to maintain relationship consistency
     public void addVariant(TrimVariant variant) {

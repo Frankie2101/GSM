@@ -3,9 +3,11 @@ package com.gsm.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import javax.persistence.*;
 
+/**
+ * Represents a group for raw materials, used for classification.
+ */
 @Entity
 @Table(name = "MaterialGroup")
 @Getter
@@ -25,9 +27,9 @@ public class MaterialGroup extends AuditableEntity {
     private String materialGroupName;
 
     /**
-     * Loại Nguyên phụ liệu.
-     * FA = Fabric (Vải)
-     * TR = Trim (Phụ liệu)
+     * The type of material.
+     * FA = Fabric
+     * TR = Trim
      */
     @Column(name = "MaterialType", nullable = false, length = 2)
     private String materialType;

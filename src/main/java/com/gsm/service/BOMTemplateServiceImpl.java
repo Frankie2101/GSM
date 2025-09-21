@@ -12,12 +12,15 @@ import com.gsm.repository.TrimRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+/**
+ * The concrete implementation of the BOMTemplateService interface.
+ * Contains all business logic for managing BOM Templates.
+ */
 @Service
 public class BOMTemplateServiceImpl implements BOMTemplateService {
 
@@ -78,21 +81,29 @@ public class BOMTemplateServiceImpl implements BOMTemplateService {
         bomTemplateRepository.deleteAllById(ids);
     }
 
+    /**
+     * Saves a BOM Template, including its detail lines.
+     * This involves checking for duplicates, mapping DTOs to entities,
+     * and synchronizing the child collection of details.
+     */
     @Override
     @Transactional
     public BOMTemplateDto save(BOMTemplateDto dto) {
+        // Check for duplicate code.
         bomTemplateRepository.findByBomTemplateCode(dto.getBomTemplateCode()).ifPresent(existing -> {
             if (dto.getBomTemplateId() == null || !existing.getBomTemplateId().equals(dto.getBomTemplateId())) {
                 throw new DuplicateResourceException("BOM Template Code '" + dto.getBomTemplateCode() + "' already exists.");
             }
         });
 
+        // Find existing or create a new template entity.
         BOMTemplate template = (dto.getBomTemplateId() != null)
                 ? bomTemplateRepository.findById(dto.getBomTemplateId()).orElseGet(BOMTemplate::new)
                 : new BOMTemplate();
 
         mapDtoToEntity(dto, template);
 
+        // Process and map the detail lines from DTOs to entities.
         List<BOMTemplateDetail> detailsToSave = new ArrayList<>();
         if (dto.getDetails() != null) {
             for (BOMTemplateDetailDto detailDto : dto.getDetails()) {
@@ -102,19 +113,23 @@ public class BOMTemplateServiceImpl implements BOMTemplateService {
                 detail.setUsageValue(detailDto.getUsageValue());
                 detail.setWaste(detailDto.getWaste());
 
+                // Based on the material type, find and link the correct Fabric or Trim entity.
                 if ("FA".equals(detailDto.getRmType())) {
                     Fabric fabric = fabricRepository.findById(detailDto.getRmId())
                             .orElseThrow(() -> new ResourceNotFoundException("Fabric not found with ID: " + detailDto.getRmId()));
                     detail.setFabric(fabric);
+                    detail.setMaterialGroup(fabric.getMaterialGroup());
                 } else if ("TR".equals(detailDto.getRmType())) {
                     Trim trim = trimRepository.findById(detailDto.getRmId())
                             .orElseThrow(() -> new ResourceNotFoundException("Trim not found with ID: " + detailDto.getRmId()));
                     detail.setTrim(trim);
+                    detail.setMaterialGroup(trim.getMaterialGroup());
                 }
                 detailsToSave.add(detail);
             }
         }
 
+        // Synchronize the details collection: clear old details and add all new ones.
         template.getDetails().clear();
         detailsToSave.forEach(template::addDetail);
 
@@ -151,11 +166,14 @@ public class BOMTemplateServiceImpl implements BOMTemplateService {
         dto.setUsageValue(detail.getUsageValue());
         dto.setWaste(detail.getWaste());
 
+        if (detail.getMaterialGroup() != null) {
+            dto.setMaterialGroupId(detail.getMaterialGroup().getMaterialGroupId());
+        }
+
         if ("FA".equals(detail.getRmType()) && detail.getFabric() != null) {
             dto.setRmId(detail.getFabric().getFabricId());
             dto.setRmCode(detail.getFabric().getFabricCode());
             dto.setRmName(detail.getFabric().getFabricName());
-            // Thêm unitName
             if (detail.getFabric().getUnit() != null) {
                 dto.setUnitName(detail.getFabric().getUnit().getUnitName());
             }
@@ -163,15 +181,12 @@ public class BOMTemplateServiceImpl implements BOMTemplateService {
             dto.setRmId(detail.getTrim().getTrimId());
             dto.setRmCode(detail.getTrim().getTrimCode());
             dto.setRmName(detail.getTrim().getTrimName());
-            // Thêm unitName
             if (detail.getTrim().getUnit() != null) {
                 dto.setUnitName(detail.getTrim().getUnit().getUnitName());
             }
         }
         return dto;
     }
-
-    // --- Helper Methods ---
 
     private BOMTemplateDto convertEntityToDtoSimple(BOMTemplate template) {
         BOMTemplateDto dto = new BOMTemplateDto();

@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {{!
+       Load necessary libraries and CSS for the page.
+       Includes SweetAlert2 for notifications, Bootstrap for styling, and custom CSS.
+     }}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +15,7 @@
 </head>
 <body>
 <div class="d-flex" id="wrapper">
+
     {{> layout/sidebar}}
     <div id="page-content-wrapper">
         {{> layout/header}}
@@ -18,7 +23,10 @@
             <div class="d-flex align-items-center mb-4">
                 <h1 class="h3 m-0"><i class="bi bi-box-seam-fill me-2"></i>Production Output</h1>
             </div>
-
+            {{!
+             Main search form for filtering production output records.
+             Users can search by various criteria.
+            }}
             <div class="card mb-4">
                 <div class="card-body">
                     <form id="searchForm">
@@ -53,6 +61,9 @@
                 </div>
             </div>
 
+            {{!
+                Area to display the search results.
+              }}
             <div class="card">
                 <div class="card-header">Result</div>
                 <div class="card-body">
@@ -73,6 +84,10 @@
                                 <th style="width: 6%;">Action</th>
                             </tr>
                             </thead>
+                            {{!
+                              The table body (tbody) will be populated dynamically by JavaScript.
+                              This is the container for result rows returned from the API.
+                            }}
                             <tbody id="outputTableBody">
                             </tbody>
                         </table>
@@ -84,6 +99,10 @@
     </div>
 </div>
 
+{{!
+  Modal dialog used for both Creating and Editing
+  a production output record.
+}}
 <div class="modal fade" id="outputModal" tabindex="-1" aria-labelledby="outputModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -120,8 +139,6 @@
                                 <option value="">-- Select Style first --</option>
                             </select>
                         </div>
-
-                        <!-- YÊU CẦU MỚI: Đổi thành input chỉ đọc -->
                         <div class="col-md-6">
                             <label for="modalDepartment" class="form-label">Department</label>
                             <input type="text" class="form-control" id="modalDepartment" name="department" readonly>

@@ -32,7 +32,11 @@ public class FabricDto {
     @NotNull(message = "Supplier is required")
     private Long supplierId;
 
+    @NotNull(message = "Material Group is required")
+    private Long materialGroupId;
+
     // For display purposes only, not submitted from form
+    private String materialGroupName;
     private String supplierName;
     private String unitName;
 

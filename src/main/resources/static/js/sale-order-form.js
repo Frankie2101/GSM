@@ -91,10 +91,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         <label class="form-label form-label-sm mb-0">Color</label>
                         <select class="form-select form-select-sm color-select" title="Color"></select>
                     </div>
-                    <div style="width: 20%;" class="me-2">
-                        <label class="form-label form-label-sm mb-0">Color Name</label>
-                        <input type="text" class="form-control form-control-sm color-name" readonly title="Color Name">
-                    </div>
                     <div style="width: 10%;" class="me-2">
                          <label class="form-label form-label-sm mb-0">Unit</label>
                          <input type="text" class="form-control form-control-sm unit-name" readonly title="Unit">
@@ -197,12 +193,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const products = await fetchProducts();
 
         for (const detail of details) {
-            const card = createDetailCard(); // Luôn tạo card mới với cấu trúc HTML đúng
+            const card = createDetailCard();
 
             const productSelect = card.querySelector('.product-select');
             const productNameInput = card.querySelector('.product-name');
             const colorSelect = card.querySelector('.color-select');
-            const colorNameInput = card.querySelector('.color-name');
             const unitInput = card.querySelector('.unit-name');
 
             productSelect.innerHTML = '<option value="">-- Select --</option>';
@@ -225,24 +220,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const colors = await fetchColors(detail.productId);
             colorSelect.innerHTML = '<option value="">-- Color --</option>';
-            let selectedColorData = null;
             colors.forEach(c => {
                 const option = new Option(c.colorCode, c.colorCode);
-                option.dataset.colorName = c.colorName;
                 colorSelect.add(option);
-                if (c.colorCode == detail.color) {
-                    selectedColorData = c;
-                }
             });
-
-            if (selectedColorData) {
-                colorSelect.value = detail.color;
-                colorNameInput.value = selectedColorData.colorName;
-            }
+            colorSelect.value = detail.color;
 
             card.querySelector(`[name="details[${card.dataset.index}].productId"]`).value = detail.productId;
             card.querySelector(`[name="details[${card.dataset.index}].color"]`).value = detail.color;
-
             await buildSizeMatrix(card, detail.productId, detail.color, detail);
         }
     };
@@ -295,7 +280,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 3. Clear the old color/size info.
             const colorSelect = card.querySelector('.color-select');
-            card.querySelector('.color-name').value = '';
             card.querySelector('.unit-name').value = selectedOption.dataset.unitName || '';
             card.querySelector(`[name="details[${card.dataset.index}].productId"]`).value = target.value;
 
@@ -305,7 +289,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 colorSelect.innerHTML = '<option value="">-- Color --</option>';
                 colors.forEach(c => {
                     const option = new Option(c.colorCode, c.colorCode);
-                    option.dataset.colorName = c.colorName; // Lưu colorName vào data attribute
                     colorSelect.add(option);
                 });
             } else {
@@ -317,8 +300,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // --- Logic when a COLOR is selected ---
         if (target.classList.contains('color-select')) {
             const selectedOption = target.options[target.selectedIndex];
-            card.querySelector('.color-name').value = selectedOption.dataset.colorName || '';
-
             const productId = card.querySelector('.product-select').value;
             card.querySelector(`[name="details[${card.dataset.index}].color"]`).value = target.value;
 

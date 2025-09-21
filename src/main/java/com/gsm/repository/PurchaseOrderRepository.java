@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -63,4 +64,41 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
      */
     @Query("SELECT po FROM PurchaseOrder po JOIN FETCH po.supplier WHERE po.status = :status ORDER BY po.poDate DESC")
     List<PurchaseOrder> findByStatus(@Param("status") String status);
+
+    /**
+     * An interface-based projection to hold the results of the material risk analysis query.
+     * This efficiently fetches data from multiple related tables.
+     */
+    public interface MaterialRiskProjection {
+        String getSaleOrderNo();
+        String getStyle();
+        LocalDate getProductionStartDate();
+        String getMaterialDescription();
+        String getPurchaseOrderNo();
+        LocalDate getPoArrivalDate();
+    }
+
+    /**
+     * A query to fetch data for material risk analysis, specifically for in-progress sales orders.
+     * It joins from PurchaseOrderDetail back to SaleOrder to compare the planned material arrival date
+     * against the planned production start date.
+     */
+    @Query("SELECT DISTINCT " +
+            "so.saleOrderNo AS saleOrderNo, " +
+            "p.productCode AS style, " +
+            "so.productionStartDate AS productionStartDate, " +
+            "obd.materialName AS materialDescription, " +
+            "po.purchaseOrderNo AS purchaseOrderNo, " +
+            "po.arrivalDate AS poArrivalDate " +
+            "FROM PurchaseOrderDetail pod " +
+            "JOIN pod.purchaseOrder po " +
+            "JOIN pod.orderBOMDetail obd " +
+            "JOIN obd.orderBOM ob " +
+            "JOIN ob.saleOrder so " +
+            "JOIN so.details sod " +
+            "JOIN sod.productVariant pv " +
+            "JOIN pv.product p " +
+            "WHERE so.status = com.gsm.enums.SaleOrderStatus.InProgress " +
+            "AND po.arrivalDate IS NOT NULL AND so.productionStartDate IS NOT NULL")
+    List<MaterialRiskProjection> findMaterialRiskData();
 }

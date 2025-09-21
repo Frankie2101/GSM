@@ -66,9 +66,10 @@ public class SaleOrderApiController {
      */
     @GetMapping("/product-colors")
     public List<ColorInfo> getProductColors(@RequestParam Long productId) {
-        List<Object[]> results = productVariantRepository.findDistinctColorsByProductId(productId);
+        List<String> results = productVariantRepository.findDistinctColorsByProductId(productId);
+
         return results.stream()
-                .map(result -> new ColorInfo((String) result[0], (String) result[1]))
+                .map(ColorInfo::new)
                 .collect(Collectors.toList());
     }
 
@@ -108,7 +109,7 @@ public class SaleOrderApiController {
         private Long id; private String code; private String name; private String unitName;
     }
     @Getter @AllArgsConstructor public static class ColorInfo {
-        private String colorCode; private String colorName;
+        private String colorCode;
     }
     @Getter @AllArgsConstructor public static class SizeInfo {
         private Long variantId; private String size; private Double price;

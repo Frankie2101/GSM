@@ -4,25 +4,26 @@
             <li class="nav-item">
                 <a class="nav-link" href="#"><i class="bi bi-bell fs-5"></i></a>
             </li>
-            {{#loggedInUser}} {{! Bắt đầu khối nếu loggedInUser tồn tại }}
+            {{!
+               This block is only rendered if the 'loggedInUser' object exists in the model.
+               The object is provided by the GlobalControllerAdvice.
+             }}
+            {{#loggedInUser}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <img src="/images/avatar.jpg" class="me-2 user-avatar-img" alt="User Avatar">
                         <div>
-                            {{! SỬA Ở ĐÂY: Lấy userName từ đối tượng loggedInUser }}
                             <div class="fw-bold">{{userName}}</div>
-                            {{! SỬA Ở ĐÂY: Lấy department từ đối tượng loggedInUser }}
                             <div class="small text-muted">{{department}}</div>
                         </div>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                         <a class="dropdown-item" href="#!">Profile</a>
                         <div class="dropdown-divider"></div>
-                        {{! THAY THẾ THẺ <a> BẰNG FORM DƯỚI ĐÂY }}
                         <a class="dropdown-item" href="/logout">Logout</a>
                     </div>
                 </li>
-            {{/loggedInUser}} {{! Kết thúc khối }}
+            {{/loggedInUser}}
         </ul>
     </div>
 </nav>

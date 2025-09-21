@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
- * Exception được ném ra khi cố gắng tạo một tài nguyên đã tồn tại (ví dụ: trùng mã).
- * Sẽ trả về HTTP Status 409 (Conflict).
+ * An exception thrown when attempting to create a resource that already exists (e.g., duplicate code).
+ * Results in an HTTP 409 (Conflict) status.
  */
 @ResponseStatus(HttpStatus.CONFLICT)
 public class DuplicateResourceException extends RuntimeException {

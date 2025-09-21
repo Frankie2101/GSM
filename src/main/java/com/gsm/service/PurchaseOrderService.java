@@ -14,6 +14,14 @@ import java.util.Map;
 public interface PurchaseOrderService {
 
     /**
+     * Generates new Purchase Orders based on the details of a saved Order BOM.
+     * / Tạo các Đơn hàng mua (PO) mới dựa trên chi tiết của một Order BOM đã được lưu.
+     * @param bomDto The saved OrderBOMDto containing items to be purchased. / DTO của OrderBOM đã lưu, chứa các mặt hàng cần mua.
+     * @return A map containing a summary message and a list of new PO numbers. / Một map chứa thông báo tóm tắt và danh sách các số PO mới.
+     */
+    Map<String, Object> generatePOsFromOrderBOM(OrderBOMDto bomDto);
+
+    /**
      * Retrieves a list of all Purchase Orders, optimized for list view.
      * @return A list of {@link PurchaseOrderDto} objects.
      */
@@ -33,6 +41,7 @@ public interface PurchaseOrderService {
      * @return The saved {@link PurchaseOrderDto}.
      */
     PurchaseOrderDto save(PurchaseOrderDto dto);
+
 
     /**
      * Deletes one or more Purchase Orders based on a list of IDs.

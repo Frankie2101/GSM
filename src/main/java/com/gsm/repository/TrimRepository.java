@@ -27,6 +27,16 @@ public interface TrimRepository extends JpaRepository<Trim, Long> {
     Optional<Trim> findByTrimCode(String trimCode);
 
     /**
+     * Finds all trims belonging to a specific Material Group.
+     * This is a "derived query method". Spring Data JPA automatically generates the
+     * implementation by parsing the method name.
+     *
+     * @param materialGroupId The ID of the Material Group to filter by.
+     * @return A list of matching {@link com.gsm.model.Trim} entities, or an empty list if none are found.
+     */
+    List<Trim> findByMaterialGroup_MaterialGroupId(Long materialGroupId);
+
+    /**
      * Searches for trims using a keyword against the trim's code and name.
      * The search is case-insensitive and matches if the keyword appears anywhere.
      *

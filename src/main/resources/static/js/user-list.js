@@ -9,7 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- FUNCTIONS ---
 
-    // Function to fetch and render users
+    /**
+     * Fetches users from the API based on the search keyword and renders them in the table.
+     */
     async function fetchUsers() {
         const keyword = keywordInput.value;
         const response = await fetch(`/api/users?keyword=${encodeURIComponent(keyword)}`);
@@ -26,7 +28,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 ? `<span class="badge bg-success">Active</span>`
                 : `<span class="badge bg-danger">Inactive</span>`;
 
-            // ==================== THAY ĐỔI 1: Sửa lại văn bản của nút ====================
             const actionButtons = `
                 <a href="#" class="action-link me-3 edit-btn" data-id="${user.userId}">Edit</a>
                 ${user.activeFlag
@@ -35,7 +36,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             `;
 
-            // ==================== THAY ĐỔI 2: Thêm style để các nút không xuống dòng ====================
             const row = `
                 <tr>
                     <td>${index + 1}</td>
@@ -54,7 +54,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Function to open modal for editing
+    /**
+     * Fetches the data for a single user and populates the modal form for editing.
+     * @param {number} userId - The ID of the user to edit.
+     */
     async function openEditModal(userId) {
         const response = await fetch(`/api/users/${userId}`);
         const user = await response.json();
@@ -71,9 +74,11 @@ document.addEventListener('DOMContentLoaded', function() {
         userModal.show();
     }
 
-    // Function to save user (Create or Update)
+    /**
+     * Gathers data from the form, creates a JSON payload, and sends it to the server
+     * to create a new user or update an existing one.
+     */
     async function saveUser() {
-        // ... (phần logic save không thay đổi)
         const password = document.getElementById('password').value;
         const userData = {
             userId: document.getElementById('userId').value || null,
@@ -106,7 +111,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- EVENT LISTENERS ---
-
     searchBtn.addEventListener('click', fetchUsers);
     keywordInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') fetchUsers();
@@ -150,6 +154,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Initial load
+    /**
+     * Initial data load when the page is ready.
+     */
     fetchUsers();
 });

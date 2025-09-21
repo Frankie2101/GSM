@@ -1,12 +1,13 @@
-// File: src/main/java/com/gsm/model/Supplier.java
 package com.gsm.model;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import javax.persistence.*;
 
+/**
+ * Represents a supplier of raw materials.
+ */
 @Entity
 @Table(name = "Supplier")
 @Getter

@@ -3,9 +3,11 @@ package com.gsm.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import javax.persistence.*;
 
+/**
+ * Represents a specific variant of a trim (e.g., a button in a specific color and size).
+ */
 @Entity
 @Table(name = "TrimVariant")
 @Getter
@@ -33,6 +35,10 @@ public class TrimVariant extends AuditableEntity {
     @Column(name = "TaxRate")
     private Double taxRate;
 
+    /**
+     * The many-to-one relationship with the parent Trim entity.
+     * FetchType.LAZY means the Trim object is only loaded from the DB when it's explicitly accessed.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "TrimId", nullable = false)
     private Trim trim;

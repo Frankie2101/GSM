@@ -1,6 +1,10 @@
 // File: src/main/java/com/gsm/dto/ZaloStyleColorDto.java
 package com.gsm.dto;
 
+/**
+ * A simple DTO representing a single, valid combination of a style and a color
+ * within a sale order.
+ */
 public class ZaloStyleColorDto {
     private String style;
     private String color;

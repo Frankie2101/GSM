@@ -1,6 +1,10 @@
 <div class="pt-4">
     <div class="row mb-4">
+        {{!
+            KPI cards for the Performance tab.
+         }}
         <div class="col-md-6 col-lg-3 mb-4">
+            {{! ... On-Time Completion KPI ... }}
             <div class="card shadow h-100 py-2 kpi-card kpi-card-success">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -14,6 +18,7 @@
             </div>
         </div>
         <div class="col-md-6 col-lg-3 mb-4">
+            {{! ... Avg. Lead Time KPI ... }}
             <div class="card shadow h-100 py-2 kpi-card kpi-card-info">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -31,12 +36,18 @@
         <div class="col-lg-6 mb-4">
             <div class="card shadow h-100">
                 <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Daily Throughput (Last 7 Days)</h6></div>
+                {{!
+                  Canvas placeholder for the Daily Throughput bar chart.
+                }}
                 <div class="card-body"><canvas id="dailyThroughputChart"></canvas></div>
             </div>
         </div>
         <div class="col-lg-6 mb-4">
             <div class="card shadow h-100">
                 <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">S-Curve: Planned vs. Actual</h6></div>
+                {{!
+                    Canvas placeholder for the S-Curve line chart.
+                }}
                 <div class="card-body"><canvas id="sCurveChart"></canvas></div>
             </div>
         </div>
@@ -45,6 +56,7 @@
         <div class="col-12">
             <div class="card shadow">
                 <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Material Risk Analysis</h6></div>
+
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover table-sm mb-0 align-middle">
@@ -61,6 +73,10 @@
                             </tr>
                             </thead>
                             <tbody>
+                            {{!
+                              Loops through the material risk table data.
+                              The badge color changes based on the 'riskStatus' value.
+                            }}
                             {{#dashboardData.performanceTab.materialRiskTable}}
                                 <tr>
                                     <td>{{saleOrderNo}}</td>
@@ -70,6 +86,7 @@
                                     <td>{{purchaseOrderNo}}</td>
                                     <td>{{poArrivalDate}}</td>
                                     <td>{{daysDifference}}</td>
+                                    {{! ... table cells ... }}
                                     <td><span class="badge {{#riskStatus}}bg-danger{{/riskStatus}}{{^riskStatus}}bg-success{{/riskStatus}}">{{riskStatus}}</span></td>
                                 </tr>
                             {{/dashboardData.performanceTab.materialRiskTable}}

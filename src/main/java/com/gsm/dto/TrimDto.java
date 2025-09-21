@@ -27,7 +27,11 @@ public class TrimDto {
     @NotNull(message = "Supplier is required")
     private Long supplierId;
 
+    @NotNull(message = "Material Group is required")
+    private Long materialGroupId;
+
     // For display purposes on list page
+    private String materialGroupName;
     private String unitName;
     private String supplierName;
 

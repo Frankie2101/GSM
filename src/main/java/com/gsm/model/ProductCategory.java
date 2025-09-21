@@ -4,6 +4,9 @@ import javax.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Represents a category for products (e.g., T-Shirt, Jacket).
+ */
 @Entity
 @Table(name = "ProductCategory")
 @Getter

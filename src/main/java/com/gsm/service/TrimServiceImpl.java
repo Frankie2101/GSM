@@ -4,10 +4,7 @@ import com.gsm.dto.TrimDto;
 import com.gsm.dto.TrimVariantDto;
 import com.gsm.exception.DuplicateResourceException;
 import com.gsm.exception.ResourceNotFoundException;
-import com.gsm.model.Supplier;
-import com.gsm.model.Trim;
-import com.gsm.model.TrimVariant;
-import com.gsm.model.Unit;
+import com.gsm.model.*;
 import com.gsm.repository.SupplierRepository;
 import com.gsm.repository.TrimRepository;
 import com.gsm.repository.TrimVariantRepository;
@@ -15,13 +12,14 @@ import com.gsm.repository.UnitRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import com.gsm.model.MaterialGroup;
+import com.gsm.repository.MaterialGroupRepository;
 
 /**
  * The concrete implementation of the {@link TrimService} interface.
@@ -34,13 +32,15 @@ public class TrimServiceImpl implements TrimService {
     private final TrimVariantRepository trimVariantRepository;
     private final UnitRepository unitRepository;
     private final SupplierRepository supplierRepository;
+    private final MaterialGroupRepository materialGroupRepository;
 
     @Autowired
-    public TrimServiceImpl(TrimRepository trimRepository, TrimVariantRepository trimVariantRepository, UnitRepository unitRepository, SupplierRepository supplierRepository) {
+    public TrimServiceImpl(TrimRepository trimRepository, TrimVariantRepository trimVariantRepository, UnitRepository unitRepository, SupplierRepository supplierRepository, MaterialGroupRepository materialGroupRepository) {
         this.trimRepository = trimRepository;
         this.trimVariantRepository = trimVariantRepository;
         this.unitRepository = unitRepository;
         this.supplierRepository = supplierRepository;
+        this.materialGroupRepository = materialGroupRepository;
     }
 
     /** {@inheritDoc} */
@@ -190,12 +190,15 @@ public class TrimServiceImpl implements TrimService {
                 .orElseThrow(() -> new ResourceNotFoundException("Unit not found with ID: " + dto.getUnitId()));
         Supplier supplier = supplierRepository.findById(dto.getSupplierId())
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with ID: " + dto.getSupplierId()));
+        MaterialGroup group = materialGroupRepository.findById(dto.getMaterialGroupId())
+                .orElseThrow(() -> new ResourceNotFoundException("Material Group not found with ID: " + dto.getMaterialGroupId()));
 
         trim.setTrimCode(dto.getTrimCode());
         trim.setTrimName(dto.getTrimName());
         trim.setUnit(unit);
         trim.setSupplier(supplier);
         trim.setTechnicalReference(dto.getTechnicalReference());
+        trim.setMaterialGroup(group);
     }
 
     /**
@@ -230,6 +233,10 @@ public class TrimServiceImpl implements TrimService {
         if (trim.getSupplier() != null) {
             dto.setSupplierId(trim.getSupplier().getSupplierId());
             dto.setSupplierName(trim.getSupplier().getSupplierName());
+        }
+        if (trim.getMaterialGroup() != null) {
+            dto.setMaterialGroupId(trim.getMaterialGroup().getMaterialGroupId());
+            dto.setMaterialGroupName(trim.getMaterialGroup().getMaterialGroupName());
         }
         dto.setTechnicalReference(trim.getTechnicalReference());
         return dto;

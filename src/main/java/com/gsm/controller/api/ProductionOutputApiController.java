@@ -11,15 +11,24 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * REST controller for handling all API requests related to Production Outputs.
+ */
 @RestController
-@RequestMapping("/api/production-outputs") // Đường dẫn gốc cho tất cả API của chức năng này
+@RequestMapping("/api/production-outputs")
 public class ProductionOutputApiController {
 
     @Autowired
     private ProductionOutputService productionOutputService;
 
     /**
-     * API để tìm kiếm và lấy danh sách sản lượng.
+     * API endpoint to search for and retrieve a list of production outputs based on various criteria.
+     * @param keyword General search term.
+     * @param outputDateFrom Start date for the search range.
+     * @param outputDateTo End date for the search range.
+     * @param department Department to filter by.
+     * @param productionLine Production line to filter by.
+     * @return A ResponseEntity containing a list of ProductionOutputDto.
      */
     @GetMapping
     public ResponseEntity<List<ProductionOutputDto>> searchOutputs(
@@ -33,7 +42,9 @@ public class ProductionOutputApiController {
     }
 
     /**
-     * API để lấy chi tiết một sản lượng theo ID.
+     * API endpoint to retrieve the details of a single production output by its ID.
+     * @param id The ID of the production output.
+     * @return A ResponseEntity containing the ProductionOutputDto.
      */
     @GetMapping("/{id}")
     public ResponseEntity<ProductionOutputDto> findById(@PathVariable Long id) {
@@ -42,7 +53,9 @@ public class ProductionOutputApiController {
     }
 
     /**
-     * API để lưu (tạo mới hoặc cập nhật) một sản lượng.
+     * API endpoint to save (create or update) a production output record.
+     * @param dto The DTO containing the production output data.
+     * @return The saved DTO on success, or a JSON error message on failure.
      */
     @PostMapping("/save")
     public ResponseEntity<?> saveProductionOutput(@RequestBody ProductionOutputDto dto) {
@@ -50,13 +63,14 @@ public class ProductionOutputApiController {
             ProductionOutputDto savedDto = productionOutputService.save(dto);
             return ResponseEntity.ok(savedDto);
         } catch (Exception e) {
-            // Trả về lỗi 400 Bad Request kèm thông báo lỗi
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
     /**
-     * API để xóa nhiều sản lượng.
+     * API endpoint for bulk deletion of production outputs.
+     * @param ids A list of IDs to be deleted.
+     * @return A success or error message in a JSON object.
      */
     @PostMapping("/delete")
     public ResponseEntity<?> deleteProductionOutputs(@RequestBody List<Long> ids) {
