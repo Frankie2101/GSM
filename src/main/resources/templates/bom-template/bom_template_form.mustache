@@ -125,10 +125,10 @@
                                                 <select class="form-select material-group-select" data-name="materialGroupId" data-selected-id="{{materialGroupId}}"></select>
                                             </td>
                                             <td>
-                                                <select class="form-select rm-code-select" data-name="rmId" data-selected-id="{{rmId}}"></select>
+                                                <select class="form-select rm-code-select" data-name="rmId" data-selected-id="{{#rmId}}{{.}}{{/rmId}}"></select>
                                             </td>
-                                            <td><input type="text" class="form-control rm-name-input" value="{{rmName}}" readonly></td>
-                                            <td><input type="text" class="form-control rm-unit-input" value="{{unitName}}" readonly></td>
+                                            <td><input type="text" class="form-control rm-name-input" value="{{#rmName}}{{.}}{{/rmName}}" readonly></td>
+                                            <td><input type="text" class="form-control rm-unit-input" value="{{#unitName}}{{.}}{{/unitName}}" readonly></td>
                                             <td><input type="number" step="0.001" class="form-control" data-name="usageValue" value="{{#usageValue}}{{.}}{{/usageValue}}" required></td>
                                             <td><input type="number" step="0.01" class="form-control" data-name="waste" value="{{#waste}}{{.}}{{/waste}}" required></td>
                                             <td class="text-center align-middle">

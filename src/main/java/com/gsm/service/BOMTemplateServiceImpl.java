@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import com.gsm.repository.MaterialGroupRepository;
 
 /**
  * The concrete implementation of the BOMTemplateService interface.
@@ -28,15 +29,19 @@ public class BOMTemplateServiceImpl implements BOMTemplateService {
     private final ProductCategoryRepository productCategoryRepository;
     private final FabricRepository fabricRepository;
     private final TrimRepository trimRepository;
+    private final MaterialGroupRepository materialGroupRepository;
+
     @Autowired
     public BOMTemplateServiceImpl(BOMTemplateRepository bomTemplateRepository,
                                   ProductCategoryRepository productCategoryRepository,
                                   FabricRepository fabricRepository,
-                                  TrimRepository trimRepository) {
+                                  TrimRepository trimRepository,
+                                  MaterialGroupRepository materialGroupRepository) {
         this.bomTemplateRepository = bomTemplateRepository;
         this.productCategoryRepository = productCategoryRepository;
         this.fabricRepository = fabricRepository;
         this.trimRepository = trimRepository;
+        this.materialGroupRepository = materialGroupRepository;
     }
 
     @Override
@@ -113,17 +118,23 @@ public class BOMTemplateServiceImpl implements BOMTemplateService {
                 detail.setUsageValue(detailDto.getUsageValue());
                 detail.setWaste(detailDto.getWaste());
 
+                if (detailDto.getMaterialGroupId() != null) {
+                    MaterialGroup group = materialGroupRepository.findById(detailDto.getMaterialGroupId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Material Group not found with ID: " + detailDto.getMaterialGroupId()));
+                    detail.setMaterialGroup(group);
+                }
+
                 // Based on the material type, find and link the correct Fabric or Trim entity.
-                if ("FA".equals(detailDto.getRmType())) {
-                    Fabric fabric = fabricRepository.findById(detailDto.getRmId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Fabric not found with ID: " + detailDto.getRmId()));
-                    detail.setFabric(fabric);
-                    detail.setMaterialGroup(fabric.getMaterialGroup());
-                } else if ("TR".equals(detailDto.getRmType())) {
-                    Trim trim = trimRepository.findById(detailDto.getRmId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Trim not found with ID: " + detailDto.getRmId()));
-                    detail.setTrim(trim);
-                    detail.setMaterialGroup(trim.getMaterialGroup());
+                if (detailDto.getRmId() != null) {
+                    if ("FA".equals(detailDto.getRmType())) {
+                        Fabric fabric = fabricRepository.findById(detailDto.getRmId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Fabric not found with ID: " + detailDto.getRmId()));
+                        detail.setFabric(fabric);
+                    } else if ("TR".equals(detailDto.getRmType())) {
+                        Trim trim = trimRepository.findById(detailDto.getRmId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Trim not found with ID: " + detailDto.getRmId()));
+                        detail.setTrim(trim);
+                    }
                 }
                 detailsToSave.add(detail);
             }

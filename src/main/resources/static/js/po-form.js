@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function createAndAppendRow(detail = {}) {
         const row = tableBody.insertRow();
         row.dataset.detailId = detail.purchaseOrderDetailId || '';
-        row.dataset.orderBomDetailId = detail.orderBOMDetailId || ''; // <-- THÊM DÒNG NÀY
+        row.dataset.orderBomDetailId = detail.orderBOMDetailId || '';
         const materialType = detail.materialType || 'FA';
         const isNewRow = !detail.purchaseOrderDetailId;
         const selectedMaterialId = detail.fabricId || detail.trimId || '';
@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', function() {
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete them!'
+            confirmButtonText: 'Delete'
         }).then((result) => {
             if (result.isConfirmed) {
                 checkedBoxes.forEach(box => box.closest('tr').remove());
@@ -518,7 +518,7 @@ document.addEventListener('DOMContentLoaded', function() {
             text: 'Once submitted, you cannot edit this PO unless it is rejected.',
             icon: 'info',
             showCancelButton: true,
-            confirmButtonText: 'Yes, submit it!'
+            confirmButtonText: 'Submit'
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {

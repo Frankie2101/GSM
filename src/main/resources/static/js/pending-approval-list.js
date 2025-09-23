@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
             try {
                 await fetchApi(`/api/purchase-orders/${poId}/${action}`, { method: 'POST' });
                 Swal.fire(
-                    isApproving ? 'Approved!' : 'Rejected!',
+                    isApproving ? 'Approved' : 'Rejected',
                     `The PO has been ${action}d.`,
                     'success'
                 );

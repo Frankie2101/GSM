@@ -89,19 +89,19 @@
                 <form id="userForm">
                     <input type="hidden" id="userId">
                     <div class="mb-3">
-                        <label for="userName" class="form-label">User Name</label>
+                        <label for="userName" class="form-label">User Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="userName" required>
                     </div>
                     <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
+                        <label for="password" class="form-label">Password<span class="text-danger">*</span></label>
                         <input type="password" class="form-control" id="password" placeholder="Leave blank to keep current password">
                     </div>
                     <div class="mb-3">
-                        <label for="phoneNumber" class="form-label">Phone Number</label>
-                        <input type="text" class="form-control" id="phoneNumber" required placeholder="Zalo Phone Number">
+                        <label for="phoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="phoneNumber" required placeholder="Phone Number">
                     </div>
                     <div class="mb-3">
-                        <label for="department" class="form-label">Department</label>
+                        <label for="department" class="form-label">Department <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="department">
                     </div>
                     <div class="mb-3">
@@ -113,7 +113,7 @@
                         <input type="email" class="form-control" id="emailAddress">
                     </div>
                     <div class="mb-3">
-                        <label for="userType" class="form-label">User Type</label>
+                        <label for="userType" class="form-label">User Type <span class="text-danger">*</span></label>
                         <select class="form-select" id="userType" required>
                             <option value="Normal">Normal</option>
                             <option value="Admin">Admin</option>

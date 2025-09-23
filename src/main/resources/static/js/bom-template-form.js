@@ -40,49 +40,50 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {HTMLElement} selectElement - The <select> element to populate.
      * @param {string|null} selectedId - The ID of the item to be pre-selected.
      */
-    const fetchMaterials = async (type, materialGroupId, selectElement, selectedId) => {
-        if (!type || !materialGroupId) {
-            selectElement.innerHTML = '<option value="">-- Select RM Type and Material Group First --</option>';
-            return;
-        }
-
-        const cacheKey = `${type}_${materialGroupId}`;
-        if (materialCache[cacheKey]) {
-            populateRmCodeSelect(selectElement, materialCache[type], selectedId);
-            return;
-        }
-        try {
-            const response = await fetch(`/api/materials?type=${type}&materialGroupId=${materialGroupId}`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const materials = await response.json();
-            materialCache[cacheKey] = materials;
-            populateRmCodeSelect(selectElement, materials, selectedId);
-        } catch (error) {
-            console.error('Failed to fetch materials:', error);
-            selectElement.innerHTML = '<option value="">Error loading data</option>';
-        }
-    };
-
-    const populateRmCodeSelect = (selectElement, materials, selectedId) => {
-        selectElement.innerHTML = '<option value="">-- Select Code --</option>';
-        materials.forEach(material => {
-            const option = document.createElement('option');
-            option.value = material.id;
-            option.textContent = material.code;
-            if (selectedId && material.id.toString() === selectedId.toString()) {
-                option.selected = true;
+        const fetchMaterials = async (type, materialGroupId, selectElement, selectedId) => {
+            if (!type || !materialGroupId) {
+                selectElement.innerHTML = '<option value="">-- Select RM Type and Material Group --</option>';
+                return;
             }
-            selectElement.appendChild(option);
-        });
-        selectElement.dispatchEvent(new Event('change', { 'bubbles': true }));
-    };
 
-    /**
-     * Event listener for the 'Add Detail' button, which adds a new blank row to the table.
-     */
-    if (addBtn) {
-        addBtn.addEventListener('click', function() {
-            const newRowHtml = `
+            const cacheKey = `${type}_${materialGroupId}`;
+            if (materialCache[cacheKey]) {
+                populateRmCodeSelect(selectElement, materialCache[cacheKey], selectedId);
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/materials?type=${type}&materialGroupId=${materialGroupId}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const materials = await response.json();
+                materialCache[cacheKey] = materials;
+                populateRmCodeSelect(selectElement, materials, selectedId);
+            } catch (error) {
+                console.error('Failed to fetch materials:', error);
+                selectElement.innerHTML = '<option value="">Error loading data</option>';
+            }
+        };
+
+        const populateRmCodeSelect = (selectElement, materials, selectedId) => {
+            selectElement.innerHTML = '<option value="">-- Select Code --</option>';
+            materials.forEach(material => {
+                const option = document.createElement('option');
+                option.value = material.id;
+                option.textContent = material.code;
+                if (selectedId && material.id.toString() === selectedId.toString()) {
+                    option.selected = true;
+                }
+                selectElement.appendChild(option);
+            });
+            selectElement.dispatchEvent(new Event('change', {'bubbles': true}));
+        };
+
+        /**
+         * Event listener for the 'Add Detail' button, which adds a new blank row to the table.
+         */
+        if (addBtn) {
+            addBtn.addEventListener('click', function () {
+                const newRowHtml = `
             <tr>
                 <td class="text-center align-middle">
                     <input class="form-check-input row-checkbox" type="checkbox">
@@ -113,109 +114,112 @@ document.addEventListener('DOMContentLoaded', function() {
             </tr>
         `;
 
-            /**
-             * Event delegation for 'change' events within the table body.
-             * Handles the chained select logic:
-             * - When RM Type changes, it fetches the corresponding material codes.
-             * - When RM Code changes, it fetches that material's details (name, unit).
-             */
-            if (tableBody) {
-                tableBody.insertAdjacentHTML('beforeend', newRowHtml);
-                reindexAndNameRows();
-            }
-        });
-    }
+                /**
+                 * Event delegation for 'change' events within the table body.
+                 * Handles the chained select logic:
+                 * - When RM Type changes, it fetches the corresponding material codes.
+                 * - When RM Code changes, it fetches that material's details (name, unit).
+                 */
+                if (tableBody) {
+                    tableBody.insertAdjacentHTML('beforeend', newRowHtml);
+                    reindexAndNameRows();
+                }
+            });
+        }
 
-    if (tableBody) {
-        tableBody.addEventListener('change', async function(e) {
-            const target = e.target;
-            const row = target.closest('tr');
-            if (!row) return;
+        if (tableBody) {
+            tableBody.addEventListener('change', async function (e) {
+                const target = e.target;
+                const row = target.closest('tr');
+                if (!row) return;
 
-            if (target.classList.contains('rm-type-select') || target.classList.contains('material-group-select')) {
-                const rmCodeSelect = row.querySelector('.rm-code-select');
-                row.querySelector('.rm-name-input').value = '';
-                row.querySelector('.rm-unit-input').value = '';
+                if (target.classList.contains('rm-type-select') || target.classList.contains('material-group-select')) {
+                    const rmCodeSelect = row.querySelector('.rm-code-select');
+                    row.querySelector('.rm-name-input').value = '';
+                    row.querySelector('.rm-unit-input').value = '';
 
-                const type = row.querySelector('.rm-type-select').value;
-                const groupId = row.querySelector('.material-group-select').value;
+                    const type = row.querySelector('.rm-type-select').value;
+                    const groupId = row.querySelector('.material-group-select').value;
 
-                fetchMaterials(type, groupId, rmCodeSelect, null);
-            }
-            else if (target.classList.contains('rm-code-select')) {
-                const rmNameInput = row.querySelector('.rm-name-input');
-                const rmUnitInput = row.querySelector('.rm-unit-input');
+                    fetchMaterials(type, groupId, rmCodeSelect, null);
+                } else if (target.classList.contains('rm-code-select')) {
+                    const rmNameInput = row.querySelector('.rm-name-input');
+                    const rmUnitInput = row.querySelector('.rm-unit-input');
 
-                rmNameInput.value = '';
-                rmUnitInput.value = '';
+                    rmNameInput.value = '';
+                    rmUnitInput.value = '';
 
-                const rmId = target.value;
-                const rmType = row.querySelector('.rm-type-select').value;
+                    const rmId = target.value;
+                    const rmType = row.querySelector('.rm-type-select').value;
 
-                if (rmId && rmType) {
-                    try {
-                        const response = await fetch(`/api/material-details/${rmId}?type=${rmType}`);
-                        if (!response.ok) throw new Error('Material details not found');
-                        const details = await response.json();
+                    if (rmId && rmType) {
+                        try {
+                            const response = await fetch(`/api/material-details/${rmId}?type=${rmType}`);
+                            if (!response.ok) throw new Error('Material details not found');
+                            const details = await response.json();
 
-                        rmNameInput.value = details.name || '';
-                        rmUnitInput.value = details.unitName || '';
-                    } catch (error) {
-                        console.error('Failed to fetch material details:', error);
+                            rmNameInput.value = details.name || '';
+                            rmUnitInput.value = details.unitName || '';
+                        } catch (error) {
+                            console.error('Failed to fetch material details:', error);
+                        }
                     }
                 }
-            }
-        });
-
-        tableBody.addEventListener('click', function(e) {
-            if (e.target.closest('.delete-row-btn')) {
-                e.target.closest('tr').remove();
-                reindexAndNameRows();
-            }
-        });
-    }
-
-    if (deleteSelectedBtn) {
-        deleteSelectedBtn.addEventListener('click', function() {
-            if (!tableBody) return;
-            const checkedBoxes = tableBody.querySelectorAll('.row-checkbox:checked');
-            if (checkedBoxes.length === 0) {
-                Swal.fire({ icon: 'error', title: 'No Details Selected', text: 'Please select at least one detail to delete.' });
-                return;
-            }
-            checkedBoxes.forEach(checkbox => checkbox.closest('tr').remove());
-            reindexAndNameRows();
-        });
-    }
-
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
-            if (!tableBody) return;
-            tableBody.querySelectorAll('.row-checkbox').forEach(checkbox => {
-                checkbox.checked = this.checked;
             });
+
+            tableBody.addEventListener('click', function (e) {
+                if (e.target.closest('.delete-row-btn')) {
+                    e.target.closest('tr').remove();
+                    reindexAndNameRows();
+                }
+            });
+        }
+
+        if (deleteSelectedBtn) {
+            deleteSelectedBtn.addEventListener('click', function () {
+                if (!tableBody) return;
+                const checkedBoxes = tableBody.querySelectorAll('.row-checkbox:checked');
+                if (checkedBoxes.length === 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No Details Selected',
+                        text: 'Please select at least one detail to delete.'
+                    });
+                    return;
+                }
+                checkedBoxes.forEach(checkbox => checkbox.closest('tr').remove());
+                reindexAndNameRows();
+            });
+        }
+
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function () {
+                if (!tableBody) return;
+                tableBody.querySelectorAll('.row-checkbox').forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+        }
+
+        document.querySelectorAll('#detailTableBody tr').forEach(row => {
+            const groupSelect = row.querySelector('.material-group-select');
+            const typeSelect = row.querySelector('.rm-type-select');
+            const codeSelect = row.querySelector('.rm-code-select');
+
+            groupSelect.innerHTML = materialGroupTemplate.innerHTML;
+            const selectedGroupId = groupSelect.getAttribute('data-selected-id');
+            if (selectedGroupId) {
+                groupSelect.value = selectedGroupId;
+            }
+
+            const typeValue = typeSelect.value;
+            const groupIdValue = groupSelect.value;
+            const selectedRmId = codeSelect.getAttribute('data-selected-id');
+
+            if (typeValue && groupIdValue) {
+                fetchMaterials(typeValue, groupIdValue, codeSelect, selectedRmId);
+            }
         });
-    }
 
-    document.querySelectorAll('#detailTableBody tr').forEach(row => {
-        const groupSelect = row.querySelector('.material-group-select');
-        const typeSelect = row.querySelector('.rm-type-select');
-        const codeSelect = row.querySelector('.rm-code-select');
-
-        groupSelect.innerHTML = materialGroupTemplate.innerHTML;
-        const selectedGroupId = groupSelect.getAttribute('data-selected-id');
-        if (selectedGroupId) {
-            groupSelect.value = selectedGroupId;
-        }
-
-        const typeValue = typeSelect.value;
-        const groupIdValue = groupSelect.value;
-        const selectedRmId = codeSelect.getAttribute('data-selected-id');
-
-        if (typeValue && groupIdValue) {
-            fetchMaterials(typeValue, groupIdValue, codeSelect, selectedRmId);
-        }
-    });
-
-    reindexAndNameRows();
+        reindexAndNameRows();
 });

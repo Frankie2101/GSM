@@ -79,15 +79,31 @@ document.addEventListener('DOMContentLoaded', function() {
      * to create a new user or update an existing one.
      */
     async function saveUser() {
+
+        const userName = document.getElementById('userName').value.trim();
+        const phoneNumber = document.getElementById('phoneNumber').value.trim();
+        const department = document.getElementById('department').value.trim();
+        const userType = document.getElementById('userType').value;
+
+        if (!userName || !phoneNumber || !department || !userType) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Please fill in all required fields (*).',
+                confirmButtonColor: '#384295'
+            });
+            return;
+        }
+
         const password = document.getElementById('password').value;
         const userData = {
             userId: document.getElementById('userId').value || null,
-            userName: document.getElementById('userName').value,
-            phoneNumber: document.getElementById('phoneNumber').value,
-            department: document.getElementById('department').value,
+            userName: userName,
+            phoneNumber: phoneNumber,
+            department: department,
             productionLine: document.getElementById('productionLine').value,
             emailAddress: document.getElementById('emailAddress').value,
-            userType: document.getElementById('userType').value
+            userType: userType
         };
 
         if (password) {
