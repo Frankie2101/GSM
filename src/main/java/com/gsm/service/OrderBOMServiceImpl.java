@@ -46,7 +46,6 @@ public class OrderBOMServiceImpl implements OrderBOMService {
                                TrimRepository trimRepository,
                                MaterialGroupRepository materialGroupRepository,
                                PurchaseOrderDetailRepository purchaseOrderDetailRepository,
-                               // Bổ sung vào constructor
                                PurchaseOrderRepository purchaseOrderRepository,
                                SupplierRepository supplierRepository,
                                OrderBOMDetailRepository orderBOMDetailRepository,
