@@ -13,14 +13,13 @@ import java.util.Map;
 public interface SaleOrderDetailRepository extends JpaRepository<SaleOrderDetail, Long> {
 
     /**
-     * Finds a distinct list of styles (product names) and colors for a given sale order.
-     * This query uses a JPQL "constructor expression" (`new map(...)`) to directly create a
-     * list of maps from the query result, which is more efficient than returning Object[] arrays.
+     * Finds the distinct combinations of product code (as style) and color for a given sale order.
+     * This is used by the Zalo Mini App to populate the selection dropdowns.
      *
-     * @param saleOrderId The ID of the sale order to query.
-     * @return A list of Maps, where each map has two keys: "style" and "color".
+     * @param saleOrderId The ID of the sale order to search within.
+     * @return A list of maps, where each map contains a 'style' (productCode) and 'color'.
      */
-    @Query("SELECT DISTINCT new map(pv.product.productName as style, pv.color as color) " +
+    @Query("SELECT DISTINCT new map(pv.product.productCode as style, pv.color as color) " +
             "FROM SaleOrderDetail sod " +
             "JOIN sod.productVariant pv " +
             "WHERE sod.saleOrder.saleOrderId = :saleOrderId")
