@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 
 /**
  * Configures the application's security settings using Spring Security.
@@ -31,6 +32,10 @@ public class SecurityConfig {
 
     private final String REMEMBER_ME_KEY = "2s55ZeKq18c9xB0Ts2tQ";
 
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().antMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico");
+    }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -124,7 +129,6 @@ public class SecurityConfig {
         http
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
-                        .antMatchers("/css/**", "/js/**", "/images/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
