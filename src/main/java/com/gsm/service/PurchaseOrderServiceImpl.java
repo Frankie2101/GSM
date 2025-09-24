@@ -36,6 +36,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private final SaleOrderRepository saleOrderRepository;
     private final PurchaseOrderDetailRepository purchaseOrderDetailRepository;
 
+
     @Autowired
     public PurchaseOrderServiceImpl(PurchaseOrderRepository purchaseOrderRepository, SupplierRepository supplierRepository, OrderBOMDetailRepository orderBOMDetailRepository, SaleOrderRepository saleOrderRepository, PurchaseOrderDetailRepository purchaseOrderDetailRepository) {
         this.purchaseOrderRepository = purchaseOrderRepository;
@@ -51,13 +52,15 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     @Override
     @Transactional
     public Map<String, Object> generatePOsFromOrderBOM(OrderBOMDto bomDto) {
+
         // A line is valid if it has a purchase quantity > 0 and is NOT already in another PO.
         List<OrderBOMDetailDto> validDetailsForPO = bomDto.getDetails().stream()
                 .filter(d -> {
                     boolean hasPurchaseData = d.getPurchaseQty() != null && d.getPurchaseQty() > 0 &&
-                            d.getSupplier() != null && !d.getSupplier().isEmpty();
+                            d.getSupplierId() != null;
                     if (!hasPurchaseData) return false;
 
+                    if (d.getOrderBOMDetailId() == null) return true;
                     return !purchaseOrderDetailRepository.existsByorderBOMDetail_OrderBOMDetailId(d.getOrderBOMDetailId());
                 })
                 .collect(Collectors.toList());
@@ -67,8 +70,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         }
 
         // 2. GROUP by supplier code
-        Map<String, List<OrderBOMDetailDto>> groupedBySupplier = validDetailsForPO.stream()
-                .collect(Collectors.groupingBy(OrderBOMDetailDto::getSupplier));
+        Map<Long, List<OrderBOMDetailDto>> groupedBySupplier = validDetailsForPO.stream()
+                .collect(Collectors.groupingBy(OrderBOMDetailDto::getSupplierId));
 
         // 3. CREATE: Create a PO for each supplier
         SaleOrder saleOrder = saleOrderRepository.findById(bomDto.getSaleOrderId()).orElseThrow();
@@ -76,11 +79,11 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         AtomicLong poSequence = new AtomicLong(existingPoCount + 1);
         List<String> newPoNumbers = new ArrayList<>();
 
-        for (Map.Entry<String, List<OrderBOMDetailDto>> entry : groupedBySupplier.entrySet()) {
-            String supplierName = entry.getKey();
+        for (Map.Entry<Long, List<OrderBOMDetailDto>> entry : groupedBySupplier.entrySet()) {
+            Long supplierId = entry.getKey();
             List<OrderBOMDetailDto> detailsForThisPO = entry.getValue();
 
-            Supplier supplier = supplierRepository.findBySupplierName(supplierName).orElseThrow();
+            Supplier supplier = supplierRepository.findById(supplierId).orElseThrow();
             PurchaseOrder po = new PurchaseOrder();
 
             // Generate PO Number
@@ -98,7 +101,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             // Add detail lines
             for (OrderBOMDetailDto detailDto : detailsForThisPO) {
                 PurchaseOrderDetail poDetail = new PurchaseOrderDetail();
-                OrderBOMDetail bomDetailRef = orderBOMDetailRepository.findById(detailDto.getOrderBOMDetailId()).orElseThrow();
+                OrderBOMDetail bomDetailRef = new OrderBOMDetail();
+                bomDetailRef.setOrderBOMDetailId(detailDto.getOrderBOMDetailId());
                 poDetail.setOrderBOMDetail(bomDetailRef);
                 poDetail.setPurchaseQuantity(detailDto.getPurchaseQty());
                 poDetail.setNetPrice(detailDto.getPrice());
@@ -108,7 +112,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             purchaseOrderRepository.save(po);
             newPoNumbers.add(po.getPurchaseOrderNo());
         }
-
         return Map.of("message", "Successfully generated " + newPoNumbers.size() + " new Purchase Order(s).", "poNumbers", newPoNumbers);
     }
 

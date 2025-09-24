@@ -200,7 +200,7 @@
 <template id="suppliers-data-template">
     <option value="">-- Supplier --</option>
     {{#suppliers}}
-        <option value="{{supplierName}}" data-currency="{{currencyCode}}">{{supplierName}}</option>
+        <option value="{{supplierId}}" data-currency="{{currencyCode}}" data-name="{{supplierName}}">{{supplierName}}</option>
     {{/suppliers}}
 </template>
 <template id="material-groups-data-template">

@@ -23,7 +23,8 @@ public class OrderBOMDetailDto {
     private String materialCode;
     private String materialName;
     private String uom;
-    private String supplier;
+    private Long supplierId;
+    private String supplierName;
     private Double price;
     private String currency;
     private Double usageValue;

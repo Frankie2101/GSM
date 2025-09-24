@@ -14,4 +14,5 @@ public interface OrderBOMService {
     OrderBOMDto findOrCreateBySaleOrderId(Long saleOrderId);
     OrderBOMDto generatePreviewFromTemplate(Long saleOrderId, Long bomTemplateId);
     OrderBOMDto save(OrderBOMDto dto);
+    Map<String, Object> saveAndGeneratePOs(OrderBOMDto bomDtoFromForm);
 }

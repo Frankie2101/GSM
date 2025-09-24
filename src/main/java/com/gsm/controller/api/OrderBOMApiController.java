@@ -50,12 +50,7 @@ public class OrderBOMApiController {
     @PostMapping("/generate-pos")
     public ResponseEntity<?> generatePurchaseOrders(@RequestBody OrderBOMDto bomDtoFromForm) {
         try {
-            OrderBOMDto savedBomDto = orderBOMService.save(bomDtoFromForm);
-            Map<Integer, Double> purchaseQtyMap = bomDtoFromForm.getDetails().stream()
-                    .collect(Collectors.toMap(OrderBOMDetailDto::getSeq, OrderBOMDetailDto::getPurchaseQty));
-            savedBomDto.getDetails().forEach(detail -> detail.setPurchaseQty(purchaseQtyMap.get(detail.getSeq())));
-            Map<String, Object> result = purchaseOrderService.generatePOsFromOrderBOM(savedBomDto);
-
+            Map<String, Object> result = orderBOMService.saveAndGeneratePOs(bomDtoFromForm);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));

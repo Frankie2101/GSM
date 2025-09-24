@@ -134,6 +134,7 @@ public class MaterialApiController {
         return new MaterialDetailInfo(
                 f.getFabricName(),
                 f.getUnit() != null ? f.getUnit().getUnitName() : "",
+                s != null ? s.getSupplierId() : null,
                 s != null ? s.getSupplierName() : "",
                 price,
                 s != null ? s.getCurrencyCode() : ""
@@ -150,6 +151,7 @@ public class MaterialApiController {
         return new MaterialDetailInfo(
                 t.getTrimName(),
                 t.getUnit() != null ? t.getUnit().getUnitName() : "",
+                s != null ? s.getSupplierId() : null,
                 s != null ? s.getSupplierName() : "",
                 price,
                 s != null ? s.getCurrencyCode() : ""
@@ -169,7 +171,8 @@ public class MaterialApiController {
     public static class MaterialDetailInfo {
         private String name;
         private String unitName;
-        private String supplier;
+        private Long supplierId;
+        private String supplierName;
         private Double price;
         private String currency;
     }

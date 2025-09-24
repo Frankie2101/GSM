@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <td><input type="text" class="form-control form-control-sm color-name-input" name="details[${index}].colorName" value="${detail.colorName || ''}" readonly></td>
             <td><select class="form-select form-select-sm size-select" name="details[${index}].size"></select></td>
             <td><select class="form-select form-select-sm uom-select" name="details[${index}].uom">${unitOptionsHtml}</select></td>
-            <td><select class="form-select form-select-sm supplier-select" name="details[${index}].supplier">${supplierOptionsHtml}</select></td>
+            <td><select class="form-select form-select-sm supplier-select" name="details[${index}].supplierId">${supplierOptionsHtml}</select></td>
             <td><input type="number" class="form-control form-control-sm price-input" name="details[${index}].price" value="${detail.price || ''}" step="0.01"></td>
             <td><input type="text" class="form-control form-control-sm currency-input" name="details[${index}].currency" value="${detail.currency || ''}" maxlength="3" readonly></td>
             <td><input type="number" class="form-control form-control-sm usage-input" name="details[${index}].usageValue" value="${detail.usageValue || 0}" step="0.001"></td>
@@ -117,13 +117,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (detail.uom) row.querySelector('.uom-select').value = detail.uom;
 
         const supplierSelect = row.querySelector('.supplier-select');
-        if (detail.supplier) {
-            supplierSelect.value = detail.supplier;
-            const selectedSupplierOption = supplierSelect.options[supplierSelect.selectedIndex];
-            //Set currency based on selected supplier
-            if (selectedSupplierOption) {
-                row.querySelector('.currency-input').value = selectedSupplierOption.dataset.currency || '';
-            }
+        if (detail.supplierId) {
+            supplierSelect.value = detail.supplierId;
+            row.querySelector('.currency-input').value = detail.currency || '';
         }
 
         const codeSelect = row.querySelector('.material-code-select');
@@ -213,79 +209,67 @@ document.addEventListener('DOMContentLoaded', function() {
         const row = target.closest('tr');
         if (!row) return;
 
-        const materialGroup = row.querySelector('.material-group-select').value;
-        const type = row.querySelector('.material-type-select').value;
-        const materialId = row.querySelector('.material-code-select').value;
-        const colorSelect = row.querySelector('.color-code-select');
-        const sizeSelect = row.querySelector('.size-select');
-        const priceInput = row.querySelector('.price-input');
-
-        //Reset related field to Material Code
+        // Reset the fields related to Material Code
         const resetMaterialFields = () => {
             row.querySelector('.material-name-input').value = '';
             row.querySelector('.uom-select').value = '';
             row.querySelector('.supplier-select').value = '';
             row.querySelector('.color-code-select').innerHTML = '';
+            row.querySelector('.color-name-input').value = '';
             row.querySelector('.size-select').innerHTML = '';
-            const fabricIdInput = row.querySelector('input[name$=".fabricId"]');
-            const trimIdInput = row.querySelector('input[name$=".trimId"]');
-            priceInput.value = '';
+            row.querySelector('.price-input').value = '';
+            row.querySelector('.currency-input').value = '';
         };
 
-        //Once change Material Type or Material Group, call API to get the Material Code list and clear the previous reference
-        //value such as Material Name, UOM, ...
+        // Once change Material Group or Material Type
         if (target.classList.contains('material-group-select') || target.classList.contains('material-type-select')) {
             const codeSelect = row.querySelector('.material-code-select');
+            resetMaterialFields(); // Clear all related fields
             codeSelect.innerHTML = '<option value=""></option>';
-            resetMaterialFields();
+
+            const materialGroup = row.querySelector('.material-group-select').value;
+            const type = row.querySelector('.material-type-select').value;
 
             if (materialGroup && type) {
                 const materials = await fetchMaterialList(type, materialGroup);
                 materials.forEach(m => codeSelect.add(new Option(m.code, m.id)));
             }
-
-            if (type === 'FA') {
-                sizeSelect.disabled = true;
-                sizeSelect.value = '';
-                sizeSelect.innerHTML = '';
-            } else {
-                sizeSelect.disabled = false;
-            }
         }
 
-
-        //Once change Material Code, automatically populate Material Name, Supplier, UOM
+        // Once change Material Code
         if (target.classList.contains('material-code-select')) {
-            fabricIdInput.value = '';
-            trimIdInput.value = '';
-            if (materialId) {
-                if (type === 'FA') {
-                    fabricIdInput.value = materialId;
-                } else if (type === 'TR') {
-                    trimIdInput.value = materialId;
-                }
+            const materialId = target.value;
+            const type = row.querySelector('.material-type-select').value;
 
+            // Reset related field
+            resetMaterialFields();
+
+            if (materialId) {
+                // Get related field data
                 const details = await fetchMaterialDetails(materialId, type);
                 if (details) {
                     row.querySelector('.material-name-input').value = details.name || '';
                     row.querySelector('.uom-select').value = details.unitName || '';
                     const supplierSelect = row.querySelector('.supplier-select');
-                    supplierSelect.value = details.supplier || '';
-                    supplierSelect.dispatchEvent(new Event('change'));
+                    supplierSelect.value = details.supplierId || '';
+                    row.querySelector('.currency-input').value = details.currency || '';
                 }
 
-                //Get the color for dropdown list
+                // Get Color Code t
+                const colorSelect = row.querySelector('.color-code-select');
                 const colors = await fetchMaterialColors(type, materialId);
                 colorSelect.innerHTML = '<option value=""></option>';
                 colors.forEach(c => {
-                    const option = new Option(c.name ? `${c.code} - ${c.name}` : c.code, c.code);
+                    const option = new Option(c.code, c.code);
                     option.dataset.name = c.name;
                     option.dataset.price = c.price;
                     colorSelect.add(option);
                 });
+
+                // Disable Size for Fabric
+                const sizeSelect = row.querySelector('.size-select');
                 sizeSelect.innerHTML = '<option value=""></option>';
-                //Disable Size for Fabric
-                if(type === 'FA') {
+                if (type === 'FA') {
                     sizeSelect.disabled = true;
                     sizeSelect.value = '';
                 } else {
@@ -294,13 +278,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        //Once select Color and Size, automatically populate Price
+        // Once changed Color
         if (target.classList.contains('color-code-select')) {
             const selectedColor = target.options[target.selectedIndex];
             row.querySelector('.color-name-input').value = selectedColor.dataset.name || '';
+            const type = row.querySelector('.material-type-select').value;
+            const materialId = row.querySelector('.material-code-select').value;
+
             if (type === 'FA') {
-                priceInput.value = selectedColor.dataset.price || '';
+                row.querySelector('.price-input').value = selectedColor.dataset.price || '';
             } else if (type === 'TR') {
+                const sizeSelect = row.querySelector('.size-select');
                 const sizes = await fetchMaterialSizes(materialId, target.value);
                 sizeSelect.innerHTML = '<option value=""></option>';
                 sizes.forEach(s => {
@@ -311,15 +299,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
+        // Once changed Size
         if (target.classList.contains('size-select')) {
             const selectedSize = target.options[target.selectedIndex];
-            priceInput.value = selectedSize.dataset.price || '';
+            row.querySelector('.price-input').value = selectedSize.dataset.price || '';
         }
 
-        if (target.classList.contains('supplier-select')) {
-            const selectedSupplier = target.options[target.selectedIndex];
-            row.querySelector('.currency-input').value = selectedSupplier.dataset.currency || '';
-        }
     });
 
     /**
@@ -393,6 +378,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const allRows = tableBody.querySelectorAll('tr');
             const bomDetails = [];
             allRows.forEach(row => {
+                const supplierSelect = row.querySelector('.supplier-select');
+                const selectedSupplierOption = supplierSelect.options[supplierSelect.selectedIndex];
                 const materialGroupSelect = row.querySelector('.material-group-select');
                 const materialGroupText = materialGroupSelect.value ? materialGroupSelect.options[materialGroupSelect.selectedIndex].textContent.trim() : '';
                 const detail = {
@@ -404,7 +391,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     colorName: row.querySelector('.color-name-input').value,
                     size: row.querySelector('.size-select').value,
                     uom: row.querySelector('.uom-select').value,
-                    supplier: row.querySelector('.supplier-select').value,
+                    supplierId: supplierSelect.value,
+                    supplierName: selectedSupplierOption ? selectedSupplierOption.textContent.trim() : '',
                     price: parseFloat(row.querySelector('.price-input').value) || 0,
                     currency: row.querySelector('.currency-input').value,
                     purchaseQty: parseFloat(row.querySelector('.purchase-qty-input').value) || 0,
@@ -414,14 +402,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 2. Filter for rows that are valid for PO generation based on business rules.
             const validDetailsForPO = bomDetails.filter(d => {
-                const hasBaseInfo = d.purchaseQty > 0 && d.supplier && d.price > 0 && d.currency && d.uom && d.colorCode;
+                const hasBaseInfo = d.purchaseQty > 0 && d.supplierId && d.price > 0 && d.currency && d.uom && d.colorCode;
                 if (!hasBaseInfo) return false;
                 if (d.materialType === 'TR' && !d.size) return false;
                 return true;
             });
 
             // 3. Sort the valid rows by supplier to group them in the preview.
-            validDetailsForPO.sort((a, b) => a.supplier.localeCompare(b.supplier));
+            validDetailsForPO.sort((a, b) => a.supplierName.localeCompare(b.supplierName));
 
             // 4. Clear the previous preview and check if there are any valid items.
             poPreviewTableBody.innerHTML = '';
@@ -437,7 +425,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <tr>
                     <td>${d.materialGroup}</td><td>${d.materialType}</td><td>${d.materialCode}</td>
                     <td>${d.materialName}</td><td>${d.colorCode}</td><td>${d.colorName}</td>
-                    <td>${d.size || 'N/A'}</td><td>${d.uom}</td><td>${d.supplier}</td>
+                    <td>${d.size || 'N/A'}</td><td>${d.uom}</td><td>${d.supplierName}</td>
                     <td>${d.price}</td><td>${d.currency}</td><td><strong>${d.purchaseQty.toFixed(2)}</strong></td>
                 </tr>
             `;
@@ -457,6 +445,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const getInputValue = (selector) => row.querySelector(selector)?.value;
             const getNumericValue = (selector) => parseFloat(getInputValue(selector)) || 0;
 
+            const getSelectedText = (selector) => {
+                const select = row.querySelector(selector);
+                if (select && select.selectedIndex >= 0) {
+                    return select.options[select.selectedIndex].textContent;
+                }
+                return '';
+            };
+
             return {
                 orderBOMDetailId: getInputValue('input[name$=".orderBOMDetailId"]') || null,
                 seq: parseInt(getInputValue('input[name$=".seq"]')),
@@ -470,7 +466,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 colorName: getInputValue('input[name$=".colorName"]'),
                 size: getInputValue('select[name$=".size"]'),
                 uom: getInputValue('select[name$=".uom"]'),
-                supplier: getInputValue('select[name$=".supplier"]'),
+                supplierId: getNumericValue('select[name$=".supplierId"]'),
+                supplierName: getSelectedText('select[name$=".supplierId"]'),
                 price: getNumericValue('input[name$=".price"]'),
                 currency: getInputValue('input[name$=".currency"]'),
                 usageValue: getNumericValue('input[name$=".usageValue"]'),

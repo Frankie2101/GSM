@@ -32,6 +32,7 @@ public class OrderBOMServiceImpl implements OrderBOMService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final SupplierRepository supplierRepository;
     private final OrderBOMDetailRepository orderBOMDetailRepository;
+    private final PurchaseOrderService purchaseOrderService;
 
     /**
      * The concrete implementation of the OrderBOMService interface.
@@ -48,7 +49,8 @@ public class OrderBOMServiceImpl implements OrderBOMService {
                                // Bổ sung vào constructor
                                PurchaseOrderRepository purchaseOrderRepository,
                                SupplierRepository supplierRepository,
-                               OrderBOMDetailRepository orderBOMDetailRepository) {
+                               OrderBOMDetailRepository orderBOMDetailRepository,
+                               PurchaseOrderService purchaseOrderService) {
         this.orderBOMRepository = orderBOMRepository;
         this.saleOrderRepository = saleOrderRepository;
         this.bomTemplateRepository = bomTemplateRepository;
@@ -59,6 +61,7 @@ public class OrderBOMServiceImpl implements OrderBOMService {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.supplierRepository = supplierRepository;
         this.orderBOMDetailRepository = orderBOMDetailRepository;
+        this.purchaseOrderService = purchaseOrderService;
     }
 
     @Transactional(readOnly = true)
@@ -121,15 +124,27 @@ public class OrderBOMServiceImpl implements OrderBOMService {
                 dto.setFabricId(fabric.getFabricId());
                 dto.setMaterialCode(fabric.getFabricCode());
                 dto.setMaterialName(fabric.getFabricName());
-                if (fabric.getUnit() != null) dto.setUom(fabric.getUnit().getUnitName());
-                if (fabric.getSupplier() != null) dto.setSupplier(fabric.getSupplier().getSupplierName());
+                if (fabric.getUnit() != null) {
+                    dto.setUom(fabric.getUnit().getUnitName());
+                }
+                if (fabric.getSupplier() != null) {
+                    dto.setSupplierId(fabric.getSupplier().getSupplierId());
+                    dto.setSupplierName(fabric.getSupplier().getSupplierName());
+                    dto.setCurrency(fabric.getSupplier().getCurrencyCode()); // <-- THÊM DÒNG NÀY
+                }
             } else if ("TR".equals(templateDetail.getRmType()) && templateDetail.getTrim() != null) {
                 Trim trim = templateDetail.getTrim();
                 dto.setTrimId(trim.getTrimId());
                 dto.setMaterialCode(trim.getTrimCode());
                 dto.setMaterialName(trim.getTrimName());
-                if (trim.getUnit() != null) dto.setUom(trim.getUnit().getUnitName());
-                if (trim.getSupplier() != null) dto.setSupplier(trim.getSupplier().getSupplierName());
+                if (trim.getUnit() != null) {
+                    dto.setUom(trim.getUnit().getUnitName());
+                }
+                if (trim.getSupplier() != null) {
+                    dto.setSupplierId(trim.getSupplier().getSupplierId());
+                    dto.setSupplierName(trim.getSupplier().getSupplierName());
+                    dto.setCurrency(trim.getSupplier().getCurrencyCode()); // <-- THÊM DÒNG NÀY
+                }
             }
 
             double demandQty = totalSoQty * dto.getUsageValue() * (1 + dto.getWaste() / 100.0);
@@ -204,13 +219,34 @@ public class OrderBOMServiceImpl implements OrderBOMService {
         return convertEntityToDto(savedOrderBOM);
     }
 
+    @Override
+    @Transactional
+    public Map<String, Object> saveAndGeneratePOs(OrderBOMDto bomDtoFromForm) {
+        OrderBOMDto savedBomDto = this.save(bomDtoFromForm);
+
+        Map<Integer, Double> purchaseQtyMap = bomDtoFromForm.getDetails().stream()
+                .collect(Collectors.toMap(OrderBOMDetailDto::getSeq, OrderBOMDetailDto::getPurchaseQty));
+        savedBomDto.getDetails().forEach(detail -> detail.setPurchaseQty(purchaseQtyMap.get(detail.getSeq())));
+
+        return purchaseOrderService.generatePOsFromOrderBOM(savedBomDto);
+    }
+
     private void mapDtoToDetailEntity(OrderBOMDetailDto detailDto, OrderBOMDetail detail) {
         detail.setSeq(detailDto.getSeq());
         detail.setMaterialType(detailDto.getMaterialType());
         detail.setMaterialCode(detailDto.getMaterialCode());
         detail.setMaterialName(detailDto.getMaterialName());
         detail.setUom(detailDto.getUom());
-        detail.setSupplier(detailDto.getSupplier());
+
+        if (detailDto.getSupplierId() != null) {
+            Supplier supplier = supplierRepository.findById(detailDto.getSupplierId()).orElse(null);
+            if (supplier != null) {
+                detail.setSupplier(supplier.getSupplierName());
+            }
+        } else {
+            detail.setSupplier(null);
+        }
+
         detail.setPrice(detailDto.getPrice());
         detail.setCurrency(detailDto.getCurrency());
         detail.setUsageValue(detailDto.getUsageValue());
@@ -263,7 +299,14 @@ public class OrderBOMServiceImpl implements OrderBOMService {
         dto.setMaterialCode(detail.getMaterialCode());
         dto.setMaterialName(detail.getMaterialName());
         dto.setUom(detail.getUom());
-        dto.setSupplier(detail.getSupplier());
+
+        if (detail.getSupplier() != null && !detail.getSupplier().isEmpty()) {
+            supplierRepository.findBySupplierName(detail.getSupplier()).ifPresent(supplier -> {
+                dto.setSupplierId(supplier.getSupplierId());
+                dto.setSupplierName(supplier.getSupplierName());
+            });
+        }
+
         dto.setPrice(detail.getPrice());
         dto.setCurrency(detail.getCurrency());
         dto.setUsageValue(detail.getUsageValue());
