@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const supplierSelect = document.getElementById('supplierId');
     const poNoInput = document.getElementById('purchaseOrderNo');
     const poDateInput = document.getElementById('poDate');
+    const arrivalDateInput = document.getElementById('arrivalDate');
     const currencyInput = document.getElementById('currencyCode');
     const deliveryTermInput = document.getElementById('deliveryTerm');
     const paymentTermInput = document.getElementById('paymentTerm');
@@ -306,6 +307,15 @@ document.addEventListener('DOMContentLoaded', function() {
             poDateInput.value = new Date().toISOString().split('T')[0];
         }
 
+        if (poData.arrivalDate) {
+            let dateValue = poData.arrivalDate;
+            if (Array.isArray(dateValue)) {
+                const [year, month, day] = dateValue;
+                dateValue = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            }
+            arrivalDateInput.value = dateValue.split('T')[0];
+        }
+
         // Step 3: Render the initial details table using the data from the server.
         renderDetailsTable(poData.details);
 
@@ -479,6 +489,7 @@ document.addEventListener('DOMContentLoaded', function() {
             purchaseOrderId: idInput.value ? parseInt(idInput.value) : null,
             purchaseOrderNo: poNoInput.value,
             poDate: poDateInput.value,
+            arrivalDate: arrivalDateInput.value || null,
             supplierId: parseInt(supplierSelect.value),
             currencyCode: currencyInput.value,
             deliveryTerm: deliveryTermInput.value,
