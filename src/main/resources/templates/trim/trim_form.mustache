@@ -57,20 +57,23 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="materialGroupId" class="form-label">Material Group <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="materialGroupId" name="materialGroupId" required>
+                                    <select class="form-select" id="materialGroupId" name="materialGroupId" required {{#trimId}}disabled{{/trimId}}>
                                         <option value="">-- Select a Group --</option>
                                         {{#materialGroups}}
                                             <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
                                         {{/materialGroups}}
                                     </select>
+                                    {{#trimId}}
+                                        <input type="hidden" name="materialGroupId" value="{{materialGroupId}}" />
+                                    {{/trimId}}
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="trimCode" class="form-label">Trim Code <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="trimCode" name="trimCode" value="{{#trimCode}}{{.}}{{/trimCode}}" required>
+                                    <input type="text" class="form-control" id="trimCode" name="trimCode" value="{{#trimCode}}{{.}}{{/trimCode}}" required {{#trimId}}readonly{{/trimId}} maxlength="50">
                                 </div>
                                 <div class="col-md-8 mb-3">
                                     <label for="trimName" class="form-label">Trim Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="trimName" name="trimName" value="{{#trimName}}{{.}}{{/trimName}}" required>
+                                    <input type="text" class="form-control" id="trimName" name="trimName" value="{{#trimName}}{{.}}{{/trimName}}" required maxlength="100">
                                 </div>
                             </div>
                             <div class="row">
@@ -85,18 +88,21 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="unitId" class="form-label">Unit <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="unitId" name="unitId" required>
+                                    <select class="form-select" id="unitId" name="unitId" required {{#trimId}}disabled{{/trimId}}>
                                         <option value="">-- Select a Unit --</option>
                                         {{#units}}
                                             <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
                                         {{/units}}
                                     </select>
+                                    {{#trimId}}
+                                        <input type="hidden" name="unitId" value="{{unitId}}" />
+                                    {{/trimId}}
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-12 mb-3">
                                     <label for="technicalReference" class="form-label">Technical Reference</label>
-                                    <textarea class="form-control" id="technicalReference" name="technicalReference" rows="2">{{#technicalReference}}{{.}}{{/technicalReference}}</textarea>
+                                    <textarea class="form-control" id="technicalReference" name="technicalReference" rows="2" maxlength="255">{{#technicalReference}}{{.}}{{/technicalReference}}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -110,7 +116,9 @@
                                 <table class="table table-bordered table-hover">
                                     <thead class="table-light">
                                     <tr>
-                                        <th style="width: 5%;" class="text-center align-middle"><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                        <th style="width: 5%;" class="text-center align-middle">
+                                            <input class="form-check-input" type="checkbox" id="selectAllCheckbox">
+                                        </th>
                                         <th style="width: 15%;">Color Code <span class="text-danger">*</span></th>
                                         <th style="width: 25%;">Color Name</th>
                                         <th style="width: 20%;">Size Code (e.g., 120,180) <span class="text-danger">*</span></th>
@@ -122,15 +130,24 @@
                                     <tbody id="variantTableBody">
                                     {{#variants}}
                                         <tr>
-                                            <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox"></td>
-                                            <input type="hidden" data-name="trimVariantId" value="{{#trimVariantId}}{{.}}{{/trimVariantId}}">
-                                            <td><input type="text" data-name="colorCode" value="{{#colorCode}}{{.}}{{/colorCode}}" class="form-control" required></td>
-                                            <td><input type="text" data-name="colorName" value="{{#colorName}}{{.}}{{/colorName}}" class="form-control"></td>
-                                            <td><input type="text" data-name="sizeCode" value="{{#sizeCode}}{{.}}{{/sizeCode}}" class="form-control" required></td>
-                                            <td><input type="number" step="0.01" data-name="netPrice" value="{{#netPrice}}{{.}}{{/netPrice}}" class="form-control"></td>
-                                            <td><input type="number" step="0.01" data-name="taxRate" value="{{#taxRate}}{{.}}{{/taxRate}}" class="form-control"></td>
                                             <td class="text-center align-middle">
-                                                <button type="button" class="btn btn-sm btn-outline-danger delete-row-btn"><i class="bi bi-trash"></i></button>
+                                                <input class="form-check-input row-checkbox" type="checkbox" {{^deletable}}disabled{{/deletable}}>
+                                            </td>
+                                            <input type="hidden" data-name="trimVariantId" value="{{#trimVariantId}}{{.}}{{/trimVariantId}}">
+                                            <td><input type="text" data-name="colorCode" value="{{#colorCode}}{{.}}{{/colorCode}}" class="form-control" required {{#trimVariantId}}readonly{{/trimVariantId}} maxlength="50"></td>
+                                            <td><input type="text" data-name="colorName" value="{{#colorName}}{{.}}{{/colorName}}" class="form-control" maxlength="100"></td>
+                                            <td><input type="text" data-name="sizeCode" value="{{#sizeCode}}{{.}}{{/sizeCode}}" class="form-control" required {{#trimVariantId}}readonly{{/trimVariantId}} maxlength="50"></td>
+                                            <td><input type="number" step="0.01" min="0" data-name="netPrice" value="{{#netPrice}}{{.}}{{/netPrice}}" class="form-control"></td>
+                                            <td><input type="number" step="0.01" min="0" data-name="taxRate" value="{{#taxRate}}{{.}}{{/taxRate}}" class="form-control"></td>
+                                            <td class="text-center align-middle">
+                                                {{#deletable}}
+                                                    <button type="button" class="btn btn-sm btn-outline-danger delete-row-btn"><i class="bi bi-trash"></i></button>
+                                                {{/deletable}}
+                                                {{^deletable}}
+                                                    <span class="text-muted" title="Cannot delete, already existing in BOM">
+                                                        <i class="bi bi-lock-fill"></i>
+                                                    </span>
+                                                {{/deletable}}
                                             </td>
                                         </tr>
                                     {{/variants}}

@@ -45,9 +45,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         <input class="form-check-input row-checkbox" type="checkbox">
                     </td>
                     <input type="hidden" data-name="productVariantId" value="">
-                    <td><input type="text" data-name="color" class="form-control" required></td>
-                    <td><input type="text" data-name="size" class="form-control" placeholder="e.g., XS,S,M" required></td>
-                    <td><input type="number" step="0.01" data-name="price" class="form-control"></td>
+                    <td><input type="text" data-name="color" class="form-control" required maxlength="50"></td>
+                    <td><input type="text" data-name="size" class="form-control" placeholder="e.g., XS,S,M" required maxlength="20"></td>
+                    <td><input type="number" step="0.01" min="0" data-name="price" class="form-control"></td>
                     <td><input type="text" data-name="currency" class="form-control" value="VND" maxlength="3"></td>
                     <td class="text-center align-middle">
                         <button type="button" class="btn btn-sm btn-outline-danger delete-row-btn">
@@ -107,4 +107,71 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+
+    document.addEventListener('input', function(event) {
+
+        const isPriceInput = event.target.matches('input[data-name="price"]')
+
+        if (isPriceInput) {
+            const input = event.target;
+
+            input.value = input.value.replace(/[^0-9.]/g, '');
+
+            let value = parseFloat(input.value);
+
+            if (value < 0) {
+                input.value = '';
+            }
+        }
+    });
+
+    const productForm = document.getElementById('productForm');
+
+    if (productForm) {
+        productForm.addEventListener('submit', function(event) {
+            const rows = tableBody.querySelectorAll('tr');
+            const seenCombinations = new Set();
+            let isDuplicateFound = false;
+
+            rows.forEach(row => row.style.backgroundColor = '');
+
+            for (const row of rows) {
+                const colorInput = row.querySelector('input[data-name="color"]');
+                const sizeInput = row.querySelector('input[data-name="size"]');
+
+                if (colorInput && sizeInput) {
+                    const color = colorInput.value.trim().toLowerCase();
+                    const sizes = sizeInput.value.split(/\s*,\s*/);
+
+                    for (const size of sizes) {
+                        if (size.trim() === '') continue;
+
+                        const combination = `${color}||${size.trim().toLowerCase()}`;
+
+                        if (seenCombinations.has(combination)) {
+                            isDuplicateFound = true;
+                            row.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Duplicate Variant',
+                                text: `The combination of Color '${colorInput.value}' and Size '${size}' is duplicated.`
+                            });
+                            break;
+                        } else {
+                            seenCombinations.add(combination);
+                        }
+                    }
+                }
+
+                if (isDuplicateFound) {
+                    break;
+                }
+            }
+
+            if (isDuplicateFound) {
+                event.preventDefault();
+            }
+        });
+    }
+
 });

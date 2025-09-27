@@ -12,14 +12,15 @@ import com.gsm.repository.UnitRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import com.gsm.model.MaterialGroup;
 import com.gsm.repository.MaterialGroupRepository;
+import com.gsm.repository.BOMTemplateDetailRepository;
+import com.gsm.repository.OrderBOMDetailRepository;
+import java.util.stream.Stream;
 
 /**
  * The concrete implementation of the {@link TrimService} interface.
@@ -33,25 +34,38 @@ public class TrimServiceImpl implements TrimService {
     private final UnitRepository unitRepository;
     private final SupplierRepository supplierRepository;
     private final MaterialGroupRepository materialGroupRepository;
+    private final BOMTemplateDetailRepository bomTemplateDetailRepository;
+    private final OrderBOMDetailRepository orderBOMDetailRepository;
 
     @Autowired
-    public TrimServiceImpl(TrimRepository trimRepository, TrimVariantRepository trimVariantRepository, UnitRepository unitRepository, SupplierRepository supplierRepository, MaterialGroupRepository materialGroupRepository) {
+    public TrimServiceImpl(TrimRepository trimRepository, TrimVariantRepository trimVariantRepository, UnitRepository unitRepository, SupplierRepository supplierRepository, MaterialGroupRepository materialGroupRepository , BOMTemplateDetailRepository bomTemplateDetailRepository, OrderBOMDetailRepository orderBOMDetailRepository) {
         this.trimRepository = trimRepository;
         this.trimVariantRepository = trimVariantRepository;
         this.unitRepository = unitRepository;
         this.supplierRepository = supplierRepository;
         this.materialGroupRepository = materialGroupRepository;
+        this.bomTemplateDetailRepository = bomTemplateDetailRepository;
+        this.orderBOMDetailRepository = orderBOMDetailRepository;
     }
 
     /** {@inheritDoc} */
     @Override
     @Transactional(readOnly = true)
     public List<TrimDto> findAll() {
+        Set<Long> bomIds = bomTemplateDetailRepository.findDistinctTrimIdsInUse();
+        Set<Long> orderBomIds = orderBOMDetailRepository.findDistinctTrimIdsInUse();
+        Set<Long> nonDeletableIds = Stream.concat(bomIds.stream(), orderBomIds.stream()).collect(Collectors.toSet());
+
         AtomicInteger index = new AtomicInteger(1);
         return trimRepository.findAll().stream()
                 .map(trim -> {
                     TrimDto dto = convertEntityToDtoSimple(trim);
                     dto.setSequenceNumber((long) index.getAndIncrement());
+
+                    if (nonDeletableIds.contains(trim.getTrimId())) {
+                        dto.setDeletable(false);
+                    }
+
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -63,7 +77,14 @@ public class TrimServiceImpl implements TrimService {
     public TrimDto findById(Long id) {
         Trim trim = trimRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trim not found with id: " + id));
-        return convertEntityToDto(trim);
+        TrimDto dto = convertEntityToDto(trim);
+
+        boolean isInBOM = bomTemplateDetailRepository.existsByTrim_TrimId(id) ||
+                orderBOMDetailRepository.existsByTrim_TrimId(id);
+        if (isInBOM) {
+            dto.setDeletable(false);
+        }
+        return dto;
     }
 
     /**
@@ -96,9 +117,11 @@ public class TrimServiceImpl implements TrimService {
             dto.getVariants().stream()
                     .filter(variantDto -> variantDto.getSizeCode() != null && !variantDto.getSizeCode().trim().isEmpty())
                     .forEach(variantDto -> {
-                        String[] sizeCodes = variantDto.getSizeCode().split("\\s*,\\s*");
+                        String[] sizeCodesArray = variantDto.getSizeCode().split("\\s*,\\s*");
+                        Set<String> uniqueSizeCodes = new LinkedHashSet<>(Arrays.asList(sizeCodesArray));
+
                         boolean isFirstSize = true;
-                        for (String size : sizeCodes) {
+                        for (String size : uniqueSizeCodes) {
                             if (size.trim().isEmpty()) continue;
                             TrimVariantDto newDto = new TrimVariantDto();
                             newDto.setColorCode(variantDto.getColorCode());
@@ -156,6 +179,19 @@ public class TrimServiceImpl implements TrimService {
     @Override
     @Transactional
     public void deleteByIds(List<Long> ids) {
+        List<String> undeletableTrims = new ArrayList<>();
+        for (Long id : ids) {
+            boolean isInBOM = bomTemplateDetailRepository.existsByTrim_TrimId(id) ||
+                    orderBOMDetailRepository.existsByTrim_TrimId(id);
+            if (isInBOM) {
+                trimRepository.findById(id).ifPresent(trim -> undeletableTrims.add(trim.getTrimCode()));
+            }
+        }
+
+        if (!undeletableTrims.isEmpty()) {
+            throw new IllegalStateException("Cannot delete Trims: " + String.join(", ", undeletableTrims) + ". It is existing in BOM.");
+        }
+
         for (Long id : ids) {
             if (trimRepository.existsById(id)) {
                 trimVariantRepository.deleteByTrim_TrimId(id);
@@ -255,6 +291,16 @@ public class TrimServiceImpl implements TrimService {
         dto.setSizeCode(variant.getSizeCode());
         dto.setNetPrice(variant.getNetPrice());
         dto.setTaxRate(variant.getTaxRate());
+
+        if (variant.getTrimVariantId() != null) {
+            Long trimId = variant.getTrim().getTrimId();
+            String colorCode = variant.getColorCode();
+            String sizeCode = variant.getSizeCode();
+
+            if (orderBOMDetailRepository.existsByTrimIdAndColorCodeAndSizeCode(trimId, colorCode, sizeCode)) {
+                dto.setDeletable(false);
+            }
+        }
         return dto;
     }
 }

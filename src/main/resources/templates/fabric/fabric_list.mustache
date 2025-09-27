@@ -76,7 +76,16 @@
                                 {{#fabrics}}
                                     <tr>
                                         {{! The checkbox value is the fabricId, which will be submitted for deletion. }}
-                                        <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox" name="selectedIds" value="{{fabricId}}"></td>
+                                        <td class="text-center align-middle">
+                                            {{#deletable}}
+                                                <input class="form-check-input row-checkbox" type="checkbox" name="selectedIds" value="{{fabricId}}">
+                                            {{/deletable}}
+                                            {{^deletable}}
+                                                <span class="disabled-checkbox-wrapper">
+                                                    <input class="form-check-input" type="checkbox" disabled>
+                                                </span>
+                                            {{/deletable}}
+                                        </td>
                                         <td class="p-3 align-middle">{{sequenceNumber}}</td>
                                         <td class="p-3 align-middle">{{fabricCode}}</td>
                                         <td class="py-3 ps-2 align-middle">{{fabricName}}</td>

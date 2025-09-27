@@ -8,10 +8,7 @@ import com.gsm.model.Product;
 import com.gsm.model.ProductCategory;
 import com.gsm.model.ProductVariant;
 import com.gsm.model.Unit;
-import com.gsm.repository.ProductCategoryRepository;
-import com.gsm.repository.ProductRepository;
-import com.gsm.repository.ProductVariantRepository;
-import com.gsm.repository.UnitRepository;
+import com.gsm.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +33,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductVariantRepository productVariantRepository;
     private final ProductCategoryRepository productCategoryRepository;
     private final UnitRepository unitRepository;
+    private final SaleOrderDetailRepository saleOrderDetailRepository;
 
 
     /**
@@ -50,11 +48,13 @@ public class ProductServiceImpl implements ProductService {
     public ProductServiceImpl(ProductRepository productRepository,
                               ProductVariantRepository productVariantRepository,
                               ProductCategoryRepository productCategoryRepository,
-                              UnitRepository unitRepository) {
+                              UnitRepository unitRepository,
+                              SaleOrderDetailRepository saleOrderDetailRepository) {
         this.productRepository = productRepository;
         this.productVariantRepository = productVariantRepository;
         this.productCategoryRepository = productCategoryRepository;
         this.unitRepository = unitRepository;
+        this.saleOrderDetailRepository = saleOrderDetailRepository;
     }
 
     /**
@@ -67,7 +67,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductDto findById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-        return convertEntityToDto(product);
+        return convertEntityToDto(product); // Logic kiểm tra đã nằm trong convertEntityToDto
     }
 
     /**
@@ -78,11 +78,18 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductDto> findAll() {
-        AtomicInteger index = new AtomicInteger(1); // *Uses an AtomicInteger to generate a client-side sequence number
+        Set<Long> nonDeletableProductIds = saleOrderDetailRepository.findDistinctProductIdsInUse();
+
+        AtomicInteger index = new AtomicInteger(1);
         return productRepository.findAll().stream()
                 .map(product -> {
                     ProductDto dto = convertEntityToDtoSimple(product);
                     dto.setSequenceNumber((long) index.getAndIncrement());
+
+                    // Set deleteable to false if already existing in Sale Order
+                    if (nonDeletableProductIds.contains(product.getProductId())) {
+                        dto.setDeletable(false);
+                    }
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -262,6 +269,11 @@ public class ProductServiceImpl implements ProductService {
         dto.setSku(variant.getSku());
         dto.setPrice(variant.getPrice());
         dto.setCurrency(variant.getCurrency());
+
+        if (saleOrderDetailRepository.existsByProductVariant_ProductVariantId(variant.getProductVariantId())) {
+            dto.setDeletable(false);
+        }
+
         return dto;
     }
 
@@ -273,8 +285,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductDto> search(String keyword, String categoryName) {
-        // Ensure that empty strings are treated as null to match the JPQL query logic.
-        String effectiveKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim().trim() : null;
+        Set<Long> nonDeletableProductIds = saleOrderDetailRepository.findDistinctProductIdsInUse();
+
+        String effectiveKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
         String effectiveCategory = (categoryName != null && !categoryName.trim().isEmpty()) ? categoryName.trim() : null;
 
         List<Product> products = productRepository.searchProducts(effectiveKeyword, effectiveCategory);
@@ -284,6 +297,10 @@ public class ProductServiceImpl implements ProductService {
                 .map(product -> {
                     ProductDto dto = convertEntityToDtoSimple(product);
                     dto.setSequenceNumber((long) index.getAndIncrement());
+
+                    if (nonDeletableProductIds.contains(product.getProductId())) {
+                        dto.setDeletable(false);
+                    }
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -296,14 +313,29 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void deleteByIds(List<Long> ids) {
-        // It's better to iterate and handle each deletion individually to ensure existence.
+        List<String> undeletableProducts = new ArrayList<>();
+
+        //Validation before delete
+        for (Long id : ids) {
+            Product product = productRepository.findById(id).orElse(null);
+            if (product != null && saleOrderDetailRepository.existsByProductVariant_Product_ProductId(id)) {
+                undeletableProducts.add(product.getProductCode());
+            }
+        }
+
+        // Return error message if delete validation is fail
+        if (!undeletableProducts.isEmpty()) {
+            throw new IllegalStateException("Cannot delete products with codes: "
+                    + String.join(", ", undeletableProducts)
+                    + ". It is already existing in Sale Orders.");
+        }
+
+        // Delete if allowed
         for (Long id : ids) {
             if (productRepository.existsById(id)) {
-                // Important: Delete children before deleting the parent.
                 productVariantRepository.deleteByProduct_ProductId(id);
                 productRepository.deleteById(id);
             }
-        }
     }
-
+}
 }

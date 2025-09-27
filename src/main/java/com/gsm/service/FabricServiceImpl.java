@@ -14,6 +14,9 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import com.gsm.repository.MaterialGroupRepository;
+import com.gsm.repository.BOMTemplateDetailRepository;
+import com.gsm.repository.OrderBOMDetailRepository;
+import java.util.stream.Stream;
 
 /**
  * The concrete implementation of the {@link FabricService} interface.
@@ -28,25 +31,38 @@ public class FabricServiceImpl implements FabricService {
     private final UnitRepository unitRepository;
     private final SupplierRepository supplierRepository;
     private final MaterialGroupRepository materialGroupRepository;
+    private final BOMTemplateDetailRepository bomTemplateDetailRepository;
+    private final OrderBOMDetailRepository orderBOMDetailRepository;
 
     @Autowired
-    public FabricServiceImpl(FabricRepository fabricRepository, FabricColorRepository fabricColorRepository, UnitRepository unitRepository, SupplierRepository supplierRepository, MaterialGroupRepository materialGroupRepository) {
+    public FabricServiceImpl(FabricRepository fabricRepository, FabricColorRepository fabricColorRepository, UnitRepository unitRepository, SupplierRepository supplierRepository, MaterialGroupRepository materialGroupRepository, BOMTemplateDetailRepository bomTemplateDetailRepository, OrderBOMDetailRepository orderBOMDetailRepository) {
         this.fabricRepository = fabricRepository;
         this.fabricColorRepository = fabricColorRepository;
         this.unitRepository = unitRepository;
         this.supplierRepository = supplierRepository;
         this.materialGroupRepository = materialGroupRepository;
+        this.bomTemplateDetailRepository = bomTemplateDetailRepository;
+        this.orderBOMDetailRepository = orderBOMDetailRepository;
     }
 
     /** {@inheritDoc} */
     @Override
     @Transactional(readOnly = true)
     public List<FabricDto> findAll() {
+        Set<Long> bomIds = bomTemplateDetailRepository.findDistinctFabricIdsInUse();
+        Set<Long> orderBomIds = orderBOMDetailRepository.findDistinctFabricIdsInUse();
+        Set<Long> nonDeletableIds = Stream.concat(bomIds.stream(), orderBomIds.stream()).collect(Collectors.toSet());
+
         AtomicInteger index = new AtomicInteger(1);
         return fabricRepository.findAll().stream()
                 .map(fabric -> {
                     FabricDto dto = convertEntityToDtoSimple(fabric);
                     dto.setSequenceNumber((long) index.getAndIncrement());
+
+                    if (nonDeletableIds.contains(fabric.getFabricId())) {
+                        dto.setDeletable(false);
+                    }
+
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -58,7 +74,14 @@ public class FabricServiceImpl implements FabricService {
     public FabricDto findById(Long id) {
         Fabric fabric = fabricRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Fabric not found with id: " + id));
-        return convertEntityToDto(fabric);
+        FabricDto dto = convertEntityToDto(fabric);
+
+        boolean isInBOM = bomTemplateDetailRepository.existsByFabric_FabricId(id) ||
+                orderBOMDetailRepository.existsByFabric_FabricId(id);
+        if (isInBOM) {
+            dto.setDeletable(false);
+        }
+        return dto;
     }
 
     /**
@@ -133,6 +156,19 @@ public class FabricServiceImpl implements FabricService {
     @Override
     @Transactional
     public void deleteByIds(List<Long> ids) {
+        List<String> undeletableFabrics = new ArrayList<>();
+        for (Long id : ids) {
+            boolean isInBOM = bomTemplateDetailRepository.existsByFabric_FabricId(id) ||
+                    orderBOMDetailRepository.existsByFabric_FabricId(id);
+            if (isInBOM) {
+                fabricRepository.findById(id).ifPresent(fab -> undeletableFabrics.add(fab.getFabricCode()));
+            }
+        }
+
+        if (!undeletableFabrics.isEmpty()) {
+            throw new IllegalStateException("Cannot delete fabrics: " + String.join(", ", undeletableFabrics) + ". It is existing in BOM.");
+        }
+
         for (Long id : ids) {
             if (fabricRepository.existsById(id)) {
                 fabricColorRepository.deleteByFabric_FabricId(id);
@@ -145,13 +181,23 @@ public class FabricServiceImpl implements FabricService {
     @Override
     @Transactional(readOnly = true)
     public List<FabricDto> search(String keyword) {
+        Set<Long> bomIds = bomTemplateDetailRepository.findDistinctFabricIdsInUse();
+        Set<Long> orderBomIds = orderBOMDetailRepository.findDistinctFabricIdsInUse();
+        Set<Long> nonDeletableIds = Stream.concat(bomIds.stream(), orderBomIds.stream()).collect(Collectors.toSet());
+
         String effectiveKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
         List<Fabric> fabrics = fabricRepository.searchFabrics(effectiveKeyword);
         AtomicInteger index = new AtomicInteger(1);
+
         return fabrics.stream()
                 .map(fabric -> {
                     FabricDto dto = convertEntityToDtoSimple(fabric);
                     dto.setSequenceNumber((long) index.getAndIncrement());
+
+                    if (nonDeletableIds.contains(fabric.getFabricId())) {
+                        dto.setDeletable(false);
+                    }
+
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -272,6 +318,15 @@ public class FabricServiceImpl implements FabricService {
         dto.setWidth(color.getWidth());
         dto.setNetPrice(color.getNetPrice());
         dto.setTaxPercent(color.getTaxPercent());
+
+        if (color.getFabricColorId() != null) {
+            Long fabricId = color.getFabric().getFabricId();
+            String colorCode = color.getColor();
+
+            if (orderBOMDetailRepository.existsByFabricIdAndColorCode(fabricId, colorCode)) {
+                dto.setDeletable(false);
+            }
+        }
         return dto;
     }
 }

@@ -25,4 +25,6 @@ public class TrimVariantDto {
 
     @PositiveOrZero(message = "Tax rate must be zero or positive")
     private Double taxRate;
+
+    private boolean deletable = true;
 }

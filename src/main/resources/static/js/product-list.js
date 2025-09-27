@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 2. Display a confirmation dialog to the user.
             Swal.fire({
-                title: `Delete ${count} Product?`,
+                title: `Delete Product?`,
                 text: `This action is cannot be undone.`,
                 icon: null,
                 showCancelButton: true,
@@ -56,6 +56,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     deleteForm.submit();
                 }
             });
+        });
+    }
+
+    const tableBody = document.querySelector('tbody');
+    if (tableBody) {
+        tableBody.addEventListener('click', function(event) {
+            const wrapper = event.target.closest('.disabled-checkbox-wrapper');
+            if (wrapper) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3500,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
+
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Can not delete, already existing in Sale Order'
+                });
+            }
         });
     }
 });

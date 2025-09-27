@@ -44,9 +44,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 2. Show confirmation dialog.
             Swal.fire({
-                title: `Delete ${count} Fabric(s)?`,
+                title: `Delete Fabric?`,
                 text: `This action cannot be undone.`,
-                icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#5a6a85',
@@ -61,6 +60,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     deleteForm.submit();
                 }
             });
+        });
+    }
+
+    const tableBody = document.querySelector('tbody');
+    if (tableBody) {
+        tableBody.addEventListener('click', function(event) {
+            const wrapper = event.target.closest('.disabled-checkbox-wrapper');
+            if (wrapper) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3500,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
+
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Can not delete, already existing in BOM'
+                });
+            }
         });
     }
 });

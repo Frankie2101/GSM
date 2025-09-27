@@ -22,4 +22,6 @@ public class FabricColorDto {
 
     @PositiveOrZero(message = "Tax percent must be zero or positive")
     private Double taxPercent;
+
+    private boolean deletable = true;
 }

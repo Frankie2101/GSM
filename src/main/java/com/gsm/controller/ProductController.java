@@ -140,7 +140,8 @@ public class ProductController {
     public String showProductList(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String category,
-            Model model) {
+            Model model,
+            HttpServletRequest request) {
 
         List<ProductDto> products;
         if ((keyword != null && !keyword.isEmpty()) || (category != null && !category.isEmpty())) {
@@ -154,6 +155,7 @@ public class ProductController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("selectedCategory", category);
         model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));
 
         return "product/product_list";
     }

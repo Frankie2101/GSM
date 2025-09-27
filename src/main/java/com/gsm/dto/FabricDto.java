@@ -50,4 +50,6 @@ public class FabricDto {
      */
     @Valid
     private List<FabricColorDto> fabricColors;
+
+    private boolean deletable = true;
 }

@@ -46,11 +46,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         <input class="form-check-input row-checkbox" type="checkbox">
                     </td>
                     <input type="hidden" data-name="fabricColorId" value="">
-                    <td><input type="text" data-name="color" class="form-control" required></td>
-                    <td><input type="text" data-name="colorName" class="form-control"></td>
-                    <td><input type="text" data-name="width" class="form-control"></td>
-                    <td><input type="number" step="0.01" data-name="netPrice" class="form-control"></td>
-                    <td><input type="number" step="0.01" data-name="taxPercent" class="form-control"></td>
+                    <td><input type="text" data-name="color" class="form-control" required maxlength="50"></td>
+                    <td><input type="text" data-name="colorName" class="form-control" maxlength="100"></td>
+                    <td><input type="text" data-name="width" class="form-control" maxlength="50"></td>
+                    <td><input type="number" step="0.01" min="0" data-name="netPrice" class="form-control"></td>
+                    <td><input type="number" step="0.01" min="0" data-name="taxPercent" class="form-control"></td>
                     <td class="text-center align-middle">
                         <button type="button" class="btn btn-sm btn-outline-danger delete-row-btn">
                             <i class="bi bi-trash"></i>
@@ -105,6 +105,75 @@ document.addEventListener('DOMContentLoaded', function () {
             tableBody.querySelectorAll('.row-checkbox').forEach(checkbox => {
                 checkbox.checked = this.checked;
             });
+        });
+    }
+
+    /**
+     * Provides real-time validation for numeric input fields to ensure only valid numbers are entered.
+     *
+     * This listener uses event delegation on the entire document to catch `input` events.
+     * It targets fields with `data-name="netPrice"` or `data-name="taxPercent"`.
+     * For these fields, it automatically removes any non-numeric characters (except for the decimal point)
+     * and clears the input if a negative value is entered.
+     */
+    document.addEventListener('input', function(event) {
+        const isNumericInput = event.target.matches('input[data-name="netPrice"]') ||
+            event.target.matches('input[data-name="taxPercent"]');
+
+        if (isNumericInput) {
+            const input = event.target;
+
+            input.value = input.value.replace(/[^0-9.]/g, '');
+
+            if (parseFloat(input.value) < 0) {
+                input.value = '';
+            }
+        }
+    });
+
+
+    /**
+     * Event listener for the main form's `submit` event to validate for duplicate color codes.
+     *
+     * Before allowing the form to be submitted to the server, this function iterates through
+     * all variant rows in the table. It uses a Set to efficiently check if any `Color Code`
+     * values are duplicated (case-insensitive). If a duplicate is found, it prevents the
+     * form submission, highlights the problematic row with a light red background,
+     * and displays a SweetAlert2 error message to the user.
+     */
+    const fabricForm = document.getElementById('fabricForm');
+    if (fabricForm) {
+        fabricForm.addEventListener('submit', function(event) {
+            const rows = tableBody.querySelectorAll('tr');
+            const seenColorCodes = new Set();
+            let isDuplicateFound = false;
+
+            rows.forEach(row => row.style.backgroundColor = '');
+
+            for (const row of rows) {
+                const colorInput = row.querySelector('input[data-name="color"]');
+
+                if (colorInput) {
+                    const colorCode = colorInput.value.trim().toLowerCase();
+
+                    if (seenColorCodes.has(colorCode)) {
+                        isDuplicateFound = true;
+                        row.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Duplicate Color Code',
+                            text: `The Color Code '${colorInput.value}' is duplicated.`
+                        });
+                        break;
+                    } else {
+                        seenColorCodes.add(colorCode);
+                    }
+                }
+            }
+
+            if (isDuplicateFound) {
+                event.preventDefault();
+            }
         });
     }
 

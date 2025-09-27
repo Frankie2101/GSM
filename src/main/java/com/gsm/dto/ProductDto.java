@@ -83,4 +83,10 @@ public class ProductDto {
      */
     @Valid
     private List<ProductVariantDto> variants;
+
+    /**
+     * A flag to indicate if the product can be deleted. Default is true.
+     * It becomes false if the product is used in any sale order.
+     */
+    private boolean deletable = true;
 }

@@ -53,4 +53,10 @@ public class ProductVariantDto {
      */
     @Size(max = 3, message = "Currency code must be 3 characters")
     private String currency;
+
+    /**
+     * A flag to indicate if the variant can be deleted. Default is true.
+     * It becomes false if the variant is used in any sale order.
+     */
+    private boolean deletable = true;
 }

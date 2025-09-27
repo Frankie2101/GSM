@@ -38,7 +38,7 @@ public class ProductVariant extends AuditableEntity {
     /**
      * The color of this specific product variant. E.g., "White", "Navy Blue".
      */
-    @Column(name = "[Size]", nullable = false, length = 20) // "Size" là từ khóa của SQL, nên đặt trong ngoặc vuông
+    @Column(name = "[Size]", nullable = false, length = 20)
     private String size;
 
     /**

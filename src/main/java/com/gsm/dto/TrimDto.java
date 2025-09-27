@@ -40,4 +40,6 @@ public class TrimDto {
 
     @Valid
     private List<TrimVariantDto> variants;
+
+    private boolean deletable = true;
 }

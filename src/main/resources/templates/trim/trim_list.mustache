@@ -41,6 +41,9 @@
                 <div class="card-header">Result</div>
                 <div class="card-body">
                     <form action="/trims/delete" method="post" id="deleteForm">
+                        {{#_csrf}}
+                            <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
+                        {{/_csrf}}
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead class="table-light">
@@ -57,7 +60,16 @@
                                 <tbody>
                                 {{#trims}}
                                     <tr>
-                                        <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox" name="selectedIds" value="{{trimId}}"></td>
+                                        <td class="text-center align-middle">
+                                            {{#deletable}}
+                                                <input class="form-check-input row-checkbox" type="checkbox" name="selectedIds" value="{{trimId}}">
+                                            {{/deletable}}
+                                            {{^deletable}}
+                                                <span class="disabled-checkbox-wrapper">
+                                                    <input class="form-check-input" type="checkbox" disabled>
+                                                </span>
+                                            {{/deletable}}
+                                        </td>
                                         <td class="p-3 align-middle">{{sequenceNumber}}</td>
                                         <td class="p-3 align-middle">{{trimCode}}</td>
                                         <td class="py-3 ps-2 align-middle">{{trimName}}</td>
@@ -70,7 +82,7 @@
                                 {{/trims}}
                                 {{^trims}}
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted p-4">No trims found. Click 'Create' to add one.</td>
+                                        <td colspan="7" class="text-center text-muted p-4">No trims found. Click 'Create' to add new.</td>
                                     </tr>
                                 {{/trims}}
                                 </tbody>

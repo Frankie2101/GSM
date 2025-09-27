@@ -36,9 +36,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Show confirmation dialog before submitting the form.
             Swal.fire({
-                title: `Delete ${count} Trim(s)?`,
+                title: `Delete Trim(s)?`,
                 text: `This action cannot be undone.`,
-                icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#5a6a85',
@@ -49,6 +48,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     deleteForm.submit();
                 }
             });
+        });
+    }
+
+    const tableBody = document.querySelector('tbody');
+    if (tableBody) {
+        tableBody.addEventListener('click', function(event) {
+            const wrapper = event.target.closest('.disabled-checkbox-wrapper');
+            if (wrapper) {
+                event.preventDefault();
+                event.stopPropagation();
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Cannot delete, already existing in BOM',
+                    showConfirmButton: false,
+                    timer: 3500,
+                    timerProgressBar: true
+                });
+            }
         });
     }
 });

@@ -39,11 +39,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <tr>
                     <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox"></td>
                     <input type="hidden" data-name="trimVariantId" value="">
-                    <td><input type="text" data-name="colorCode" class="form-control" required></td>
-                    <td><input type="text" data-name="colorName" class="form-control"></td>
-                    <td><input type="text" data-name="sizeCode" class="form-control" placeholder="e.g., 120,180,200" required></td>
-                    <td><input type="number" step="0.01" data-name="netPrice" class="form-control"></td>
-                    <td><input type="number" step="0.01" data-name="taxRate" class="form-control"></td>
+                    <td><input type="text" data-name="colorCode" class="form-control" required maxlength="50"></td>
+                    <td><input type="text" data-name="colorName" class="form-control" maxlength="100"></td>
+                    <td><input type="text" data-name="sizeCode" class="form-control" placeholder="e.g., 120,180,200" required maxlength="50"></td>
+                    <td><input type="number" step="0.01" min="0" data-name="netPrice" class="form-control"></td>
+                    <td><input type="number" step="0.01" min="0" data-name="taxRate" class="form-control"></td>
                     <td class="text-center align-middle">
                         <button type="button" class="btn btn-sm btn-outline-danger delete-row-btn"><i class="bi bi-trash"></i></button>
                     </td>
@@ -88,9 +88,86 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', function() {
-            tableBody.querySelectorAll('.row-checkbox').forEach(checkbox => {
-                this.checked ? checkbox.checked = true : checkbox.checked = false;
+            tableBody.querySelectorAll('.row-checkbox:not(:disabled)').forEach(checkbox => {
+                checkbox.checked = this.checked;
             });
+        });
+    }
+
+    /**
+     * Provides real-time validation for numeric input fields to ensure only valid numbers are entered.
+     *
+     * This listener uses event delegation on the entire document to catch `input` events.
+     * It specifically targets fields with `data-name="netPrice"` or `data-name="taxRate"`.
+     * For these fields, it automatically removes any non-numeric characters (except for the decimal point)
+     * and clears the input if a negative value is entered.
+     */
+    document.addEventListener('input', function(event) {
+        const isNumericInput = event.target.matches('input[data-name="netPrice"]') ||
+            event.target.matches('input[data-name="taxRate"]');
+
+        if (isNumericInput) {
+            const input = event.target;
+            input.value = input.value.replace(/[^0-9.]/g, '');
+            if (parseFloat(input.value) < 0) {
+                input.value = '';
+            }
+        }
+    });
+
+    /**
+     * Event listener for the main form's `submit` event to validate for duplicate variants.
+     *
+     * Before the form is submitted, this function iterates through all variant rows and checks if any
+     * `Color Code` + `Size Code` combination is duplicated (case-insensitive). It intelligently handles
+     * comma-separated values within the `Size Code` field, treating each size as a separate entry.
+     * If a duplicate is found, it prevents the form submission, highlights the problematic row,
+     * and displays a SweetAlert2 error to the user.
+     */
+    if (trimForm) {
+        trimForm.addEventListener('submit', function(event) {
+            const rows = tableBody.querySelectorAll('tr');
+            const seenCombinations = new Set();
+            let isDuplicateFound = false;
+
+            rows.forEach(row => row.style.backgroundColor = '');
+
+            for (const row of rows) {
+                const colorInput = row.querySelector('input[data-name="colorCode"]');
+                const sizeInput = row.querySelector('input[data-name="sizeCode"]');
+
+                if (colorInput && sizeInput) {
+                    const color = colorInput.value.trim().toLowerCase();
+                    const sizes = sizeInput.value.split(/\s*,\s*/);
+
+                    for (const size of sizes) {
+                        if (size.trim() === '') continue
+
+                        const combination = `${color}||${size.trim().toLowerCase()}`;
+
+                        if (seenCombinations.has(combination)) {
+                            isDuplicateFound = true;
+                            row.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Duplicate Variant',
+                                text: `The combination of Color '${colorInput.value}' and Size '${size}' is duplicated.`
+                            });
+                            break;
+                        } else {
+                            seenCombinations.add(combination);
+                        }
+                    }
+                }
+
+                if (isDuplicateFound) {
+                    break;
+                }
+            }
+
+            if (isDuplicateFound) {
+                event.preventDefault();
+            }
         });
     }
 
