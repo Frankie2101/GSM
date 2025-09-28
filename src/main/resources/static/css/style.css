@@ -654,3 +654,8 @@ body.body-login {
     max-width: 450px;
     width: 100%;
 }
+
+.locked-field {
+    pointer-events: none;
+    background-color: #e9ecef;
+}

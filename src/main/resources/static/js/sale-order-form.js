@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const orderNoInput = document.getElementById('saleOrderNo');
     const currencyInput = document.getElementById('currencyCode');
     const orderDateInput = document.getElementById('orderDate');
+
     let detailIndex = 0;
 
     if (!document.querySelector('[name="saleOrderId"]').value) {
@@ -70,8 +71,10 @@ document.addEventListener('DOMContentLoaded', function() {
      * The card includes dropdowns for product/color and a container for the size matrix.
      * @returns {HTMLElement} The newly created card element.
      */
-        const createDetailCard = () => {
+        const createDetailCard = (isExistingRow) => {
+        const lockClass = isExistingRow ? 'locked-field' : '';
         const card = document.createElement('div');
+
         card.className = 'card mb-2 detail-card';
         card.dataset.index = detailIndex++;
         card.innerHTML = `
@@ -81,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="d-flex align-items-end" style="flex: 0 0 50%;">
                     <div style="width: 25%;" class="me-2">
                         <label class="form-label form-label-sm mb-0">Product</label>
-                        <select class="form-select form-select-sm product-select" title="Product"></select>
+                        <select class="form-select form-select-sm product-select ${lockClass}" title="Product"></select>
                     </div>
                     <div style="width: 30%;" class="me-2">
                         <label class="form-label form-label-sm mb-0">Product Name</label>
@@ -89,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <div style="width: 20%;" class="me-2">
                         <label class="form-label form-label-sm mb-0">Color</label>
-                        <select class="form-select form-select-sm color-select" title="Color"></select>
+                        <select class="form-select form-select-sm color-select ${lockClass}" title="Color"></select>
                     </div>
                     <div style="width: 10%;" class="me-2">
                          <label class="form-label form-label-sm mb-0">Unit</label>
@@ -193,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const products = await fetchProducts();
 
         for (const detail of details) {
-            const card = createDetailCard();
+            const card = createDetailCard(true);
 
             const productSelect = card.querySelector('.product-select');
             const productNameInput = card.querySelector('.product-name');
@@ -248,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
      * It creates a new blank card and populates its product dropdown with all available products.
      */
     addDetailBtn.addEventListener('click', async () => {
-        const card = createDetailCard();
+        const card = createDetailCard(false);
         const productSelect = card.querySelector('.product-select');
         const products = await fetchProducts();
 
@@ -314,7 +317,6 @@ document.addEventListener('DOMContentLoaded', function() {
     detailsContainer.addEventListener('click', (e) => {
         // If the clicked element (or its parent) is a delete button...
         if (e.target.closest('.delete-detail-btn')) {
-            // ...find its parent card and remove it from the DOM.
             e.target.closest('.detail-card').remove();
         }
     });

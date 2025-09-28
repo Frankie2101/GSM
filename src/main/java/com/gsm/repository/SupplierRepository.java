@@ -5,6 +5,7 @@ import com.gsm.model.Supplier;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -23,4 +24,6 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
      * @return An {@link Optional} containing the found supplier.
      */
     Optional<Supplier> findBySupplierName(String supplierName);
+
+    List<Supplier> findBySupplierNameIn(List<String> names);
 }

@@ -60,4 +60,6 @@ public class SaleOrderDto {
         }
         return "";
     }
+
+    private boolean deletable = true;
 }

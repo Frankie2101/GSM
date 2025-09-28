@@ -54,7 +54,7 @@
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label for="bomTemplateCode" class="form-label">Template Code <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="bomTemplateCode" name="bomTemplateCode" value="{{#bomTemplateCode}}{{.}}{{/bomTemplateCode}}" required>
+                                    <input type="text" class="form-control" id="bomTemplateCode" name="bomTemplateCode" value="{{#bomTemplateCode}}{{.}}{{/bomTemplateCode}}" required {{#bomTemplateId}}readonly{{/bomTemplateId}}>
                                 </div>
                                 <div class="col-md-8 mb-3">
                                     <label for="bomTemplateName" class="form-label">Template Name <span class="text-danger">*</span></label>
@@ -64,12 +64,15 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="productCategoryId" class="form-label">Product Category <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="productCategoryId" name="productCategoryId" required>
+                                    <select class="form-select" id="productCategoryId" name="productCategoryId" required {{#bomTemplateId}}disabled{{/bomTemplateId}}>
                                         <option value="">-- Select a Category --</option>
                                         {{#categories}}
                                             <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
                                         {{/categories}}
                                     </select>
+                                    {{#bomTemplateId}}
+                                        <input type="hidden" name="productCategoryId" value="{{productCategoryId}}" />
+                                    {{/bomTemplateId}}
                                 </div>
                             </div>
                         </div>
@@ -129,8 +132,12 @@
                                             </td>
                                             <td><input type="text" class="form-control rm-name-input" value="{{#rmName}}{{.}}{{/rmName}}" readonly></td>
                                             <td><input type="text" class="form-control rm-unit-input" value="{{#unitName}}{{.}}{{/unitName}}" readonly></td>
-                                            <td><input type="number" step="0.001" class="form-control" data-name="usageValue" value="{{#usageValue}}{{.}}{{/usageValue}}" required></td>
-                                            <td><input type="number" step="0.01" class="form-control" data-name="waste" value="{{#waste}}{{.}}{{/waste}}" required></td>
+                                            <td>
+                                                <input type="number" step="0.001" class="form-control" data-name="usageValue" value="{{#usageValue}}{{.}}{{/usageValue}}" required min="0">
+                                            </td>
+                                            <td>
+                                                <input type="number" step="0.01" class="form-control" data-name="waste" value="{{#waste}}{{.}}{{/waste}}" required min="0">
+                                            </td>
                                             <td class="text-center align-middle">
                                                 <button type="button" class="btn btn-sm btn-outline-danger delete-row-btn"><i class="bi bi-trash"></i></button>
                                             </td>

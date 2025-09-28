@@ -33,4 +33,6 @@ public class BOMTemplateDto {
 
     @Valid
     private List<BOMTemplateDetailDto> details;
+
+    private boolean deletable = true;
 }

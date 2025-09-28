@@ -1,0 +1,25 @@
+[33m88a5f8c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Added Delete Validation and Field Length for Product, Fabric, Trim
+[33m6462725[m[33m ([m[1;31morigin/qa[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/dev[m[33m, [m[1;32mqa[m[33m)[m Added Arrival Date
+[33mfafa24d[m Fixed Zalo Style
+[33me4bc3f8[m Fixed Pending Approval
+[33m819c1e9[m Fixed Security Config
+[33mbf686bc[m Fixed all BOM and PO functions
+[33mc894e6e[m Fixed all BOM and PO
+[33m5b2cd3b[m Fix bugs
+[33mc951591[m Fixed User save
+[33md6230c7[m Finished required function
+[33m1fa6446[m[33m ([m[1;32mrecovery-branch[m[33m)[m Finalize code before deploying to Render
+[33me0f22ac[m[33m ([m[1;33mtag: [m[1;33mv1.7.4[m[33m)[m Finalize code before deploying to Render
+[33me03f9df[m[33m ([m[1;33mtag: [m[1;33mv1.7.3[m[33m)[m Finalize code before deploying to Render
+[33mb5eb287[m[33m ([m[1;33mtag: [m[1;33mv1.7.2[m[33m)[m Finalize code before deploying to Render
+[33mfee6e6d[m[33m ([m[1;33mtag: [m[1;33mv1.7.1[m[33m)[m Finalize code before deploying to Render
+[33mbb4863f[m[33m ([m[1;33mtag: [m[1;33mv1.6.0[m[33m)[m Finalize code before deploying to Render
+[33m30494ae[m[33m ([m[1;33mtag: [m[1;33mv1.5.0[m[33m)[m Finalize code before deploying to Render
+[33m58ddb30[m[33m ([m[1;33mtag: [m[1;33mv1.4.0[m[33m)[m Finalize code before deploying to Render
+[33m516cd0b[m[33m ([m[1;33mtag: [m[1;33mv1.3.0[m[33m)[m Finalize code before deploying to Render
+[33m7ab3678[m Configure health for Azure deployment
+[33m2e3242f[m Update production config in application.properties
+[33mf06e5b6[m Add Dockerfile for Render deployment
+[33m0c1f216[m[33m ([m[1;33mtag: [m[1;33mv1.1.0[m[33m)[m Finalize code before deploying to Render
+[33m29d6948[m[33m ([m[1;33mtag: [m[1;33mv1.0.0[m[33m)[m Finalize code before deploying to Render
+[33m15da0f6[m Initial commit: Project setup

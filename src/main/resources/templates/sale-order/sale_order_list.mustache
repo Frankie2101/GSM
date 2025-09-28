@@ -56,6 +56,9 @@
                         This form targets the delete endpoint. It is triggered by JavaScript after a user confirmation.
                     }}
                     <form action="/sale-orders/delete" method="post" id="deleteForm">
+                        {{#_csrf}}
+                            <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
+                        {{/_csrf}}
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead class="table-light">
@@ -78,7 +81,16 @@
                                 {{#orders}}
                                     <tr>
                                         {{! The checkbox value is the saleOrderId, which will be submitted for deletion. }}
-                                        <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox" name="selectedIds" value="{{saleOrderId}}"></td>
+                                        <td class="text-center align-middle">
+                                            {{#deletable}}
+                                                <input class="form-check-input row-checkbox" type="checkbox" name="selectedIds" value="{{saleOrderId}}">
+                                            {{/deletable}}
+                                            {{^deletable}}
+                                                <span class="disabled-checkbox-wrapper">
+                                                    <input class="form-check-input" type="checkbox" disabled>
+                                                </span>
+                                            {{/deletable}}
+                                        </td>
                                         <td class="p-3 align-middle">{{sequenceNumber}}</td>
                                         <td class="p-3 align-middle">{{saleOrderNo}}</td>
                                         <td class="py-3 ps-2 align-middle">{{customerName}}</td>

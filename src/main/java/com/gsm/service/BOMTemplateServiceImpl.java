@@ -5,18 +5,15 @@ import com.gsm.dto.BOMTemplateDto;
 import com.gsm.exception.DuplicateResourceException;
 import com.gsm.exception.ResourceNotFoundException;
 import com.gsm.model.*;
-import com.gsm.repository.BOMTemplateRepository;
-import com.gsm.repository.FabricRepository;
-import com.gsm.repository.ProductCategoryRepository;
-import com.gsm.repository.TrimRepository;
+import com.gsm.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import com.gsm.repository.MaterialGroupRepository;
 
 /**
  * The concrete implementation of the BOMTemplateService interface.
@@ -30,18 +27,21 @@ public class BOMTemplateServiceImpl implements BOMTemplateService {
     private final FabricRepository fabricRepository;
     private final TrimRepository trimRepository;
     private final MaterialGroupRepository materialGroupRepository;
+    private final OrderBOMRepository orderBOMRepository;
 
     @Autowired
     public BOMTemplateServiceImpl(BOMTemplateRepository bomTemplateRepository,
                                   ProductCategoryRepository productCategoryRepository,
                                   FabricRepository fabricRepository,
                                   TrimRepository trimRepository,
-                                  MaterialGroupRepository materialGroupRepository) {
+                                  MaterialGroupRepository materialGroupRepository,
+                                  OrderBOMRepository orderBOMRepository) {
         this.bomTemplateRepository = bomTemplateRepository;
         this.productCategoryRepository = productCategoryRepository;
         this.fabricRepository = fabricRepository;
         this.trimRepository = trimRepository;
         this.materialGroupRepository = materialGroupRepository;
+        this.orderBOMRepository = orderBOMRepository;
     }
 
     @Override
@@ -55,11 +55,17 @@ public class BOMTemplateServiceImpl implements BOMTemplateService {
     @Override
     @Transactional(readOnly = true)
     public List<BOMTemplateDto> findAll() {
+        Set<Long> nonDeletableIds = orderBOMRepository.findDistinctBomTemplateIdsInUse();
+
         AtomicInteger index = new AtomicInteger(1);
         return bomTemplateRepository.findAll().stream()
                 .map(template -> {
                     BOMTemplateDto dto = convertEntityToDtoSimple(template);
                     dto.setSequenceNumber((long) index.getAndIncrement());
+
+                    if (nonDeletableIds.contains(template.getBomTemplateId())) {
+                        dto.setDeletable(false);
+                    }
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -68,6 +74,8 @@ public class BOMTemplateServiceImpl implements BOMTemplateService {
     @Override
     @Transactional(readOnly = true)
     public List<BOMTemplateDto> search(String keyword) {
+        Set<Long> nonDeletableIds = orderBOMRepository.findDistinctBomTemplateIdsInUse();
+
         String effectiveKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
         List<BOMTemplate> templates = bomTemplateRepository.search(effectiveKeyword);
         AtomicInteger index = new AtomicInteger(1);
@@ -75,6 +83,10 @@ public class BOMTemplateServiceImpl implements BOMTemplateService {
                 .map(template -> {
                     BOMTemplateDto dto = convertEntityToDtoSimple(template);
                     dto.setSequenceNumber((long) index.getAndIncrement());
+
+                    if (nonDeletableIds.contains(template.getBomTemplateId())) {
+                        dto.setDeletable(false);
+                    }
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -83,6 +95,21 @@ public class BOMTemplateServiceImpl implements BOMTemplateService {
     @Override
     @Transactional
     public void deleteByIds(List<Long> ids) {
+        List<String> undeletableTemplates = new ArrayList<>();
+        for (Long id : ids) {
+            // Check if the template is used in any OrderBOM
+            if (orderBOMRepository.existsByBomTemplate_BomTemplateId(id)) {
+                bomTemplateRepository.findById(id).ifPresent(template ->
+                        undeletableTemplates.add(template.getBomTemplateCode()));
+            }
+        }
+
+        if (!undeletableTemplates.isEmpty()) {
+            throw new IllegalStateException("Cannot delete templates: "
+                    + String.join(", ", undeletableTemplates)
+                    + ". It is already existing in BOM.");
+        }
+
         bomTemplateRepository.deleteAllById(ids);
     }
 

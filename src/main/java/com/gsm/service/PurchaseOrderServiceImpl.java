@@ -61,7 +61,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                     if (!hasPurchaseData) return false;
 
                     if (d.getOrderBOMDetailId() == null) return true;
-                    return !purchaseOrderDetailRepository.existsByorderBOMDetail_OrderBOMDetailId(d.getOrderBOMDetailId());
+                    return !purchaseOrderDetailRepository.existsByOrderBOMDetail_OrderBOMDetailId(d.getOrderBOMDetailId());
                 })
                 .collect(Collectors.toList());
 

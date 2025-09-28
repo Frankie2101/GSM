@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface ProductionOutputRepository extends JpaRepository<ProductionOutput, Long> {
@@ -118,4 +119,24 @@ public interface ProductionOutputRepository extends JpaRepository<ProductionOutp
             "GROUP BY po.outputDate, po.department " +
             "ORDER BY po.outputDate, po.department")
     List<DailyThroughputByDeptResult> findDailyThroughputByDepartment(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    /**
+     * Checks if any ProductionOutput record is linked to a specific SaleOrder ID.
+     * This is an optimized query to quickly check for usage before allowing a delete operation.
+     *
+     * @param saleOrderId The ID of the SaleOrder to check.
+     * @return true if the SaleOrder is in use, false otherwise.
+     */
+    boolean existsBySaleOrder_SaleOrderId(Long saleOrderId);
+
+    /**
+     * Finds a distinct set of all SaleOrder IDs that are currently referenced in the ProductionOutput table.
+     * This is used to efficiently determine the lock status for a list of sale orders,
+     * preventing the N+1 query problem.
+     *
+     * @return A Set containing the unique IDs of all used SaleOrders.
+     */
+    @Query("SELECT DISTINCT po.saleOrder.saleOrderId FROM ProductionOutput po")
+    Set<Long> findDistinctSaleOrderIdsInUse();
+
 }

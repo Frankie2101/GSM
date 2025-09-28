@@ -40,7 +40,7 @@
 
             {{#orderBOM}}
 
-                <form action="/order-boms/save" method="post" id="orderBOMForm">
+                <form action="/order-boms/save" method="post" id="orderBOMForm" data-is-edit-mode="{{#orderBOMId}}true{{/orderBOMId}}{{^orderBOMId}}false{{/orderBOMId}}">
                     {{! ... hidden inputs for CSRF, orderBOMId, saleOrderId ... }}
                     {{#_csrf}}
                         <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
@@ -67,12 +67,15 @@
                                 <div class="col-md-4">
                                     {{! Selecting a template will trigger a JS event to load details }}
                                     <label for="bomTemplateId" class="form-label">BOM Template</label>
-                                    <select class="form-select" id="bomTemplateId" name="bomTemplateId" required>
+                                    <select class="form-select" id="bomTemplateId" name="bomTemplateId" required {{#orderBOMId}}disabled{{/orderBOMId}}>
                                         <option value="">-- Please select --</option>
                                         {{#bomTemplates}}
                                             <option value="{{bomTemplateId}}" {{#selected}}selected{{/selected}}>{{bomTemplateName}}</option>
                                         {{/bomTemplates}}
                                     </select>
+                                    {{#orderBOMId}}
+                                        <input type="hidden" name="bomTemplateId" value="{{bomTemplateId}}" />
+                                    {{/orderBOMId}}
                                 </div>
                             </div>
                         </div>

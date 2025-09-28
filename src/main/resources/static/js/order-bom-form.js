@@ -85,8 +85,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const supplierOptionsHtml = supplierTemplate?.innerHTML || '<option value=""></option>';
         const materialGroupOptionsHtml = materialGroupTemplate?.innerHTML || '<option value=""></option>';
 
+        const isDisabled = detail.inPo;
+
         row.innerHTML = `
-            <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox"></td>
+            <td class="text-center align-middle">
+                <span class="${isDisabled ? 'disabled-checkbox-wrapper' : ''}">
+                    <input class="form-check-input row-checkbox" type="checkbox" ${isDisabled ? 'disabled' : ''}>
+                </span>
+            </td>
             <td class="align-middle text-center seq-number"></td>
             <input type="hidden" name="details[${index}].orderBOMDetailId" value="${detail.orderBOMDetailId || ''}">
             <input type="hidden" name="details[${index}].seq">
@@ -109,7 +115,11 @@ document.addEventListener('DOMContentLoaded', function() {
             <td><input type="number" class="form-control form-control-sm demand-qty-input" name="details[${index}].demandQty" value="${detail.demandQty || 0}" step="0.0001" readonly></td>
             <td><input type="number" step="0.01" class="form-control form-control-sm inventory-qty-input" name="details[${index}].inventoryQty" value="${(detail.inventoryQty || 0).toFixed(2)}"></td>
             <td><input type="number" step="0.01" class="form-control form-control-sm purchase-qty-input" name="details[${index}].purchaseQty" value="${(detail.purchaseQty || 0).toFixed(2)}"></td>
-            <td class="text-center align-middle"><button type="button" class="btn btn-sm delete-row-btn"><i class="bi bi-trash"></i></button></td>
+            <td class="text-center align-middle">
+                <button type="button" class="btn btn-sm btn-outline-danger delete-row-btn" ${isDisabled ? 'disabled' : ''}>
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
         `;
 
         //Set value to dropdown
@@ -147,6 +157,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     if(detail.colorCode && c.code === detail.colorCode) { option.selected = true; }
                     colorSelect.add(option);
                 });
+
+                const sizeSelect = row.querySelector('.size-select');
+                if (detail.materialType === 'FA') {
+                    sizeSelect.disabled = true;
+                    sizeSelect.innerHTML = '';
+                } else if (detail.materialType === 'TR' && colorSelect.value) {
+                    const sizes = await fetchMaterialSizes(codeSelect.value, colorSelect.value);
+                    sizeSelect.innerHTML = '<option value=""></option>';
+                    sizes.forEach(s => {
+                        const option = new Option(s.size, s.size);
+                        option.dataset.price = s.price;
+                        if (detail.size && s.size === detail.size) {
+                            option.selected = true;
+                        }
+                        sizeSelect.add(option);
+                    });
+                }
+
                 colorSelect.dispatchEvent(new Event('change'));
             }
 
@@ -332,6 +360,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    /**
+     * Event listener for the main "Delete" button.
+     * Handles bulk deletion of all rows selected via their checkboxes.
+     */
     deleteSelectedBtn.addEventListener('click', function() {
         const checkedBoxes = tableBody.querySelectorAll('.row-checkbox:checked');
         if (checkedBoxes.length === 0) { Swal.fire('No selection', 'Please select rows to delete.', 'warning'); return; }
@@ -339,15 +371,57 @@ document.addEventListener('DOMContentLoaded', function() {
         reindexRows();
     });
 
+    /**
+     * Event listener for all 'click' events inside the table body (event delegation).
+     * This single listener efficiently handles clicks on disabled items and individual delete buttons for each row.
+     */
     tableBody.addEventListener('click', function(e) {
-        if (e.target.closest('.delete-row-btn')) {
-            e.target.closest('tr').remove();
+        const target = e.target;
+        const row = target.closest('tr');
+        if (!row) return;
+
+        const wrapper = target.closest('.disabled-checkbox-wrapper');
+        const disabledDeleteBtn = target.closest('.delete-row-btn[disabled]');
+
+        if (wrapper || disabledDeleteBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'error',
+                title: 'Cannot delete, BOM Detail is existing in Purchase Order already.',
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true
+            });
+            return;
+        }
+
+        if (target.closest('.delete-row-btn')) {
+            row.remove();
             reindexRows();
+            return;
+        }
+
+        if (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'BUTTON' || target.tagName === 'I') {
+            return;
+        }
+
+        const checkbox = row.querySelector('.row-checkbox');
+        if (checkbox && !checkbox.disabled) {
+            checkbox.checked = !checkbox.checked;
         }
     });
 
+    /**
+     * Event listener for the "Select All" checkbox in the table header.
+     * Toggles the checked state of all individual row checkboxes at once.
+     */
     selectAllCheckbox.addEventListener('change', function() {
-        tableBody.querySelectorAll('.row-checkbox').forEach(checkbox => checkbox.checked = this.checked);
+        tableBody.querySelectorAll('.row-checkbox:not(:disabled)').forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
     });
 
     // --- INITIALIZATION LOGIC ---
@@ -525,4 +599,58 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    /**
+     * Provides robust, real-time validation for all numeric input fields.
+     */
+
+// A reusable selector for all numeric fields that require this validation.
+    const numericInputSelector = 'input[data-name="price"], input[data-name="netPrice"], ' +
+        'input[data-name="taxRate"], input[data-name="taxPercent"], ' +
+        '.price-input, .usage-input, .waste-input, .so-qty-input, ' +
+        '.inventory-qty-input, .purchase-qty-input';
+
+    /**
+     * Handles keyboard input BEFORE the character is entered.
+     * This proactively prevents the user from typing invalid characters.
+     */
+    document.addEventListener('keydown', function(event) {
+        if (event.target.matches(numericInputSelector)) {
+            const input = event.target;
+            const key = event.key;
+
+            // Allow control keys (Backspace, Tab, Arrows, etc.), function keys, and shortcuts (Ctrl+A, etc.)
+            if (event.ctrlKey || event.metaKey || key.length > 1) {
+                return;
+            }
+
+            // Prevent a second decimal point from being typed.
+            if (key === '.' && input.value.includes('.')) {
+                event.preventDefault();
+                return;
+            }
+
+            // Allow only digits (0-9) and a single decimal point.
+            if (!/[0-9.]/.test(key)) {
+                event.preventDefault();
+            }
+        }
+    });
+
+    /**
+     * Handles pasted content AFTER it has been entered.
+     * This sanitizes the input in case the user pastes text containing invalid characters.
+     */
+    document.addEventListener('input', function(event) {
+        if (event.target.matches(numericInputSelector)) {
+            const input = event.target;
+            // This logic is a simplified cleanup for pasted content.
+            if (isNaN(parseFloat(input.value))) {
+                input.value = '';
+            }
+            if (parseFloat(input.value) < 0) {
+                input.value = '';
+            }
+        }
+    });
 });

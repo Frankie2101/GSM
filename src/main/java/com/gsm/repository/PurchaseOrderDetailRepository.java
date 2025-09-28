@@ -3,7 +3,11 @@ package com.gsm.repository;
 import com.gsm.model.OrderBOMDetail;
 import com.gsm.model.PurchaseOrderDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.Set;
 
 /**
  * Spring Data JPA repository for the {@link PurchaseOrderDetail} entity.
@@ -22,6 +26,19 @@ public interface PurchaseOrderDetailRepository extends JpaRepository<PurchaseOrd
     /**
      * Checks if a PurchaseOrderDetail exists by the ID of its associated OrderBOMDetail.
      */
-    boolean existsByorderBOMDetail_OrderBOMDetailId(Long orderBOMDetailId);
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
+            "FROM PurchaseOrderDetail p " +
+            "WHERE p.orderBOMDetail.orderBOMDetailId = :orderBOMDetailId")
+    boolean existsByOrderBOMDetail_OrderBOMDetailId(@Param("orderBOMDetailId") Long orderBOMDetailId);
 
+    /**
+     * Finds all distinct OrderBOMDetail IDs that are used in any PurchaseOrderDetail
+     * for a given parent OrderBOM.
+     * @param orderBOMId The ID of the parent OrderBOM.
+     * @return A Set of Longs containing the used OrderBOMDetail IDs.
+     */
+    @Query("SELECT pod.orderBOMDetail.orderBOMDetailId " +
+            "FROM PurchaseOrderDetail pod " +
+            "WHERE pod.orderBOMDetail.orderBOM.orderBOMId = :orderBOMId")
+    Set<Long> findUsedOrderBOMDetailIdsByOrderBOMId(@Param("orderBOMId") Long orderBOMId);
 }

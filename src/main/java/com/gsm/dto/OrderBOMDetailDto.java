@@ -45,4 +45,6 @@ public class OrderBOMDetailDto {
     private Double demandQty; // Required material quantity
     private Double inventoryQty; // Quantity on hand
     private Double purchaseQty; // Quantity to be purchased
+
+    private boolean isInPo = false;
 }

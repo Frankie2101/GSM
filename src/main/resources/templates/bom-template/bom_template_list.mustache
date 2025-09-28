@@ -52,6 +52,9 @@
                         This form targets the delete endpoint and is controlled by JavaScript.
                     }}
                     <form action="/bom-templates/delete" method="post" id="deleteForm">
+                        {{#_csrf}}
+                            <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
+                        {{/_csrf}}
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead class="table-light">
@@ -71,7 +74,16 @@
                                 }}
                                 {{#templates}}
                                     <tr>
-                                        <td class="text-center align-middle"><input class="form-check-input row-checkbox" type="checkbox" name="selectedIds" value="{{bomTemplateId}}"></td>
+                                        <td class="text-center align-middle">
+                                            {{#deletable}}
+                                                <input class="form-check-input row-checkbox" type="checkbox" name="selectedIds" value="{{bomTemplateId}}">
+                                            {{/deletable}}
+                                            {{^deletable}}
+                                                <span class="disabled-checkbox-wrapper">
+                                                    <input class="form-check-input" type="checkbox" disabled>
+                                                </span>
+                                            {{/deletable}}
+                                        </td>
                                         <td class="p-3 align-middle">{{sequenceNumber}}</td>
                                         <td class="p-3 align-middle">{{bomTemplateCode}}</td>
                                         <td class="py-3 ps-2 align-middle">{{bomTemplateName}}</td>

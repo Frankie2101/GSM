@@ -275,13 +275,34 @@ public class OrderBOMServiceImpl implements OrderBOMService {
                     .sum();
         }
 
-        if (orderBOM.getDetails() != null) {
+        if (orderBOM.getDetails() != null && !orderBOM.getDetails().isEmpty()) {
+            Set<Long> usedDetailIds = purchaseOrderDetailRepository
+                    .findUsedOrderBOMDetailIdsByOrderBOMId(orderBOM.getOrderBOMId());
+
+            Set<String> supplierNames = orderBOM.getDetails().stream()
+                    .map(OrderBOMDetail::getSupplier)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            Map<String, Supplier> supplierMap = new HashMap<>();
+            if (!supplierNames.isEmpty()) {
+                supplierMap = supplierRepository.findBySupplierNameIn(new ArrayList<>(supplierNames))
+                        .stream()
+                        .collect(Collectors.toMap(Supplier::getSupplierName, Function.identity()));
+            }
+
             final int finalTotalSoQty = totalSoQty;
+            final Map<String, Supplier> finalSupplierMap = supplierMap;
+
             dto.setDetails(orderBOM.getDetails().stream()
                     .map(detail -> {
-                        OrderBOMDetailDto detailDto = convertDetailEntityToDto(detail);
+                        OrderBOMDetailDto detailDto = convertDetailEntityToDto(detail, finalSupplierMap);
                         detailDto.setSoQty(finalTotalSoQty);
                         detailDto.setDemandQty(detail.getDemandQuantity());
+
+                        if (usedDetailIds.contains(detail.getOrderBOMDetailId())) {
+                            detailDto.setInPo(true);
+                        }
                         return detailDto;
                     })
                     .collect(Collectors.toList()));
@@ -290,7 +311,7 @@ public class OrderBOMServiceImpl implements OrderBOMService {
         return dto;
     }
 
-    private OrderBOMDetailDto convertDetailEntityToDto(OrderBOMDetail detail) {
+    private OrderBOMDetailDto convertDetailEntityToDto(OrderBOMDetail detail, Map<String, Supplier> supplierMap) {
         OrderBOMDetailDto dto = new OrderBOMDetailDto();
         dto.setOrderBOMDetailId(detail.getOrderBOMDetailId());
         dto.setSeq(detail.getSeq());
@@ -298,27 +319,30 @@ public class OrderBOMServiceImpl implements OrderBOMService {
         dto.setMaterialCode(detail.getMaterialCode());
         dto.setMaterialName(detail.getMaterialName());
         dto.setUom(detail.getUom());
-
-        if (detail.getSupplier() != null && !detail.getSupplier().isEmpty()) {
-            supplierRepository.findBySupplierName(detail.getSupplier()).ifPresent(supplier -> {
-                dto.setSupplierId(supplier.getSupplierId());
-                dto.setSupplierName(supplier.getSupplierName());
-            });
-        }
-
         dto.setPrice(detail.getPrice());
         dto.setCurrency(detail.getCurrency());
         dto.setUsageValue(detail.getUsageValue());
         dto.setWaste(detail.getWaste());
-
         dto.setColorCode(detail.getColorCode());
         dto.setColorName(detail.getColorName());
         dto.setSize(detail.getSize());
+        dto.setFabricId(detail.getFabric() != null ? detail.getFabric().getFabricId() : null);
+        dto.setTrimId(detail.getTrim() != null ? detail.getTrim().getTrimId() : null);
 
-        if ("FA".equals(detail.getMaterialType()) && detail.getFabric() != null) {
-            dto.setFabricId(detail.getFabric().getFabricId());
-        } else if ("TR".equals(detail.getMaterialType()) && detail.getTrim() != null) {
-            dto.setTrimId(detail.getTrim().getTrimId());
+        if (detail.getMaterialGroup() != null) {
+            dto.setMaterialGroupId(detail.getMaterialGroup().getMaterialGroupId());
+            dto.setMaterialGroupName(detail.getMaterialGroup().getMaterialGroupName());
+
+        }
+
+        if (detail.getSupplier() != null) {
+            Supplier supplier = supplierMap.get(detail.getSupplier());
+            if (supplier != null) {
+                dto.setSupplierId(supplier.getSupplierId());
+                dto.setSupplierName(supplier.getSupplierName());
+            } else {
+                dto.setSupplierName(detail.getSupplier());
+            }
         }
 
         return dto;

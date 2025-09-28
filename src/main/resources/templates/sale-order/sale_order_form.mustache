@@ -51,7 +51,7 @@
                     </div>
                 </div>
 
-                <form action="/sale-orders/save" method="post" id="saleOrderForm">
+                <form action="/sale-orders/save" method="post" id="saleOrderForm" data-is-edit-mode="{{#saleOrderId}}true{{/saleOrderId}}{{^saleOrderId}}false{{/saleOrderId}}">
 
                     {{! ... CSRF token and hidden saleOrderId ... }}
                     {{#_csrf}}

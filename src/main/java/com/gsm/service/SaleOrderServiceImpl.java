@@ -10,12 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import com.gsm.repository.OrderBOMRepository;
+import com.gsm.repository.ProductionOutputRepository;
+import java.util.stream.Stream;
 
 /**
  * The concrete implementation of the {@link SaleOrderService} interface.
@@ -27,15 +27,21 @@ public class SaleOrderServiceImpl implements SaleOrderService {
     private final SaleOrderRepository saleOrderRepository;
     private final CustomerRepository customerRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final OrderBOMRepository orderBOMRepository;
+    private final ProductionOutputRepository productionOutputRepository;
 
 
     @Autowired
     public SaleOrderServiceImpl(SaleOrderRepository saleOrderRepository,
                                 CustomerRepository customerRepository,
-                                ProductVariantRepository productVariantRepository) {
+                                ProductVariantRepository productVariantRepository,
+                                OrderBOMRepository orderBOMRepository,
+                                ProductionOutputRepository productionOutputRepository) {
         this.saleOrderRepository = saleOrderRepository;
         this.customerRepository = customerRepository;
         this.productVariantRepository = productVariantRepository;
+        this.orderBOMRepository = orderBOMRepository;
+        this.productionOutputRepository = productionOutputRepository;
     }
 
     /** {@inheritDoc} */
@@ -134,11 +140,19 @@ public class SaleOrderServiceImpl implements SaleOrderService {
     @Override
     @Transactional(readOnly = true)
     public List<SaleOrderDto> findAll() {
+        Set<Long> bomIds = orderBOMRepository.findDistinctSaleOrderIdsInUse();
+        Set<Long> outputIds = productionOutputRepository.findDistinctSaleOrderIdsInUse();
+        Set<Long> nonDeletableIds = Stream.concat(bomIds.stream(), outputIds.stream()).collect(Collectors.toSet());
+
         AtomicInteger index = new AtomicInteger(1);
         return saleOrderRepository.findAll().stream()
                 .map(order -> {
                     SaleOrderDto dto = convertEntityToDtoSimple(order);
                     dto.setSequenceNumber((long) index.getAndIncrement());
+
+                    if (nonDeletableIds.contains(order.getSaleOrderId())) {
+                        dto.setDeletable(false);
+                    }
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -151,6 +165,10 @@ public class SaleOrderServiceImpl implements SaleOrderService {
     @Override
     @Transactional(readOnly = true)
     public List<SaleOrderDto> search(String keyword) {
+        Set<Long> bomIds = orderBOMRepository.findDistinctSaleOrderIdsInUse();
+        Set<Long> outputIds = productionOutputRepository.findDistinctSaleOrderIdsInUse();
+        Set<Long> nonDeletableIds = Stream.concat(bomIds.stream(), outputIds.stream()).collect(Collectors.toSet());
+
         String effectiveKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
         List<SaleOrder> orders = saleOrderRepository.search(effectiveKeyword);
         AtomicInteger index = new AtomicInteger(1);
@@ -158,6 +176,10 @@ public class SaleOrderServiceImpl implements SaleOrderService {
                 .map(order -> {
                     SaleOrderDto dto = convertEntityToDtoSimple(order);
                     dto.setSequenceNumber((long) index.getAndIncrement());
+
+                    if (nonDeletableIds.contains(order.getSaleOrderId())) {
+                        dto.setDeletable(false);
+                    }
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -172,6 +194,22 @@ public class SaleOrderServiceImpl implements SaleOrderService {
     @Override
     @Transactional
     public void deleteByIds(List<Long> ids) {
+        List<String> undeletableOrders = new ArrayList<>();
+        for (Long id : ids) {
+            boolean isInUse = orderBOMRepository.existsBySaleOrder_SaleOrderId(id) ||
+                    productionOutputRepository.existsBySaleOrder_SaleOrderId(id);
+            if (isInUse) {
+                saleOrderRepository.findById(id).ifPresent(order ->
+                        undeletableOrders.add(order.getSaleOrderNo()));
+            }
+        }
+
+        if (!undeletableOrders.isEmpty()) {
+            throw new IllegalStateException("Cannot delete Sale Orders: "
+                    + String.join(", ", undeletableOrders)
+                    + ". They are in use by an Order BOM or have Production Output.");
+        }
+
         for (Long id : ids) {
             saleOrderRepository.deleteById(id);
         }

@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', function() {
-            rowCheckboxes.forEach(checkbox => {
+            document.querySelectorAll('.row-checkbox:not(:disabled)').forEach(checkbox => {
                 checkbox.checked = this.checked;
             });
         });
@@ -44,9 +44,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 2. Display a confirmation dialog to the user before proceeding.
             Swal.fire({
-                title: `Delete ${count} Order(s)?`,
+                title: `Delete Order(s)?`,
                 text: `This action cannot be undone.`,
-                icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#5a6a85',
@@ -58,6 +57,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     deleteForm.submit();
                 }
             });
+        });
+    }
+
+    /**
+     * Event listener to provide feedback when a user clicks on a disabled checkbox.
+     *
+     * This uses event delegation on the table body to efficiently handle clicks. If a click
+     * occurs inside a `<span>` with the `disabled-checkbox-wrapper` class, it prevents
+     * any default action and displays a temporary "toast" notification (using SweetAlert2)
+     * to inform the user why the item cannot be selected for deletion.
+     */
+    const tableBody = document.querySelector('tbody');
+    if (tableBody) {
+        tableBody.addEventListener('click', function(event) {
+            const wrapper = event.target.closest('.disabled-checkbox-wrapper');
+            if (wrapper) {
+                event.preventDefault();
+                event.stopPropagation();
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Cannot delete: Order is in use.',
+                    showConfirmButton: false,
+                    timer: 3500,
+                    timerProgressBar: true
+                });
+            }
         });
     }
 });

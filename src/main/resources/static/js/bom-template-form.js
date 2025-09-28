@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
     const materialGroupTemplate = document.getElementById('material-groups-data-template');
+    const numericInputSelector = 'input[data-name="usageValue"], input[data-name="waste"]';
 
     /**
      * An object to cache material lists (Fabric, Trim) to avoid redundant API calls.
@@ -106,8 +107,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td><select class="form-select rm-code-select" data-name="rmId"></select></td>
                 <td><input type="text" class="form-control rm-name-input" readonly></td>
                 <td><input type="text" class="form-control rm-unit-input" readonly></td>
-                <td><input type="number" step="0.001" class="form-control" data-name="usageValue" required></td>
-                <td><input type="number" step="0.01" class="form-control" data-name="waste" value="0" required></td>
+                <td><input type="number" step="0.001" class="form-control" data-name="usageValue" value="0" required min="0" required></td>
+                <td><input type="number" step="0.01" class="form-control" data-name="waste" value="0" required min="0" required></td>
                 <td class="text-center align-middle">
                     <button type="button" class="btn btn-sm btn-outline-danger delete-row-btn"><i class="bi bi-trash"></i></button>
                 </td>
@@ -126,6 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
+
 
         if (tableBody) {
             tableBody.addEventListener('change', async function (e) {
@@ -201,6 +203,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
+    /**
+     * Loop through each existing detail row in the table on page load.
+     * This function initializes the dynamic dropdowns for each pre-existing row.
+     */
         document.querySelectorAll('#detailTableBody tr').forEach(row => {
             const groupSelect = row.querySelector('.material-group-select');
             const typeSelect = row.querySelector('.rm-type-select');
@@ -220,6 +226,49 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetchMaterials(typeValue, groupIdValue, codeSelect, selectedRmId);
             }
         });
+
+    /**
+     * Handles the 'keydown' event BEFORE a character is entered into the input field.
+     * This proactively prevents the user from typing invalid characters (e.g., letters, multiple decimal points, negative signs).
+     */
+    document.addEventListener('keydown', function(event) {
+        if (event.target.matches(numericInputSelector)) {
+            const input = event.target;
+            const key = event.key;
+
+            if (event.ctrlKey || event.metaKey || key.length > 1) {
+                return;
+            }
+
+            if (key === '.' && input.value.includes('.')) {
+                event.preventDefault();
+                return;
+            }
+
+            if (key === '-') {
+                event.preventDefault();
+                return;
+            }
+
+            if (!/[0-9.]/.test(key)) {
+                event.preventDefault();
+            }
+        }
+    });
+
+    /**
+     * Handles the 'input' event AFTER the value of the input has already changed.
+     * This is a failsafe to sanitize the content, such as pasting text,
+     * and to ensure the final value is not negative.
+     */
+    document.addEventListener('input', function(event) {
+        if (event.target.matches(numericInputSelector)) {
+            const input = event.target;
+            if (parseFloat(input.value) < 0) {
+                input.value = '';
+            }
+        }
+    });
 
         reindexAndNameRows();
 });

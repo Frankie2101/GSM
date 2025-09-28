@@ -58,6 +58,9 @@
                         It will only be submitted when the user confirms the deletion.
                     }}
                     <form action="/fabrics/delete" method="post" id="deleteForm">
+                        {{#_csrf}}
+                            <input type="hidden" name="{{parameterName}}" value="{{token}}"/>
+                        {{/_csrf}}
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead class="table-light">
