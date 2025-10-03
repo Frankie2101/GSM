@@ -45,4 +45,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT DISTINCT u.productionLine FROM User u WHERE u.productionLine IS NOT NULL AND u.productionLine <> ''")
     List<String> findDistinctProductionLines();
 
+
 }

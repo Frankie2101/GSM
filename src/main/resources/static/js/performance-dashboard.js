@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
 
-    // --- Biểu đồ 1: Daily Throughput ---
     const throughputCanvas = document.getElementById('dailyThroughputChart');
     if (throughputCanvas) {
         const throughputData = JSON.parse(throughputCanvas.dataset.chartData || '{}');
@@ -23,7 +22,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // --- Biểu đồ 2: S-Curve ---
     const sCurveCanvas = document.getElementById('sCurveChart');
     if (sCurveCanvas) {
         const sCurveData = JSON.parse(sCurveCanvas.dataset.chartData || '{}');

@@ -15,4 +15,6 @@ public interface UnitRepository extends JpaRepository<Unit, Long> {
      * @return An {@link Optional} containing the found unit.
      */
     Optional<Unit> findByUnitName(String unitName);
+
+    Optional<Unit> findByUnitCode(String unitCode);
 }

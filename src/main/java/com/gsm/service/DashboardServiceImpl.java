@@ -145,13 +145,13 @@ public class DashboardServiceImpl implements DashboardService {
         // Priority 1: Check for critical blockers like "Not Started".
         if (order.getProductionStartDate() != null && today.isAfter(order.getProductionStartDate()) && dto.getCutQty() == 0) {
             remarks.add("Not Started");
-            return String.join(", ", remarks); // Nếu chưa sản xuất, không cần kiểm tra các lỗi khác
+            return String.join(", ", remarks);
         }
 
         // Priority 2: Check for progress issues like "Short Qty Risk" or "Behind Pace".
         if (order.getShipDate() != null && today.isAfter(order.getShipDate().minusDays(3)) && dto.getOrderQty() > 0) {
             if (dto.getPckQty() < dto.getOrderQty() * 0.95) {
-                remarks.add("Short Qty Risk"); // Rõ nghĩa hơn: "Nguy cơ thiếu hàng"
+                remarks.add("Short Qty Risk");
             }
         }
 

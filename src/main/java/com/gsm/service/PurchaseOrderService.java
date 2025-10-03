@@ -15,9 +15,8 @@ public interface PurchaseOrderService {
 
     /**
      * Generates new Purchase Orders based on the details of a saved Order BOM.
-     * / Tạo các Đơn hàng mua (PO) mới dựa trên chi tiết của một Order BOM đã được lưu.
      * @param bomDto The saved OrderBOMDto containing items to be purchased. / DTO của OrderBOM đã lưu, chứa các mặt hàng cần mua.
-     * @return A map containing a summary message and a list of new PO numbers. / Một map chứa thông báo tóm tắt và danh sách các số PO mới.
+     * @return A map containing a summary message and a list of new PO numbers.
      */
     Map<String, Object> generatePOsFromOrderBOM(OrderBOMDto bomDto);
 

@@ -27,7 +27,7 @@ import org.springframework.security.core.userdetails.UserDetails; // THÊM IMPOR
 public class UserServiceImpl implements UserService {
 
     @Autowired private UserRepository userRepository;
-    @Autowired private PasswordEncoder passwordEncoder; // <-- TIÊM PasswordEncoder VÀO
+    @Autowired private PasswordEncoder passwordEncoder;
 
     /**
      * Saves a user. This handles both creation of new users and updates to existing ones.

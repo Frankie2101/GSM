@@ -1,0 +1,158 @@
+{{!
+    This is the main Mustache template for the Master Data Management page.
+    It uses a tabbed interface to allow users to view and import data for
+    Customers, Suppliers, and Units from a single, centralized location.
+}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Master Data Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="d-flex" id="wrapper">
+    {{! Import the shared sidebar menu }}
+    {{> layout/sidebar}}
+    <div id="page-content-wrapper">
+        {{! Import the shared header/navbar }}
+        {{> layout/header}}
+        <main class="container-fluid p-4">
+            <h1 class="h3 mb-3 text-gradient-custom">Master Data Management</h1>
+
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="customers-tab" data-bs-toggle="tab" data-bs-target="#customers" type="button" role="tab" aria-controls="customers" aria-selected="true">Customers</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="suppliers-tab" data-bs-toggle="tab" data-bs-target="#suppliers" type="button" role="tab" aria-controls="suppliers" aria-selected="false">Suppliers</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="units-tab" data-bs-toggle="tab" data-bs-target="#units" type="button" role="tab" aria-controls="units" aria-selected="false">Units</button>
+                </li>
+            </ul>
+
+            {{! Tab panes: Contains the content for each tab }}
+            <div class="tab-content" id="myTabContent">
+                {{! ----- CUSTOMERS TAB ----- }}
+                <div class="tab-pane fade show active" id="customers" role="tabpanel" aria-labelledby="customers-tab">
+                    <div class="card card-body border-top-0 rounded-bottom">
+                        <div class="d-flex justify-content-end mb-3">
+                            <button type="button" class="btn btn-success rounded-pill px-3 py-2" data-bs-toggle="modal" data-bs-target="#customerImportModal">
+                                <i class="bi bi-file-earmark-excel me-1"></i> Import Customers
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead><tr><th>Code</th><th>Name</th><th>Address</th><th>Phone</th><th>Email</th></tr></thead>
+                                <tbody>
+                                {{#customers}}
+                                    <tr><td>{{customerCode}}</td><td>{{customerName}}</td><td>{{address}}</td><td>{{contactPhone}}</td><td>{{contactEmail}}</td></tr>
+                                {{/customers}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                {{! ----- SUPPLIERS TAB ----- }}
+                <div class="tab-pane fade" id="suppliers" role="tabpanel" aria-labelledby="suppliers-tab">
+                    <div class="card card-body border-top-0 rounded-bottom">
+                        <div class="d-flex justify-content-end mb-3">
+                            <button type="button" class="btn btn-success rounded-pill px-3 py-2" data-bs-toggle="modal" data-bs-target="#supplierImportModal">
+                                <i class="bi bi-file-earmark-excel me-1"></i> Import Suppliers
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead><tr><th>Code</th><th>Name</th><th>Address</th><th>Phone</th><th>Email</th></tr></thead>
+                                <tbody>
+                                {{#suppliers}}
+                                    <tr><td>{{supplierCode}}</td><td>{{supplierName}}</td><td>{{address}}</td><td>{{contactPhone}}</td><td>{{contactEmail}}</td></tr>
+                                {{/suppliers}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                {{! ----- UNITS TAB ----- }}
+                <div class="tab-pane fade" id="units" role="tabpanel" aria-labelledby="units-tab">
+                    <div class="card card-body border-top-0 rounded-bottom">
+                        <div class="d-flex justify-content-end mb-3">
+                            <button type="button" class="btn btn-success rounded-pill px-3 py-2" data-bs-toggle="modal" data-bs-target="#unitImportModal">
+                                <i class="bi bi-file-earmark-excel me-1"></i> Import Units
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead><tr><th>Code</th><th>Name</th></tr></thead>
+                                <tbody>
+                                {{#units}}
+                                    <tr><td>{{unitCode}}</td><td>{{unitName}}</td></tr>
+                                {{/units}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        {{> layout/footer}}
+    </div>
+</div>
+
+{{! ----- MODALS FOR EACH TYPE ----- }}
+<div class="modal fade" id="customerImportModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form id="customerImportForm">
+            <div class="modal-header"><h5 class="modal-title">Import Customers</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3 text-muted small">
+                    <a href="/master-data/download-template/Customer_Import_Template.xlsx" target="_blank">Download Template</a>.
+                </div>
+                <input class="form-control" type="file" name="file" accept=".xlsx" required>
+                <div class="mt-3" id="customerImportMessage"></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button type="submit" class="btn btn-primary">Upload</button></div>
+        </form>
+    </div></div>
+</div>
+<div class="modal fade" id="supplierImportModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form id="supplierImportForm">
+            <div class="modal-header"><h5 class="modal-title">Import Suppliers</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3 text-muted small">
+                    <a href="/master-data/download-template/Supplier_Import_Template.xlsx" target="_blank">Download Template</a>.
+                </div>
+                <input class="form-control" type="file" name="file" accept=".xlsx" required>
+                <div class="mt-3" id="supplierImportMessage"></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button type="submit" class="btn btn-primary">Upload</button></div>
+        </form>
+    </div></div>
+</div>
+<div class="modal fade" id="unitImportModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form id="unitImportForm">
+            <div class="modal-header"><h5 class="modal-title">Import Units</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3 text-muted small">
+                    <a href="/master-data/download-template/Unit_Import_Template.xlsx" target="_blank">Download Template</a>.
+                </div>
+                <input class="form-control" type="file" name="file" accept=".xlsx" required>
+                <div class="mt-3" id="unitImportMessage"></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button type="submit" class="btn btn-primary">Upload</button></div>
+        </form>
+    </div></div>
+</div>
+
+{{> layout/scripts}}
+<script src="/js/master-data.js"></script>
+</body>
+</html>

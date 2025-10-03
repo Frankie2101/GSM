@@ -8,10 +8,10 @@ import lombok.NoArgsConstructor;
 public class MaterialRiskDto {
     private String saleOrderNo;
     private String style;
-    private String productionStartDate; // Dạng String MM/dd/yy
-    private String materialDescription; // Mô tả NPL chính
+    private String productionStartDate;
+    private String materialDescription;
     private String purchaseOrderNo;
-    private String poArrivalDate; // Dạng String MM/dd/yy
-    private long daysDifference; // Chênh lệch ngày, âm là rủi ro
-    private String riskStatus; // "At Risk" hoặc "On Track"
+    private String poArrivalDate;
+    private long daysDifference;
+    private String riskStatus;
 }

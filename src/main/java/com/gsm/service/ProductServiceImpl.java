@@ -67,7 +67,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductDto findById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-        return convertEntityToDto(product); // Logic kiểm tra đã nằm trong convertEntityToDto
+        return convertEntityToDto(product);
     }
 
     /**
