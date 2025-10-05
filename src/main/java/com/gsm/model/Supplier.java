@@ -23,7 +23,7 @@ public class Supplier extends AuditableEntity {
     @Column(name = "SupplierCode", nullable = false, unique = true, length = 50)
     private String supplierCode;
 
-    @Column(name = "SupplierName", nullable = false, length = 100)
+    @Column(name = "SupplierName", nullable = false, unique = true, length = 100)
     private String supplierName;
 
     @Column(name = "Address", length = 255)
@@ -41,7 +41,7 @@ public class Supplier extends AuditableEntity {
     @Column(name = "PaymentTerm", length = 100)
     private String paymentTerm;
 
-    @Column(name = "CurrencyCode", length = 3)
+    @Column(name = "CurrencyCode", nullable = false, length = 3)
     private String currencyCode;
 
     @Column(name = "TaxRate")

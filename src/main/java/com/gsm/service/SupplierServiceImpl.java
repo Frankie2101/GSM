@@ -54,6 +54,20 @@ public class SupplierServiceImpl implements SupplierService {
                 supplier.setAddress(getCellValueAsString(row.getCell(2)));
                 supplier.setContactPhone(getCellValueAsString(row.getCell(3)));
                 supplier.setContactEmail(getCellValueAsString(row.getCell(4)));
+                supplier.setDeliveryTerm(getCellValueAsString(row.getCell(5)));
+                supplier.setPaymentTerm(getCellValueAsString(row.getCell(6)));
+                supplier.setCurrencyCode(getCellValueAsString(row.getCell(7)));
+
+                try {
+                    String taxRateStr = getCellValueAsString(row.getCell(8));
+                    if (!taxRateStr.isEmpty()) {
+                        supplier.setTaxRate(Double.parseDouble(taxRateStr));
+                    }
+                } catch (NumberFormatException e) {
+                    System.err.println("Invalid TaxRate format for supplier code: " + supplierCode);
+                }
+
+                supplier.setCountryCode(getCellValueAsString(row.getCell(9)));
 
                 suppliersToSave.add(supplier);
             }

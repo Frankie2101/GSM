@@ -34,13 +34,13 @@ public class Customer extends AuditableEntity {
     /**
      * The full name of the customer.
      */
-    @Column(name = "CustomerName", nullable = false, length = 100)
+    @Column(name = "CustomerName", nullable = false, unique = true, length = 100)
     private String customerName;
 
     /**
      * The physical address of the customer.
      */
-    @Column(name = "Address", length = 255)
+    @Column(name = "Address", nullable = false, length = 255)
     private String address;
 
     /**
@@ -70,12 +70,12 @@ public class Customer extends AuditableEntity {
     /**
      * The default currency code used for transactions (e.g., "USD").
      */
-    @Column(name = "CurrencyCode", length = 3)
+    @Column(name = "CurrencyCode", nullable = false, length = 3)
     private String currencyCode;
 
     /**
      * The country code of the customer (e.g., "VN").
      */
-    @Column(name = "CountryCode", length = 10)
+    @Column(name = "CountryCode", nullable = false, length = 10)
     private String countryCode;
 }

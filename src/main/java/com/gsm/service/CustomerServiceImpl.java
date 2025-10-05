@@ -72,6 +72,10 @@ public class CustomerServiceImpl implements CustomerService {
                 customer.setAddress(getCellValueAsString(row.getCell(2)));
                 customer.setContactPhone(getCellValueAsString(row.getCell(3)));
                 customer.setContactEmail(getCellValueAsString(row.getCell(4)));
+                customer.setDeliveryTerm(getCellValueAsString(row.getCell(5)));
+                customer.setPaymentTerm(getCellValueAsString(row.getCell(6)));
+                customer.setCurrencyCode(getCellValueAsString(row.getCell(7)));
+                customer.setCountryCode(getCellValueAsString(row.getCell(8)));
 
                 customersToSave.add(customer);
             }
