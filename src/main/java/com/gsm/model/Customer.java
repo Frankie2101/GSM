@@ -41,42 +41,41 @@ public class Customer extends AuditableEntity {
      * The physical address of the customer.
      */
     @Column(name = "Address", nullable = false, length = 255)
-    private String address  = "";
+    private String address;
 
     /**
      * The contact phone number for the customer.
      */
     @Column(name = "ContactPhone", length = 20)
-    private String contactPhone  = "";
+    private String contactPhone;
 
     /**
      * The contact email address for the customer.
      */
     @Column(name = "ContactEmail", length = 100)
-    private String contactEmail  = "";
+    private String contactEmail;
 
     /**
      * Business delivery terms.
      */
     @Column(name = "DeliveryTerm", length = 100)
-    private String deliveryTerm  = "";
+    private String deliveryTerm;
 
     /**
      * Business payment terms.
      */
     @Column(name = "PaymentTerm", length = 100)
-    private String paymentTerm  = "";
+    private String paymentTerm;
 
     /**
      * The default currency code used for transactions (e.g., "USD").
      */
     @Column(name = "CurrencyCode", nullable = false, length = 3)
-    private String currencyCode  = "";
+    private String currencyCode;
 
     /**
      * The country code of the customer (e.g., "VN").
      */
     @Column(name = "CountryCode", nullable = false, length = 10)
-    private String countryCode  = "";
-
+    private String countryCode;
 }

@@ -78,9 +78,11 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     /**
-     * Safely reads a cell's value and returns it as a String.
-     * @param cell The Excel cell to read from.
-     * @return The cell's content as a trimmed String.
+     * Safely reads a cell's value and returns it as a String, regardless of the cell type.
+     * This prevents "Cannot get a STRING value from a NUMERIC cell" errors.
+     *
+     * @param cell The Excel cell to read from. Can be null.
+     * @return The cell's content as a trimmed String. Returns an empty string if the cell is null.
      */
     private String getCellValueAsString(Cell cell) {
         if (cell == null) {
