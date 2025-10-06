@@ -47,10 +47,32 @@
                         </div>
                         <div class="table-responsive">
                             <table class="table table-hover">
-                                <thead><tr><th>Code</th><th>Name</th><th>Address</th><th>Phone</th><th>Email</th><th>Delivery Term</th><th>Payment Term</th><th>Currency</th><th>Country</th></tr></thead>
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Name</th>
+                                        <th>Address</th>
+                                        <th>Phone</th>
+                                        <th>Email</th>
+                                        <th>Delivery Term</th>
+                                        <th>Payment Term</th>
+                                        <th>Currency</th>
+                                        <th>Country</th>
+                                    </tr>
+                                </thead>
                                 <tbody>
                                 {{#customers}}
-                                    <tr><td>{{customerCode}}</td><td>{{customerName}}</td><td>{{address}}</td><td>{{contactPhone}}</td><td>{{contactEmail}}</td><td>{{deliveryTerm}}</td><td>{{paymentTerm}}</td><td>{{currencyCode}}</td><td>{{country}}</td></tr>
+                                    <tr>
+                                        <td>{{customerCode}}</td>
+                                        <td>{{customerName}}</td>
+                                        <td>{{address}}</td>
+                                        <td>{{contactPhone}}</td>
+                                        <td>{{contactEmail}}</td>
+                                        <td>{{deliveryTerm}}</td>
+                                        <td>{{paymentTerm}}</td>
+                                        <td>{{currencyCode}}</td>
+                                        <td>{{countryCode}}</td>
+                                    </tr>
                                 {{/customers}}
                                 </tbody>
                             </table>
@@ -68,10 +90,34 @@
                         </div>
                         <div class="table-responsive">
                             <table class="table table-hover">
-                                <thead><tr><th>Code</th><th>Name</th><th>Address</th><th>Phone</th><th>Email</th></tr></thead>
+                                <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Address</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                    <th>Delivery Term</th>
+                                    <th>Payment Term</th>
+                                    <th>Currency</th>
+                                    <th>Country</th>
+                                    <th>Tax Rate</th>
+                                </tr>
+                                </thead>
                                 <tbody>
                                 {{#suppliers}}
-                                    <tr><td>{{supplierCode}}</td><td>{{supplierName}}</td><td>{{address}}</td><td>{{contactPhone}}</td><td>{{contactEmail}}</td></tr>
+                                    <tr>
+                                        <td>{{supplierCode}}</td>
+                                        <td>{{supplierName}}</td>
+                                        <td>{{address}}</td>
+                                        <td>{{contactPhone}}</td>
+                                        <td>{{contactEmail}}</td>
+                                        <td>{{deliveryTerm}}</td>
+                                        <td>{{paymentTerm}}</td>
+                                        <td>{{currencyCode}}</td>
+                                        <td>{{countryCode}}</td>
+                                        <td>{{taxRate}}</td>
+                                    </tr>
                                 {{/suppliers}}
                                 </tbody>
                             </table>
@@ -89,10 +135,18 @@
                         </div>
                         <div class="table-responsive">
                             <table class="table table-hover">
-                                <thead><tr><th>Code</th><th>Name</th></tr></thead>
+                                <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                </tr>
+                                </thead>
                                 <tbody>
                                 {{#units}}
-                                    <tr><td>{{unitCode}}</td><td>{{unitName}}</td></tr>
+                                    <tr>
+                                        <td>{{unitCode}}</td>
+                                        <td>{{unitName}}</td>
+                                    </tr>
                                 {{/units}}
                                 </tbody>
                             </table>

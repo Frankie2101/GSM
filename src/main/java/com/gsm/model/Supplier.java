@@ -27,26 +27,27 @@ public class Supplier extends AuditableEntity {
     private String supplierName;
 
     @Column(name = "Address", length = 255)
-    private String address;
+    private String address = "";
 
     @Column(name = "ContactPhone", length = 20)
-    private String contactPhone;
+    private String contactPhone = "";
 
     @Column(name = "ContactEmail", length = 100)
-    private String contactEmail;
+    private String contactEmail = "";
 
     @Column(name = "DeliveryTerm", length = 100)
-    private String deliveryTerm;
+    private String deliveryTerm = "";
 
     @Column(name = "PaymentTerm", length = 100)
-    private String paymentTerm;
+    private String paymentTerm = "";
 
     @Column(name = "CurrencyCode", nullable = false, length = 3)
-    private String currencyCode;
+    private String currencyCode = "";
 
-    @Column(name = "TaxRate")
+    @Column(name = "TaxRate", nullable = false)
     private Double taxRate;
 
-    @Column(name = "CountryCode", length = 10)
-    private String countryCode;
+    @Column(name = "CountryCode",  nullable = false, length = 10)
+    private String countryCode = "";
+
 }
