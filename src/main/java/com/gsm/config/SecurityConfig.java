@@ -132,9 +132,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/login") // Trang login cho web desktop
+                        .loginPage("/login")
                         .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/sale-orders", true)
+                        .defaultSuccessUrl("/dashboard", true)
                         .failureUrl("/login?error=true")
                         .permitAll()
                 )
