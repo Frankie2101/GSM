@@ -17,11 +17,13 @@ public class OrderBOMDetailDto {
     private Long fabricId;
     private Long trimId;
 
+    private String materialCode;
+    private String materialName;
+    private String colorName;
+
     /**
      * Fields that are displayed and can be edited by the user.
      */
-    private String materialCode;
-    private String materialName;
     private String uom;
     private Long supplierId;
     private String supplierName;
@@ -35,8 +37,7 @@ public class OrderBOMDetailDto {
      * Color and size information for the material.
      */
     private String colorCode;
-    private String colorName;
-    private String size;
+        private String size;
 
     /**
      * Quantity-related fields.

@@ -233,8 +233,6 @@ public class OrderBOMServiceImpl implements OrderBOMService {
     private void mapDtoToDetailEntity(OrderBOMDetailDto detailDto, OrderBOMDetail detail) {
         detail.setSeq(detailDto.getSeq());
         detail.setMaterialType(detailDto.getMaterialType());
-        detail.setMaterialCode(detailDto.getMaterialCode());
-        detail.setMaterialName(detailDto.getMaterialName());
         detail.setUom(detailDto.getUom());
 
         if (detailDto.getSupplierId() != null) {
@@ -252,7 +250,6 @@ public class OrderBOMServiceImpl implements OrderBOMService {
         detail.setWaste(detailDto.getWaste());
         detail.setDemandQuantity(detailDto.getDemandQty());
         detail.setColorCode(detailDto.getColorCode());
-        detail.setColorName(detailDto.getColorName());
         detail.setSize(detailDto.getSize());
 
         if (detailDto.getMaterialGroupId() != null) {
@@ -263,6 +260,8 @@ public class OrderBOMServiceImpl implements OrderBOMService {
         } else if ("TR".equals(detailDto.getMaterialType()) && detailDto.getTrimId() != null) {
             detail.setTrim(trimRepository.findById(detailDto.getTrimId()).orElse(null));
         }
+
+
     }
 
     private OrderBOMDto convertEntityToDto(OrderBOM orderBOM) {
@@ -316,15 +315,12 @@ public class OrderBOMServiceImpl implements OrderBOMService {
         dto.setOrderBOMDetailId(detail.getOrderBOMDetailId());
         dto.setSeq(detail.getSeq());
         dto.setMaterialType(detail.getMaterialType());
-        dto.setMaterialCode(detail.getMaterialCode());
-        dto.setMaterialName(detail.getMaterialName());
         dto.setUom(detail.getUom());
         dto.setPrice(detail.getPrice());
         dto.setCurrency(detail.getCurrency());
         dto.setUsageValue(detail.getUsageValue());
         dto.setWaste(detail.getWaste());
         dto.setColorCode(detail.getColorCode());
-        dto.setColorName(detail.getColorName());
         dto.setSize(detail.getSize());
         dto.setFabricId(detail.getFabric() != null ? detail.getFabric().getFabricId() : null);
         dto.setTrimId(detail.getTrim() != null ? detail.getTrim().getTrimId() : null);
@@ -332,8 +328,36 @@ public class OrderBOMServiceImpl implements OrderBOMService {
         if (detail.getMaterialGroup() != null) {
             dto.setMaterialGroupId(detail.getMaterialGroup().getMaterialGroupId());
             dto.setMaterialGroupName(detail.getMaterialGroup().getMaterialGroupName());
-
         }
+
+        if ("FA".equals(detail.getMaterialType()) && detail.getFabric() != null) {
+            Fabric fabric = detail.getFabric();
+            dto.setMaterialCode(fabric.getFabricCode());
+            dto.setMaterialName(fabric.getFabricName());
+
+            if (detail.getColorCode() != null && fabric.getFabricColors() != null) {
+                String colorName = fabric.getFabricColors().stream()
+                        .filter(fc -> detail.getColorCode().equals(fc.getColor()))
+                        .findFirst()
+                        .map(FabricColor::getColorName)
+                        .orElse("");
+                dto.setColorName(colorName);
+            }
+        } else if ("TR".equals(detail.getMaterialType()) && detail.getTrim() != null) {
+            Trim trim = detail.getTrim();
+            dto.setMaterialCode(trim.getTrimCode());
+            dto.setMaterialName(trim.getTrimName());
+
+            if (detail.getColorCode() != null && detail.getSize() != null && trim.getVariants() != null) {
+                String colorName = trim.getVariants().stream()
+                        .filter(variant -> detail.getColorCode().equals(variant.getColorCode()) && detail.getSize().equals(variant.getSizeCode()))
+                        .findFirst()
+                        .map(TrimVariant::getColorName)
+                        .orElse("");
+                dto.setColorName(colorName);
+            }
+        }
+
 
         if (detail.getSupplier() != null) {
             Supplier supplier = supplierMap.get(detail.getSupplier());

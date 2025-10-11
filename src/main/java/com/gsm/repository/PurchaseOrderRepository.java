@@ -87,12 +87,17 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
             "so.saleOrderNo AS saleOrderNo, " +
             "p.productCode AS style, " +
             "so.productionStartDate AS productionStartDate, " +
-            "obd.materialName AS materialDescription, " +
+            "CASE " +
+            "   WHEN obd.materialType = 'FA' THEN fab.fabricName " +
+            "   ELSE tr.trimName " +
+            "END AS materialDescription, " +
             "po.purchaseOrderNo AS purchaseOrderNo, " +
             "po.arrivalDate AS poArrivalDate " +
             "FROM PurchaseOrderDetail pod " +
             "JOIN pod.purchaseOrder po " +
             "JOIN pod.orderBOMDetail obd " +
+            "   LEFT JOIN obd.fabric fab " +
+            "   LEFT JOIN obd.trim tr " +
             "JOIN obd.orderBOM ob " +
             "JOIN ob.saleOrder so " +
             "JOIN so.details sod " +

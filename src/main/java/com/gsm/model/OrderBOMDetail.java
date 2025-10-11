@@ -14,6 +14,7 @@ import javax.persistence.*;
 public class OrderBOMDetail extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "OrderBOMDetailId")
     private Long orderBOMDetailId;
 
     /**
@@ -26,7 +27,7 @@ public class OrderBOMDetail extends AuditableEntity {
     /**
      * The sequence number for ordering the details.
      */
-    @Column(nullable = false)
+    @Column(name = "Seq", nullable = false)
     private Integer seq;
 
     /**
@@ -36,34 +37,25 @@ public class OrderBOMDetail extends AuditableEntity {
     @JoinColumn(name = "MaterialGroupId")
     private MaterialGroup materialGroup;
 
-    @Column(length = 50)
+    @Column(name = "ColorCode", length = 50)
     private String colorCode;
 
-    @Column(length = 100)
-    private String colorName;
-
-    @Column(length = 50)
+    @Column(name = "Size", length = 50)
     private String size;
 
     @Column(name = "MaterialType", nullable = false, length = 2) // "FA" for Fabric, "TR" for Trim
     private String materialType;
 
-    @Column(length = 100)
-    private String materialCode;
-
-    @Column(length = 255)
-    private String materialName;
-
-    @Column(length = 50)
+    @Column(name = "UOM", length = 50)
     private String uom; // Unit of Measure
 
-    @Column(nullable = false)
+    @Column(name = "UsageValue", nullable = false)
     private Double usageValue; // Consumption rate
 
-    @Column(nullable = false)
+    @Column(name = "Waste", nullable = false)
     private Double waste;  // Waste percentage
 
-    @Column
+    @Column(name = "DemandQuantity")
     private Double demandQuantity;
 
     /**
@@ -80,11 +72,12 @@ public class OrderBOMDetail extends AuditableEntity {
     @JoinColumn(name = "TrimId", nullable = true)
     private Trim trim;
 
-    @Column(length = 255)
+    @Column(name = "Supplier",length = 255)
     private String supplier;
 
+    @Column(name = "Price")
     private Double price;
 
-    @Column(length = 3)
+    @Column(name = "Currency", length = 3)
     private String currency;
 }

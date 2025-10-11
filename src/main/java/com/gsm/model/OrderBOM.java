@@ -17,6 +17,7 @@ import java.util.List;
 public class OrderBOM extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "OrderBOMId")
     private Long orderBOMId;
 
     /**

@@ -16,6 +16,7 @@ public class PurchaseOrderDetail extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "PurchaseOrderDetailId")
     private Long purchaseOrderDetailId;
 
     /**
@@ -36,7 +37,7 @@ public class PurchaseOrderDetail extends AuditableEntity {
     /**
      * The quantity of the material being purchased.
      */
-    @Column(nullable = false)
+    @Column(name = "PurchaseQuantity", nullable = false)
     private Double purchaseQuantity;
 
     /**

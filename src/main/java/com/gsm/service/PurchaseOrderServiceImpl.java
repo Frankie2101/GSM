@@ -170,11 +170,11 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         Long fabricId = null;
         Long trimId = null;
         String materialCode = "N/A";
+        String materialName = "N/A";
 
         if (bomDetail != null) {
             dto.setOrderBOMDetailId(bomDetail.getOrderBOMDetailId());
             dto.setMaterialType(bomDetail.getMaterialType());
-            dto.setMaterialName(bomDetail.getMaterialName());
             dto.setColorCode(bomDetail.getColorCode());
             dto.setSize(bomDetail.getSize());
             dto.setUom(bomDetail.getUom());
@@ -182,9 +182,11 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             if ("FA".equals(bomDetail.getMaterialType()) && bomDetail.getFabric() != null) {
                 fabricId = bomDetail.getFabric().getFabricId();
                 materialCode = bomDetail.getFabric().getFabricCode();
+                materialName = bomDetail.getFabric().getFabricName();
             } else if ("TR".equals(bomDetail.getMaterialType()) && bomDetail.getTrim() != null) {
                 trimId = bomDetail.getTrim().getTrimId();
                 materialCode = bomDetail.getTrim().getTrimCode();
+                materialName = bomDetail.getTrim().getTrimName();
             }
         }
 
@@ -192,6 +194,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         dto.setFabricId(fabricId);
         dto.setTrimId(trimId);
         dto.setMaterialCode(materialCode);
+        dto.setMaterialName(materialName);
         dto.setPurchaseQuantity(quantity);
         dto.setNetPrice(price);
         dto.setTaxRate(detail.getTaxRate());

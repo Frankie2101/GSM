@@ -25,7 +25,7 @@ public class PurchaseOrder extends AuditableEntity {
     /**
      * The unique, business-logic-driven number for the purchase order.
      */
-    @Column(length = 100, nullable = false, unique = true)
+    @Column(name = "PurchaseOrderNo", length = 100, nullable = false, unique = true)
     private String purchaseOrderNo;
 
     /**
@@ -44,30 +44,31 @@ public class PurchaseOrder extends AuditableEntity {
     /**
      * The currency code for this purchase order (e.g., "VND", "USD").
      */
-    @Column(length = 3)
+    @Column(name = "CurrencyCode", length = 3)
     private String currencyCode;
 
     /**
      * Commercial term specifying delivery conditions (e.g., "FOB", "CIF").
      */
-    @Column(length = 100)
+    @Column(name = "DeliveryTerm", length = 100)
     private String deliveryTerm;
 
     /**
      * Commercial term specifying payment conditions (e.g., "T/T in 30 days").
      */
-    @Column(length = 100)
+    @Column(name = "PaymentTerm", length = 100)
     private String paymentTerm;
 
     /**
      * The expected arrival date of the materials.
      */
+    @Column(name = "ArrivalDate")
     private LocalDate arrivalDate;
 
     /**
      * The current status of the purchase order (e.g., "New", "Submitted", "Approved").
      */
-    @Column(name = "status", nullable = false, length = 50)
+    @Column(name = "Status", nullable = false, length = 50)
     private String status = "New";
 
     /**
