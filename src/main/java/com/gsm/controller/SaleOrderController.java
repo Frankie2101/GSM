@@ -3,7 +3,7 @@ package com.gsm.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gsm.dto.SaleOrderDto;
-import com.gsm.enums.SaleOrderStatus; // Import SaleOrderStatus
+import com.gsm.enums.SaleOrderStatus;
 import com.gsm.exception.DuplicateResourceException;
 import com.gsm.model.Customer;
 import com.gsm.repository.CustomerRepository;

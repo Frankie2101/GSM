@@ -2,7 +2,7 @@ package com.gsm.dto;
 
 import com.gsm.enums.SaleOrderStatus;
 import lombok.Data;
-import org.springframework.format.annotation.DateTimeFormat; // THÊM IMPORT NÀY
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;

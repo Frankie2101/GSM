@@ -101,11 +101,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             // Add detail lines
             for (OrderBOMDetailDto detailDto : detailsForThisPO) {
                 PurchaseOrderDetail poDetail = new PurchaseOrderDetail();
-                OrderBOMDetail bomDetailRef = new OrderBOMDetail();
-                bomDetailRef.setOrderBOMDetailId(detailDto.getOrderBOMDetailId());
+                OrderBOMDetail bomDetailRef = orderBOMDetailRepository.findById(detailDto.getOrderBOMDetailId())
+                        .orElseThrow(() -> new ResourceNotFoundException("FATAL: OrderBOMDetail not found during PO generation. ID: " + detailDto.getOrderBOMDetailId()));
+
                 poDetail.setOrderBOMDetail(bomDetailRef);
                 poDetail.setPurchaseQuantity(detailDto.getPurchaseQty());
                 poDetail.setNetPrice(detailDto.getPrice());
+
                 po.addDetail(poDetail);
             }
 
@@ -157,49 +159,44 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     }
 
     private PurchaseOrderDetailDto convertDetailEntityToDto(PurchaseOrderDetail detail) {
-        if (detail == null) return null;
+        if (detail == null) {
+            return null;
+        }
 
         PurchaseOrderDetailDto dto = new PurchaseOrderDetailDto();
+        OrderBOMDetail bomDetail = detail.getOrderBOMDetail(); // Không cần kiểm tra null ở đây
+
+        dto.setOrderBOMDetailId(bomDetail.getOrderBOMDetailId());
+        dto.setMaterialType(bomDetail.getMaterialType());
+        dto.setColorCode(bomDetail.getColorCode());
+        dto.setSize(bomDetail.getSize());
+        dto.setUom(bomDetail.getUom());
+
+        if (bomDetail.getMaterialGroup() != null) {
+            dto.setMaterialGroupId(bomDetail.getMaterialGroup().getMaterialGroupId());
+            dto.setMaterialGroupName(bomDetail.getMaterialGroup().getMaterialGroupName()); // ✅ Đã sửa
+        }
+
+        if ("FA".equals(bomDetail.getMaterialType()) && bomDetail.getFabric() != null) {
+            dto.setFabricId(bomDetail.getFabric().getFabricId());
+            dto.setMaterialCode(bomDetail.getFabric().getFabricCode());
+            dto.setMaterialName(bomDetail.getFabric().getFabricName());
+        } else if ("TR".equals(bomDetail.getMaterialType()) && bomDetail.getTrim() != null) {
+            dto.setTrimId(bomDetail.getTrim().getTrimId());
+            dto.setMaterialCode(bomDetail.getTrim().getTrimCode());
+            dto.setMaterialName(bomDetail.getTrim().getTrimName());
+        }
+
+        dto.setPurchaseOrderDetailId(detail.getPurchaseOrderDetailId());
+        dto.setPurchaseQuantity(detail.getPurchaseQuantity());
+        dto.setNetPrice(detail.getNetPrice());
+        dto.setTaxRate(detail.getTaxRate());
+        dto.setReceivedQuantity(detail.getReceivedQuantity());
 
         Double quantity = detail.getPurchaseQuantity() != null ? detail.getPurchaseQuantity() : 0.0;
         Double price = detail.getNetPrice() != null ? detail.getNetPrice() : 0.0;
         Double tax = detail.getTaxRate() != null ? detail.getTaxRate() : 0.0;
-        Double lineAmount = quantity * price * (1 + tax / 100.0);
-
-        OrderBOMDetail bomDetail = detail.getOrderBOMDetail();
-        Long fabricId = null;
-        Long trimId = null;
-        String materialCode = "N/A";
-        String materialName = "N/A";
-
-        if (bomDetail != null) {
-            dto.setOrderBOMDetailId(bomDetail.getOrderBOMDetailId());
-            dto.setMaterialType(bomDetail.getMaterialType());
-            dto.setColorCode(bomDetail.getColorCode());
-            dto.setSize(bomDetail.getSize());
-            dto.setUom(bomDetail.getUom());
-
-            if ("FA".equals(bomDetail.getMaterialType()) && bomDetail.getFabric() != null) {
-                fabricId = bomDetail.getFabric().getFabricId();
-                materialCode = bomDetail.getFabric().getFabricCode();
-                materialName = bomDetail.getFabric().getFabricName();
-            } else if ("TR".equals(bomDetail.getMaterialType()) && bomDetail.getTrim() != null) {
-                trimId = bomDetail.getTrim().getTrimId();
-                materialCode = bomDetail.getTrim().getTrimCode();
-                materialName = bomDetail.getTrim().getTrimName();
-            }
-        }
-
-        dto.setPurchaseOrderDetailId(detail.getPurchaseOrderDetailId());
-        dto.setFabricId(fabricId);
-        dto.setTrimId(trimId);
-        dto.setMaterialCode(materialCode);
-        dto.setMaterialName(materialName);
-        dto.setPurchaseQuantity(quantity);
-        dto.setNetPrice(price);
-        dto.setTaxRate(detail.getTaxRate());
-        dto.setReceivedQuantity(detail.getReceivedQuantity());
-        dto.setLineAmount(lineAmount);
+        dto.setLineAmount(quantity * price * (1 + tax / 100.0));
 
         return dto;
     }
@@ -248,42 +245,30 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("PO not found: " + dto.getPurchaseOrderId()))
                 : new PurchaseOrder();
 
-        // Step 2: Check business rule: only 'New' or 'Rejected' POs can be edited.
-        if (po.getPurchaseOrderId() != null && !"New".equals(po.getStatus()) && !"Rejected".equals(po.getStatus())) {
-            throw new IllegalStateException("Only POs with status 'New' or 'Rejected' can be edited.");
-        }
-
-        // Step 3: Map all header-level data (supplier, dates, terms) from the DTO to the entity.
+        // Step 2: Map all header-level data (supplier, dates, terms) from the DTO to the entity.
         mapDtoToEntityHeader(dto, po);
 
-        // Step 4: Clear the existing details collection on the entity.
-        po.getDetails().clear();
+        // Step 3: Create a Map to find the fields with ID
+        Map<Long, PurchaseOrderDetail> existingDetailsMap = po.getDetails().stream()
+                .collect(Collectors.toMap(PurchaseOrderDetail::getPurchaseOrderDetailId, detail -> detail));
 
-        // Step 5: Loop through the new detail DTOs from the form and create new detail entities.
+        // Step 4: Loop through the new detail DTOs from the form and create new detail entities.
         if (dto.getDetails() != null) {
             for (PurchaseOrderDetailDto detailDto : dto.getDetails()) {
-                //Create a new, empty PurchaseOrderDetail entity.
-                PurchaseOrderDetail newDetail = new PurchaseOrderDetail();
+                PurchaseOrderDetail existingDetail = existingDetailsMap.get(detailDto.getPurchaseOrderDetailId());
 
-                //Find the original OrderBOMDetail to establish the traceability link.
-                OrderBOMDetail bomDetail = orderBOMDetailRepository.findById(detailDto.getOrderBOMDetailId())
-                        .orElseThrow(() -> new ResourceNotFoundException("OrderBOMDetail not found with ID: " + detailDto.getOrderBOMDetailId()));
-                newDetail.setOrderBOMDetail(bomDetail);
-
-                //Map data from the DTO to the new detail entity.
-                newDetail.setPurchaseQuantity(detailDto.getPurchaseQuantity());
-                newDetail.setNetPrice(detailDto.getNetPrice());
-                newDetail.setTaxRate(detailDto.getTaxRate());
-                newDetail.setReceivedQuantity(detailDto.getReceivedQuantity() != null ? detailDto.getReceivedQuantity() : 0.0);
-
-                //Add the newly created detail to the parent PO. This also sets the back-reference.
-                po.addDetail(newDetail);
+                if (existingDetail != null) {
+                    existingDetail.setPurchaseQuantity(detailDto.getPurchaseQuantity());
+                    existingDetail.setNetPrice(detailDto.getNetPrice());
+                    existingDetail.setTaxRate(detailDto.getTaxRate());
+                    existingDetail.setReceivedQuantity(detailDto.getReceivedQuantity() != null ? detailDto.getReceivedQuantity() : 0.0);
+                }
             }
         }
 
-        // Step 6: Save the parent PO. JPA will automatically handle all INSERT, UPDATE, and DELETE.
+        // Step 5: Save the parent PO. JPA will automatically handle all INSERT, UPDATE, and DELETE.
         PurchaseOrder savedPO = purchaseOrderRepository.save(po);
-        // Step 7: Convert the saved entity back to a DTO to return to the client.
+        // Step 6: Convert the saved entity back to a DTO to return to the client.
         return convertEntityToDto(savedPO);
     }
 

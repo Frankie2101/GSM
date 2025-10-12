@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, de-active it!'
+                confirmButtonText: 'De-Active'
             });
             if (result.isConfirmed) {
                 await fetch(`/api/users/${userId}/deactivate`, { method: 'POST' });

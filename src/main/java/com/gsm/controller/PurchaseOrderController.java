@@ -1,5 +1,3 @@
-// trong file: com/gsm/controller/PurchaseOrderController.java
-
 package com.gsm.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,8 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
-// Thêm 2 import này vào đầu file
 import com.samskivert.mustache.Mustache;
+import com.gsm.repository.MaterialGroupRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.DecimalFormat;
@@ -33,6 +31,9 @@ public class PurchaseOrderController {
     @Autowired
     private PurchaseOrderService purchaseOrderService;
 
+    @Autowired
+    private MaterialGroupRepository materialGroupRepository;
+
     /**
      * Displays the main list page for all Purchase Orders.
      * The actual data loading is handled by JavaScript via API calls.
@@ -40,6 +41,7 @@ public class PurchaseOrderController {
     @GetMapping
     public String showPoListPage(Model model) {
         model.addAttribute("isPurchaseOrderPage", true);
+        model.addAttribute("materialGroups", materialGroupRepository.findAll());
         return "po/po_list";
     }
 
@@ -58,6 +60,7 @@ public class PurchaseOrderController {
         model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));
         model.addAttribute("poJson", mapper.writeValueAsString(poDto));
         model.addAttribute("isPurchaseOrderPage", true);
+        model.addAttribute("materialGroups", materialGroupRepository.findAll());
         return "po/po_form";
     }
 

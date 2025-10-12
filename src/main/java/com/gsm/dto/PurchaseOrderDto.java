@@ -1,6 +1,7 @@
 package com.gsm.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.gsm.model.MaterialGroup;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

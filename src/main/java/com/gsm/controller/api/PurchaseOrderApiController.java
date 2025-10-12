@@ -1,5 +1,3 @@
-// trong file: com/gsm/controller/api/PurchaseOrderApiController.java
-
 package com.gsm.controller.api;
 
 import com.gsm.dto.PurchaseOrderDto;

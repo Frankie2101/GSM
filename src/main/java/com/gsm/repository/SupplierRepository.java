@@ -1,4 +1,3 @@
-// File: src/main/java/com/gsm/repository/SupplierRepository.java
 package com.gsm.repository;
 
 import com.gsm.model.Supplier;

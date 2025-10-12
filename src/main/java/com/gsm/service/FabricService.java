@@ -1,4 +1,3 @@
-// File: src/main/java/com/gsm/service/FabricService.java
 package com.gsm.service;
 
 import com.gsm.dto.FabricDto;

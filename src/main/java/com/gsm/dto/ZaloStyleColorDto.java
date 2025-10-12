@@ -1,4 +1,3 @@
-// File: src/main/java/com/gsm/dto/ZaloStyleColorDto.java
 package com.gsm.dto;
 
 /**

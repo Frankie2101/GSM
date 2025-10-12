@@ -5,7 +5,7 @@ import com.gsm.model.Supplier;
 import com.gsm.model.Trim;
 import com.gsm.repository.FabricRepository;
 import com.gsm.repository.TrimRepository;
-import com.gsm.model.TrimVariant; // <-- SỬA LỖI 1: THÊM IMPORT
+import com.gsm.model.TrimVariant;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;

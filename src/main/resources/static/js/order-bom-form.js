@@ -269,11 +269,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const materialId = target.value;
             const type = row.querySelector('.material-type-select').value;
 
+            const fabricIdInput = row.querySelector('input[name$=".fabricId"]');
+            const trimIdInput = row.querySelector('input[name$=".trimId"]');
+
             // Reset related field
             resetMaterialFields();
+            fabricIdInput.value = '';
+            trimIdInput.value = '';
 
             if (materialId) {
                 // Get related field data
+                if (type === 'FA') {
+                    fabricIdInput.value = materialId;
+                } else if (type === 'TR') {
+                    trimIdInput.value = materialId;
+                }
+
                 const details = await fetchMaterialDetails(materialId, type);
                 if (details) {
                     row.querySelector('.material-name-input').value = details.name || '';

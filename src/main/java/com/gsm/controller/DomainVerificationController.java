@@ -1,6 +1,6 @@
 package com.gsm.controller;
 
-import org.springframework.http.HttpHeaders; // Thêm import này
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;

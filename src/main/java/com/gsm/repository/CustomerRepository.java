@@ -1,4 +1,3 @@
-// File: src/main/java/com/gsm/repository/CustomerRepository.java
 package com.gsm.repository;
 
 import com.gsm.model.Customer;

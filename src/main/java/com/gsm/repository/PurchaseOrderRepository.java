@@ -45,7 +45,14 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
      * @param id The ID of the PO to find.
      * @return An Optional containing the Purchase Order with its details.
      */
-    @Query("SELECT po FROM PurchaseOrder po LEFT JOIN FETCH po.details WHERE po.purchaseOrderId = :id")
+    @Query("SELECT po FROM PurchaseOrder po " +
+            "LEFT JOIN FETCH po.supplier s " +
+            "LEFT JOIN FETCH po.details pod " +
+            "LEFT JOIN FETCH pod.orderBOMDetail obd " +
+            "LEFT JOIN FETCH obd.materialGroup mg " +
+            "LEFT JOIN FETCH obd.fabric f " +
+            "LEFT JOIN FETCH obd.trim t " +
+            "WHERE po.purchaseOrderId = :id")
     Optional<PurchaseOrder> findByIdWithDetails(@Param("id") Long id);
 
     /**

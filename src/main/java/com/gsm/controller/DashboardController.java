@@ -2,7 +2,7 @@ package com.gsm.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gsm.dto.dashboard.MainDashboardDto; // Sửa import
+import com.gsm.dto.dashboard.MainDashboardDto;
 import com.gsm.service.DashboardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

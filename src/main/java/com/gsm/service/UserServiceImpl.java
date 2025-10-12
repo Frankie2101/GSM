@@ -8,6 +8,7 @@ import com.gsm.repository.UserRepository;
 import com.gsm.security.CustomUserDetails;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -125,6 +126,10 @@ public class UserServiceImpl implements UserService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         com.gsm.model.User user = userRepository.findByUserName(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+
+        if (!user.isActiveFlag()) {
+            throw new DisabledException("User account is disabled.");
+        }
 
         return new CustomUserDetails(
                 user.getUserId(),

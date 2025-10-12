@@ -1,4 +1,4 @@
-package com.gsm.model; // Giả sử package là model
+package com.gsm.model;
 
 import lombok.Getter;
 import lombok.Setter;

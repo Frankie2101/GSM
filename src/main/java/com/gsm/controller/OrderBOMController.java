@@ -18,7 +18,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import com.gsm.repository.MaterialGroupRepository; // Thêm import
+import com.gsm.repository.MaterialGroupRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;

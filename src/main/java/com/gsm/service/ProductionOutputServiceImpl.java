@@ -4,10 +4,10 @@ import com.gsm.dto.ProductionOutputDto;
 import com.gsm.exception.ResourceNotFoundException;
 import com.gsm.model.ProductionOutput;
 import com.gsm.model.SaleOrder;
-import com.gsm.model.User; // Thêm import User
+import com.gsm.model.User;
 import com.gsm.repository.ProductionOutputRepository;
 import com.gsm.repository.SaleOrderRepository;
-import com.gsm.repository.UserRepository; // Thêm import UserRepository
+import com.gsm.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map; // Thêm import Map
-import java.util.Set; // Thêm import Set
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 

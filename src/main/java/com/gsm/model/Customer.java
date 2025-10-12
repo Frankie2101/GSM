@@ -1,4 +1,3 @@
-// File: src/main/java/com/gsm/model/Customer.java
 package com.gsm.model;
 
 import lombok.Getter;

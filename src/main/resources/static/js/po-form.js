@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- 1. INITIALIZATION: Get elements and initial data from the JSON data island ---
     const poData = JSON.parse(document.getElementById('po-data').textContent);
+    const materialGroupTemplate = document.getElementById('material-groups-data-template');
     console.log("Loaded PO Data from Server:", poData);
 
     // ... element selectors ..
@@ -36,6 +37,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+    const materialCodeCache = {};
+    const colorCache = {};
+    const sizeCache = {};
 
     // --- 2. API HELPERS ---
     async function fetchApi(url, options = {}) {
@@ -77,140 +81,81 @@ document.addEventListener('DOMContentLoaded', function() {
     const numberFormatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     /** Creates and appends a single, fully functional detail row to the table. */
-    function createAndAppendRow(detail = {}) {
+    async function createAndAppendRow(detail = {}) {
         const row = tableBody.insertRow();
         row.dataset.detailId = detail.purchaseOrderDetailId || '';
         row.dataset.orderBomDetailId = detail.orderBOMDetailId || '';
-        const materialType = detail.materialType || 'FA';
-        const isNewRow = !detail.purchaseOrderDetailId;
-        const selectedMaterialId = detail.fabricId || detail.trimId || '';
+        const materialType = detail.materialType;
 
         row.innerHTML = `
-            <td><input class="form-check-input row-checkbox" type="checkbox"></td>
-            <td>
-                <select class="form-select form-select-sm material-type-select">
-                    <option value="FA" ${materialType === 'FA' ? 'selected' : ''}>Fabric</option>
-                    <option value="TR" ${materialType === 'TR' ? 'selected' : ''}>Trim</option>
-                </select>
-            </td>
-            <td>
-                <select class="form-select form-select-sm material-code-select" data-selected-id="${selectedMaterialId}">
-                    ${!isNewRow && detail.materialCode ? `<option value="${selectedMaterialId}">${detail.materialCode}</option>` : ''}
-                </select>
-            </td>
-            <td><input type="text" class="form-control form-control-sm material-name-input" value="${detail.materialName || ''}" readonly></td>
-            <td>
-                <select class="form-select form-select-sm color-select" data-selected-code="${detail.colorCode || ''}">
-                     ${!isNewRow && detail.colorCode ? `<option value="${detail.colorCode}">${detail.colorCode}</option>` : ''}
-                </select>
-            </td>
-            <td>
-                <select class="form-select form-select-sm size-select" data-selected-code="${detail.size || ''}">
-                    ${!isNewRow && detail.size ? `<option value="${detail.size}">${detail.size}</option>` : ''}
-                </select>
-            </td>
-            <td><input type="text" class="form-control form-control-sm uom-input" value="${detail.uom || ''}" readonly></td>
-            <td><input type="text" class="form-control form-control-sm text-end qty-input" value="${numberFormatter.format(detail.purchaseQuantity || 0)}" inputmode="decimal"></td>
-            <td><input type="text" class="form-control form-control-sm text-end price-input" value="${numberFormatter.format(detail.netPrice || 0)}" inputmode="decimal"></td>
-            <td><input type="text" class="form-control form-control-sm text-end tax-rate-input" value="${detail.taxRate || 0}" inputmode="decimal"></td>
-            <td><input type="text" class="form-control form-control-sm text-end received-qty-input" value="${numberFormatter.format(detail.receivedQuantity || 0)}" inputmode="decimal"></td>
-            <td><input type="text" class="form-control form-control-sm text-end line-amount" readonly></td>
-            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger delete-row-btn"><i class="bi bi-trash"></i></button></td>
-        `;
+        <td><input class="form-check-input row-checkbox" type="checkbox" disabled></td>
+        <td><select class="form-select form-select-sm material-type-select is-locked" disabled><option>${materialType === 'FA' ? 'Fabric' : 'Trim'}</option></select></td>
+        <td><select class="form-select form-select-sm material-group-select is-locked" disabled></select></td>
+        <td><select class="form-select form-select-sm material-code-select is-locked" disabled></select></td>
+        <td><input type="text" class="form-control form-control-sm material-name-input" value="${detail.materialName || ''}" readonly></td>
+        <td><select class="form-select form-select-sm color-select is-locked" disabled></select></td>
+        <td><select class="form-select form-select-sm size-select is-locked" disabled></select></td>
+        <td><input type="text" class="form-control form-control-sm uom-input" value="${detail.uom || ''}" readonly></td>
+        <td><input type="text" class="form-control form-control-sm text-end qty-input" value="${numberFormatter.format(detail.purchaseQuantity || 0)}" inputmode="decimal"></td>
+        <td><input type="text" class="form-control form-control-sm text-end price-input" value="${numberFormatter.format(detail.netPrice || 0)}" inputmode="decimal"></td>
+        <td><input type="text" class="form-control form-control-sm text-end tax-rate-input" value="${detail.taxRate || 0}" inputmode="decimal"></td>
+        <td><input type="text" class="form-control form-control-sm text-end received-qty-input" value="${numberFormatter.format(detail.receivedQuantity || 0)}" inputmode="decimal"></td>
+        <td><input type="text" class="form-control form-control-sm text-end line-amount" readonly></td>
+        <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger delete-row-btn" disabled><i class="bi bi-trash"></i></button></td>
+    `;
 
-        if (isNewRow) {
-            const typeSelect = row.querySelector('.material-type-select');
-            handleMaterialTypeChange(typeSelect);
+        const groupSelect = row.querySelector('.material-group-select');
+        const codeSelect = row.querySelector('.material-code-select');
+        const colorSelect = row.querySelector('.color-select');
+        const sizeSelect = row.querySelector('.size-select');
+
+        groupSelect.innerHTML = materialGroupTemplate.innerHTML;
+        groupSelect.value = detail.materialGroupId || '';
+
+        const groupId = detail.materialGroupId;
+        if (materialType && groupId) {
+            const cacheKey = `${materialType}-${groupId}`;
+            if (!materialCodeCache[cacheKey]) {
+                materialCodeCache[cacheKey] = await fetchApi(`/api/materials?type=${materialType}&materialGroupId=${groupId}`);
+            }
+            codeSelect.innerHTML = '<option value="">-- Select --</option>';
+            materialCodeCache[cacheKey].forEach(m => codeSelect.add(new Option(m.code, m.id)));
+            codeSelect.value = detail.fabricId || detail.trimId || '';
+        }
+
+        const materialId = codeSelect.value;
+        if (materialType && materialId) {
+            const cacheKey = `${materialType}-${materialId}`;
+            if (!colorCache[cacheKey]) {
+                colorCache[cacheKey] = await fetchApi(`/api/material-colors?type=${materialType}&materialId=${materialId}`);
+            }
+            colorSelect.innerHTML = '<option value="">-- Select --</option>';
+            colorCache[cacheKey].forEach(c => colorSelect.add(new Option(c.code, c.code)));
+            colorSelect.value = detail.colorCode || '';
+        }
+
+        const currentMaterialId = codeSelect.value;
+        const currentColorCode = colorSelect.value;
+        if (materialType === 'TR' && currentMaterialId && currentColorCode) {
+            const cacheKey = `${currentMaterialId}-${currentColorCode}`;
+            if (!sizeCache[cacheKey]) {
+                sizeCache[cacheKey] = await fetchApi(`/api/material-sizes?trimId=${currentMaterialId}&colorCode=${currentColorCode}`);
+            }
+            sizeSelect.innerHTML = '<option value="">-- Select --</option>';
+            sizeCache[cacheKey].forEach(s => sizeSelect.add(new Option(s.size, s.size)));
+            sizeSelect.value = detail.size || '';
         }
     }
 
     /** Renders the initial state of the details table from a data array. */
-    function renderDetailsTable(details = []) {
+    async function renderDetailsTable(details = []) {
         tableBody.innerHTML = '';
         if (details && details.length > 0) {
-            details.forEach(detail => createAndAppendRow(detail));
+            for (const detail of details) {
+                await createAndAppendRow(detail);
+            }
         }
         updateAllLineAmounts();
-    }
-
-    /** Lazily populates a dropdown with data from an API call, only runs once per dropdown. */
-    async function populateDropdownIfNeeded(selectElement, apiCall) {
-        if (selectElement.dataset.loaded === 'true' && !apiCall) return;
-
-        const selectedValue = selectElement.dataset.selectedId || selectElement.dataset.selectedCode;
-        selectElement.dataset.loaded = 'true';
-
-        try {
-            const items = await apiCall();
-            selectElement.innerHTML = `<option value="">-- Select --</option>`;
-
-            items.forEach(item => {
-                const value = item.id || item.code || item.size;
-                const text = item.code || item.name || item.size;
-                const option = new Option(text, value);
-
-                if (item.price !== undefined) option.dataset.price = item.price;
-                if (item.taxRate !== undefined) option.dataset.taxRate = item.taxRate;
-
-                selectElement.add(option);
-            });
-
-            if (selectedValue) {
-                selectElement.value = selectedValue;
-            }
-        } catch (e) {
-            console.error("Failed to populate dropdown", e);
-        }
-    }
-
-    /** The series of cascading logic functions. */
-    async function handleMaterialTypeChange(typeSelect) {
-        const row = typeSelect.closest('tr');
-        const codeSelect = row.querySelector('.material-code-select');
-        codeSelect.dataset.loaded = 'false'; // Reset to allow reloading
-        await populateDropdownIfNeeded(codeSelect, () => fetchApi(`/api/materials?type=${typeSelect.value}`));
-        await handleMaterialCodeChange(codeSelect);
-    }
-
-    async function handleMaterialCodeChange(codeSelect) {
-        const row = codeSelect.closest('tr');
-        const materialId = codeSelect.value;
-        const type = row.querySelector('.material-type-select').value;
-        const colorSelect = row.querySelector('.color-select');
-
-        // Reset fields
-        row.querySelector('.material-name-input').value = '';
-        row.querySelector('.uom-input').value = '';
-        colorSelect.innerHTML = '';
-        row.querySelector('.size-select').innerHTML = '';
-
-        if (!materialId) {
-            updateAllLineAmounts();
-            return;
-        }
-
-        const details = await fetchApi(`/api/material-details/${materialId}?type=${type}`);
-        row.querySelector('.material-name-input').value = details.name;
-        row.querySelector('.uom-input').value = details.unitName;
-
-        colorSelect.dataset.loaded = 'false';
-        await populateDropdownIfNeeded(colorSelect, () => fetchApi(`/api/material-colors?type=${type}&materialId=${materialId}`));
-        await handleColorChange(colorSelect);
-    }
-
-    async function handleColorChange(colorSelect) {
-        const row = colorSelect.closest('tr');
-        const colorCode = colorSelect.value;
-        const type = row.querySelector('.material-type-select').value;
-        const materialId = row.querySelector('.material-code-select').value;
-        const sizeSelect = row.querySelector('.size-select');
-
-        sizeSelect.innerHTML = '';
-
-        if (!colorCode || type !== 'TR' || !materialId) return;
-
-        sizeSelect.dataset.loaded = 'false';
-        await populateDropdownIfNeeded(sizeSelect, () => fetchApi(`/api/material-sizes?trimId=${materialId}&colorCode=${colorCode}`));
     }
 
     /** Calculates the total amount for a single row. */
@@ -264,8 +209,18 @@ document.addEventListener('DOMContentLoaded', function() {
     /** Enables or disables all form fields based on the PO status. */
     function setFormReadOnly(readOnly) {
         poForm.querySelectorAll('input, select').forEach(el => {
-            if (el.id !== 'status') el.disabled = readOnly;
+            if (el.id === 'status' || el.classList.contains('is-locked')) {
+                return;
+            }
+
+            const isAlwaysEditable = el.id === 'arrivalDate' || el.classList.contains('received-qty-input');
+            if (isAlwaysEditable) {
+                el.disabled = false;
+                return;
+            }
+            el.disabled = readOnly;
         });
+
         const displayStyle = readOnly ? 'none' : 'inline-block';
         addDetailBtn.style.display = displayStyle;
         deleteSelectedDetailsBtn.style.display = displayStyle;
@@ -317,25 +272,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Step 3: Render the initial details table using the data from the server.
-        renderDetailsTable(poData.details);
+        await renderDetailsTable(poData.details);
 
         // Step 4: Determine the PO's status and set the form's interactivity.
         const status = statusInput.value;
+
+        addDetailBtn.style.display = 'none';
+        deleteSelectedDetailsBtn.style.display = 'none';
+
         if (status === 'New' || status === 'Rejected') {
-            // If the PO is editable, enable fields and show relevant buttons.
             setFormReadOnly(false);
             saveBtn.style.display = 'inline-block';
             submitBtn.style.display = 'inline-block';
+        } else if (status === 'Approved') {
+            setFormReadOnly(true);
+            saveBtn.style.display = 'inline-block';
+            submitBtn.style.display = 'none';
         } else {
-            // If the PO is submitted/approved, lock the form.
             setFormReadOnly(true);
             saveBtn.style.display = 'none';
             submitBtn.style.display = 'none';
         }
 
-        // Step 5: Show the print button only for existing POs.
-        if (!isNew) {
+        // Step 5: Show the print button only for Approved POs.
+        if (!isNew && status === 'Approved') {
             printBtn.style.display = 'inline-block';
+        } else {
+            printBtn.style.display = 'none';
         }
 
         // Step 6: Attach the click event to the Print button.
@@ -353,49 +316,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedOption = this.options[this.selectedIndex];
         currencyInput.value = selectedOption.dataset.currency || 'USD';
     });
-
-    tableBody.addEventListener('change', async function(e) {
-        const target = e.target;
-        const row = target.closest('tr');
-
-        if (target.classList.contains('material-type-select')) {
-            await handleMaterialTypeChange(target);
-        } else if (target.classList.contains('material-code-select')) {
-            await handleMaterialCodeChange(target);
-        } else if (target.classList.contains('color-select')) {
-            await handleColorChange(target);
-            const type = row.querySelector('.material-type-select').value;
-            if (type === 'FA') {
-                updatePriceAndTaxFromSelection(target);
-            }
-        } else if (target.classList.contains('size-select')) {
-            updatePriceAndTaxFromSelection(target);
-        }
-    });
-
-    tableBody.addEventListener('focus', async (e) => {
-        const target = e.target;
-        if (target.matches('.material-code-select:not([data-loaded]), .color-select:not([data-loaded]), .size-select:not([data-loaded])')) {
-            await populateDropdownIfNeeded(target, async () => {
-                const row = target.closest('tr');
-                const type = row.querySelector('.material-type-select').value;
-                const materialId = row.querySelector('.material-code-select').value;
-                if (target.classList.contains('material-code-select')) {
-                    return fetchApi(`/api/materials?type=${type}`);
-                }
-                if (target.classList.contains('color-select') && materialId) {
-                    return fetchApi(`/api/material-colors?type=${type}&materialId=${materialId}`);
-                }
-                if (target.classList.contains('size-select') && materialId && type === 'TR') {
-                    const colorCode = row.querySelector('.color-select').value;
-                    if (colorCode) {
-                        return fetchApi(`/api/material-sizes?trimId=${materialId}&colorCode=${colorCode}`);
-                    }
-                }
-                return [];
-            });
-        }
-    }, true);
 
     tableBody.addEventListener('click', function(e) {
         if (e.target.closest('.delete-row-btn')) {

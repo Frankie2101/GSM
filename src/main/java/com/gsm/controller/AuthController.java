@@ -1,12 +1,12 @@
 package com.gsm.controller;
 
-import org.springframework.security.web.csrf.CsrfToken; // THÊM IMPORT NÀY
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.servlet.http.HttpServletRequest; // THÊM IMPORT NÀY
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Handles web requests related to user authentication, such as displaying the login page.

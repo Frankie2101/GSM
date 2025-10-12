@@ -8,8 +8,8 @@ import com.gsm.repository.ProductCategoryRepository;
 import com.gsm.repository.UnitRepository;
 import com.gsm.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.web.csrf.CsrfToken; // SỬA IMPORT NÀY
-import javax.servlet.http.HttpServletRequest; // THÊM IMPORT NÀY
+import org.springframework.security.web.csrf.CsrfToken;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;

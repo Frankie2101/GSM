@@ -1,4 +1,3 @@
-// File: src/main/java/com/gsm/dto/BOMTemplateDto.java
 package com.gsm.dto;
 
 import lombok.Data;

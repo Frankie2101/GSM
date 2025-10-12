@@ -28,6 +28,8 @@ public class PurchaseOrderDetailDto {
     private String colorCode;
     private String size;
     private String uom;
+    private Long materialGroupId;
+    private String materialGroupName;
 
     /**
      * The quantity of the material being purchased.

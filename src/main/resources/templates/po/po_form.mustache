@@ -111,6 +111,7 @@
                             <tr>
                                 <th style="width: 3%;"><input class="form-check-input" type="checkbox" id="selectAllDetailsCheckbox"></th>
                                 <th class="col-type">Material Type</th>
+                                <th class="col-longCode">Material Group</th>
                                 <th class="col-longCode">Material Code</th>
                                 <th class="col-name">Material Name</th>
                                 <th class="col-code">Color</th>
@@ -150,6 +151,14 @@
 </div>
 
 {{> layout/scripts}}
+
+<template id="material-groups-data-template">
+    <option value="">-- Group --</option>
+    {{#materialGroups}}
+        <option value="{{materialGroupId}}">{{materialGroupName}}</option>
+    {{/materialGroups}}
+</template>
+
 <script src="/js/po-form.js"></script>
 </body>
 </html>
