@@ -5,6 +5,7 @@ import com.gsm.service.SupplierService;
 import com.gsm.service.UnitService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @RestController
 @RequestMapping("/api/import")
+@PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('MASTER_DATA_EDIT')")
 public class DataImportController {
 
     private final CustomerService customerService;

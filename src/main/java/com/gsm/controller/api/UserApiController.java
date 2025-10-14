@@ -5,6 +5,7 @@ import com.gsm.security.CustomUserDetails;
 import com.gsm.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +27,7 @@ public class UserApiController {
      * @return A list of UserDtos matching the criteria.
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('USER_VIEW')")
     public List<UserDto> searchUsers(@RequestParam(required = false) String keyword) {
         return userService.search(keyword);
     }
@@ -36,6 +38,7 @@ public class UserApiController {
      * @return A ResponseEntity containing the UserDto.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('USER_VIEW')")
     public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
         UserDto userDto = userService.findById(id);
         return ResponseEntity.ok(userDto);
@@ -61,6 +64,7 @@ public class UserApiController {
      * @return A ResponseEntity with the saved UserDto.
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('USER_CREATE_EDIT')")
     public ResponseEntity<UserDto> saveUser(@Valid @RequestBody UserDto userDto) {
         UserDto savedUser = userService.save(userDto);
         return ResponseEntity.ok(savedUser);
@@ -72,6 +76,7 @@ public class UserApiController {
      * @return An empty ResponseEntity with a 200 OK status.
      */
     @PostMapping("/{id}/deactivate")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('USER_DELETE')")
     public ResponseEntity<Void> deactivateUser(@PathVariable Long id) {
         userService.setActiveFlag(id, false);
         return ResponseEntity.ok().build();
@@ -83,6 +88,7 @@ public class UserApiController {
      * @return An empty ResponseEntity with a 200 OK status.
      */
     @PostMapping("/{id}/activate")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('USER_DELETE')")
     public ResponseEntity<Void> activateUser(@PathVariable Long id) {
         userService.setActiveFlag(id, true);
         return ResponseEntity.ok().build();

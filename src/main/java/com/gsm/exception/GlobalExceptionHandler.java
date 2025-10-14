@@ -11,6 +11,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -75,5 +76,18 @@ public class GlobalExceptionHandler {
         model.addAttribute("errorMessage", "An unexpected error occurred. Please contact support.");
         model.addAttribute("errorStatus", "500 Internal Server Error");
         return "error/error_page";
+    }
+
+    /**
+     * Handles authorization failures (HTTP 403 Forbidden) for API endpoints.
+     * This method catches Spring Security's {@link AccessDeniedException} and returns a standardized JSON error response,
+     * which is useful for clients like the Zalo Mini App.
+     * @param ex The AccessDeniedException thrown when authorization fails.
+     * @return A ResponseEntity with an HTTP 403 Forbidden status and a JSON body containing the error message.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAccessDeniedException(AccessDeniedException ex) {
+        Map<String, String> response = Map.of("message", "You do not have permission to access this function.");
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 }

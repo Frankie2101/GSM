@@ -34,7 +34,9 @@
 
                         <div class="col-md-4 d-flex justify-content-start justify-content-md-end">
                             <button id="searchBtn" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-search me-1"></i> Search</button>
-                            <button id="addNewBtn" class="btn btn-custom-gradient rounded-pill px-4"><i class="bi bi-plus-circle me-1"></i> Add New</button>
+                            {{#userPermissions.USER_CREATE_EDIT}}
+                                <button id="addNewBtn" class="btn btn-custom-gradient rounded-pill px-4"><i class="bi bi-plus-circle me-1"></i> Add New</button>
+                            {{/userPermissions.USER_CREATE_EDIT}}
                         </div>
                     </div>
                 </div>
@@ -119,6 +121,22 @@
                             <option value="Admin">Admin</option>
                         </select>
                     </div>
+                    <div class="mb-3" id="permissionSection">
+                        <label class="form-label">Permissions</label>
+                        <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                            {{#permissionGroups}}
+                                <div class="mb-3">
+                                    <strong class="d-block border-bottom pb-1 mb-2">{{groupName}}</strong>
+                                    {{#permissions}}
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input permission-checkbox" type="checkbox" value="{{name}}" id="perm_{{name}}">
+                                            <label class="form-check-label" for="perm_{{name}}">{{actionName}}</label>
+                                        </div>
+                                    {{/permissions}}
+                                </div>
+                            {{/permissionGroups}}
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -130,6 +148,17 @@
 </div>
 
 {{> layout/scripts}}
+<script>
+    // Pass CSRF token and user permissions to the JavaScript file
+    const csrfToken = {
+        headerName: "{{_csrf.headerName}}",
+        token: "{{_csrf.token}}"
+    };
+    const userPermissions = {
+    canEdit: {{#userPermissions.USER_CREATE_EDIT}}true{{/userPermissions.USER_CREATE_EDIT}}{{^userPermissions.USER_CREATE_EDIT}}false{{/userPermissions.USER_CREATE_EDIT}},
+    canDelete: {{#userPermissions.USER_DELETE}}true{{/userPermissions.USER_DELETE}}{{^userPermissions.USER_DELETE}}false{{/userPermissions.USER_DELETE}}
+    };
+</script>
 <script src="/js/user-list.js"></script>
 </body>
 </html>

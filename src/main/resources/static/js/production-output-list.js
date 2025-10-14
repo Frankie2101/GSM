@@ -113,23 +113,24 @@ document.addEventListener('DOMContentLoaded', function () {
      * Event listener for the "Create" button.
      * It resets the modal form, sets default values, pre-fills user info, and shows the modal.
      */
-    createBtn.addEventListener('click', async () => {
-        outputForm.reset();
-        styleSelect.innerHTML = '<option value="">-- Type SO No first --</option>';
-        colorSelect.innerHTML = '<option value="">-- Select Style first --</option>';
-        document.getElementById('outputModalLabel').textContent = 'Create Production Output';
-        document.getElementById('productionOutputId').value = '';
-        document.getElementById('outputDate').valueAsDate = new Date(); // Default to today.
+    if (createBtn) {
+        createBtn.addEventListener('click', async () => {
+            outputForm.reset();
+            styleSelect.innerHTML = '<option value=\"\">-- Type SO No first --</option>';
+            colorSelect.innerHTML = '<option value=\"\">-- Select Style first --</option>';
+            document.getElementById('outputModalLabel').textContent = 'Create Production Output';
+            document.getElementById('productionOutputId').value = '';
+            document.getElementById('outputDate').valueAsDate = new Date();
 
-        // Load and pre-fill user's department and production line.
-        await loadCurrentUser();
-        if (currentUser) {
-            departmentInput.value = currentUser.department || '';
-            productionLineInput.value = currentUser.productionLine || '';
-        }
+            await loadCurrentUser();
+            if (currentUser) {
+                departmentInput.value = currentUser.department || '';
+                productionLineInput.value = currentUser.productionLine || '';
+            }
 
-        outputModal.show();
-    });
+            outputModal.show();
+        });
+    }
 
     // Add event listeners for the chained select functionality.
     saleOrderNoInput.addEventListener('blur', () => handleSaleOrderNoChange(null));
@@ -329,7 +330,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Assign event listeners to the main action buttons and the table.
     searchBtn.addEventListener('click', fetchOutputs);
     saveBtn.addEventListener('click', saveOutput);
-    deleteBtn.addEventListener('click', deleteSelectedOutputs);
+
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', deleteSelectedOutputs);
+    }
 
     // Use event delegation for the edit buttons inside the table.
     outputTableBody.addEventListener('click', function(e) {

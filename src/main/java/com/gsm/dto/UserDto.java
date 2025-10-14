@@ -4,6 +4,7 @@ import  com.gsm.enums.UserType;
 import lombok.Data;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+import java.util.Set;
 
 /**
  * Data Transfer Object for the User entity.
@@ -32,4 +33,6 @@ public class UserDto {
 
     @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
     private String password;
+
+    private Set<String> permissions;
 }

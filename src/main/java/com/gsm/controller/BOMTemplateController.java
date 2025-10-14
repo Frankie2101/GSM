@@ -6,6 +6,7 @@ import com.gsm.model.ProductCategory;
 import com.gsm.repository.ProductCategoryRepository;
 import com.gsm.service.BOMTemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -36,6 +37,7 @@ public class BOMTemplateController {
      * <p><b>Use Case:</b> Called when a user clicks "Create" or "Edit".
      */
     @GetMapping("/form")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('BOM_TEMPLATE_VIEW')")
     public String showBomTemplateForm(@RequestParam(required = false) Long id, Model model, HttpServletRequest request) {
         BOMTemplateDto template;
         if (id != null) {
@@ -74,6 +76,7 @@ public class BOMTemplateController {
      * <p><b>Use Case:</b> Called via POST when the user clicks "Save" on the form.
      */
     @PostMapping("/save")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('BOM_TEMPLATE_CREATE_EDIT')")
     public String saveBomTemplate(@ModelAttribute BOMTemplateDto bomTemplateDto, RedirectAttributes redirectAttributes) {
         try {
             BOMTemplateDto savedTemplate = bomTemplateService.save(bomTemplateDto);
@@ -94,6 +97,7 @@ public class BOMTemplateController {
      * <p><b>Use Case:</b> The main landing page for BOM Template management.
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('BOM_TEMPLATE_VIEW')")
     public String showBomTemplateList(@RequestParam(required = false) String keyword, Model model, HttpServletRequest request) {
         List<BOMTemplateDto> templates;
         if (keyword != null && !keyword.isEmpty()) {
@@ -113,6 +117,7 @@ public class BOMTemplateController {
      * <p><b>Use Case:</b> Called when the user clicks "Delete" on the list page.
      */
     @PostMapping("/delete")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('BOM_TEMPLATE_DELETE')")
     public String deleteBomTemplates(@RequestParam(value = "selectedIds", required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
         if (ids == null || ids.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Please select at least one template to delete.");

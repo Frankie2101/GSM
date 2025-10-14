@@ -1,3 +1,5 @@
+// In file: src/main/java/com/gsm/controller/api/ProductionOutputApiController.java
+
 package com.gsm.controller.api;
 
 import com.gsm.dto.ProductionOutputDto;
@@ -5,6 +7,7 @@ import com.gsm.service.ProductionOutputService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize; // MAKE SURE THIS IMPORT EXISTS
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -22,15 +25,11 @@ public class ProductionOutputApiController {
     private ProductionOutputService productionOutputService;
 
     /**
-     * API endpoint to search for and retrieve a list of production outputs based on various criteria.
-     * @param keyword General search term.
-     * @param outputDateFrom Start date for the search range.
-     * @param outputDateTo End date for the search range.
-     * @param department Department to filter by.
-     * @param productionLine Production line to filter by.
-     * @return A ResponseEntity containing a list of ProductionOutputDto.
+     * API endpoint to search for production outputs.
+     * Requires PRODUCTION_OUTPUT_VIEW permission.
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('PRODUCTION_OUTPUT_VIEW')")
     public ResponseEntity<List<ProductionOutputDto>> searchOutputs(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate outputDateFrom,
@@ -42,22 +41,22 @@ public class ProductionOutputApiController {
     }
 
     /**
-     * API endpoint to retrieve the details of a single production output by its ID.
-     * @param id The ID of the production output.
-     * @return A ResponseEntity containing the ProductionOutputDto.
+     * API endpoint to retrieve a single production output.
+     * Requires PRODUCTION_OUTPUT_VIEW permission.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('PRODUCTION_OUTPUT_VIEW')")
     public ResponseEntity<ProductionOutputDto> findById(@PathVariable Long id) {
         ProductionOutputDto dto = productionOutputService.findById(id);
         return ResponseEntity.ok(dto);
     }
 
     /**
-     * API endpoint to save (create or update) a production output record.
-     * @param dto The DTO containing the production output data.
-     * @return The saved DTO on success, or a JSON error message on failure.
+     * API endpoint to save a production output record.
+     * Requires PRODUCTION_OUTPUT_CREATE_EDIT permission.
      */
     @PostMapping("/save")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('PRODUCTION_OUTPUT_CREATE_EDIT')")
     public ResponseEntity<?> saveProductionOutput(@RequestBody ProductionOutputDto dto) {
         try {
             ProductionOutputDto savedDto = productionOutputService.save(dto);
@@ -69,10 +68,10 @@ public class ProductionOutputApiController {
 
     /**
      * API endpoint for bulk deletion of production outputs.
-     * @param ids A list of IDs to be deleted.
-     * @return A success or error message in a JSON object.
+     * Requires PRODUCTION_OUTPUT_DELETE permission.
      */
     @PostMapping("/delete")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('PRODUCTION_OUTPUT_DELETE')")
     public ResponseEntity<?> deleteProductionOutputs(@RequestBody List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Please select at least one item to delete."));

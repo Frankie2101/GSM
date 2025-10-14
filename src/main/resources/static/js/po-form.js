@@ -208,22 +208,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     /** Enables or disables all form fields based on the PO status. */
     function setFormReadOnly(readOnly) {
+        // Disable header fields
         poForm.querySelectorAll('input, select').forEach(el => {
-            if (el.id === 'status' || el.classList.contains('is-locked')) {
+            // These fields are always read-only or controlled by other logic
+            if (el.id === 'status' || el.id === 'totalAmount' || el.id === 'currencyCode' || el.classList.contains('is-locked')) {
                 return;
             }
-
+            // These fields should always be editable, even for an approved PO
             const isAlwaysEditable = el.id === 'arrivalDate' || el.classList.contains('received-qty-input');
-            if (isAlwaysEditable) {
-                el.disabled = false;
-                return;
+            if (!isAlwaysEditable) {
+                el.disabled = readOnly;
             }
-            el.disabled = readOnly;
         });
 
+        // Hide/Show table action buttons
         const displayStyle = readOnly ? 'none' : 'inline-block';
         addDetailBtn.style.display = displayStyle;
         deleteSelectedDetailsBtn.style.display = displayStyle;
+
+        // Hide/Show individual row action elements
         tableBody.querySelectorAll('.delete-row-btn').forEach(btn => {
             btn.closest('td').style.display = readOnly ? 'none' : 'table-cell';
         });
@@ -276,32 +279,44 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Step 4: Determine the PO's status and set the form's interactivity.
         const status = statusInput.value;
+        const canEdit = userPermissions.canEdit;
 
+        // By default, hide all action buttons.
+        saveBtn.style.display = 'none';
+        submitBtn.style.display = 'none';
+        printBtn.style.display = 'none';
         addDetailBtn.style.display = 'none';
         deleteSelectedDetailsBtn.style.display = 'none';
 
+        // Set the entire form to read-only by default.
+        setFormReadOnly(true);
+
+        // Logic for 'New' or 'Rejected' POs
         if (status === 'New' || status === 'Rejected') {
-            setFormReadOnly(false);
-            saveBtn.style.display = 'inline-block';
-            submitBtn.style.display = 'inline-block';
-        } else if (status === 'Approved') {
-            setFormReadOnly(true);
-            saveBtn.style.display = 'inline-block';
-            submitBtn.style.display = 'none';
-        } else {
-            setFormReadOnly(true);
-            saveBtn.style.display = 'none';
-            submitBtn.style.display = 'none';
+            if (canEdit) {
+                // If user can edit, make the form editable and show the Save button.
+                setFormReadOnly(false);
+                saveBtn.style.display = 'inline-block';
+                // Show the submit button only if the user also has submit permission.
+                if (userPermissions.canSubmit) {
+                    submitBtn.style.display = 'inline-block';
+                }
+            }
+        }
+        // Logic for 'Approved' POs
+        else if (status === 'Approved') {
+            // An approved PO can only have its arrival date and received quantities updated.
+            if (canEdit) {
+                saveBtn.style.display = 'inline-block'; // Show save button for updates
+            }
         }
 
-        // Step 5: Show the print button only for Approved POs.
-        if (!isNew && status === 'Approved') {
+        // The Print button is visible for existing POs if the user has print permission.
+        if (!isNew && userPermissions.canPrint && status === 'Approved') {
             printBtn.style.display = 'inline-block';
-        } else {
-            printBtn.style.display = 'none';
         }
 
-        // Step 6: Attach the click event to the Print button.
+        // Step 5: Attach the click event to the Print button.
         printBtn.addEventListener('click', () => {
             const poId = idInput.value;
             if (poId) {

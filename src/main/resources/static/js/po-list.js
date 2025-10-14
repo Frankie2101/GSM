@@ -73,7 +73,6 @@ document.addEventListener('DOMContentLoaded', function () {
             // Build the final HTML string for the entire table row.
             const row = `
                 <tr>
-                    <td><input class="form-check-input row-checkbox" type="checkbox" value="${po.purchaseOrderId}" ${!canBeDeleted ? 'disabled' : ''}></td>
                     <td>${index + 1}</td>
                     <td><strong>${po.purchaseOrderNo}</strong></td>
                     <td>${po.supplierName || 'N/A'}</td>
@@ -128,48 +127,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (event.key === 'Enter') {
             performSearch();
         }
-    });
-
-    deleteSelectedBtn.addEventListener('click', function() {
-        const checkedBoxes = tableBody.querySelectorAll('.row-checkbox:checked');
-        const count = checkedBoxes.length;
-
-        if (count === 0) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'No Items Selected',
-                text: 'Please select at least one Purchase Order to delete.',
-            });
-            return;
-        }
-
-        Swal.fire({
-            title: `Delete ${count} Purchase Order(s)?`,
-            text: "This action cannot be undone!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Delete'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                checkedBoxes.forEach(box => {
-                    const hiddenInput = document.createElement('input');
-                    hiddenInput.type = 'hidden';
-                    hiddenInput.name = 'selectedIds';
-                    hiddenInput.value = box.value;
-                    deleteForm.appendChild(hiddenInput);
-                });
-                deleteForm.submit();
-            }
-        });
-    });
-
-    selectAllCheckbox.addEventListener('change', function() {
-        const rowCheckboxes = tableBody.querySelectorAll('.row-checkbox:not(:disabled)');
-        rowCheckboxes.forEach(checkbox => {
-            checkbox.checked = this.checked;
-        });
     });
 
     async function loadPOs() {

@@ -52,9 +52,15 @@
                                 <input type="text" class="form-control" id="productionLine" name="productionLine" placeholder="Enter Production Line...">
                             </div>
                             <div class="col-md-4 d-flex align-items-end justify-content-start">
-                                <button type="button" id="createBtn" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-plus-circle me-1"></i> Create</button>
-                                <button type="button" id="searchBtn" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-search me-1"></i> Search</button>
-                                <button type="button" id="deleteBtn" class="btn btn-delete-gradient rounded-pill px-4"><i class="bi bi-trash me-1"></i> Delete</button>
+                                {{#userPermissions.PRODUCTION_OUTPUT_CREATE_EDIT}}
+                                   <button type="button" id="createBtn" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-plus-circle me-1"></i> Create</button>
+                                {{/userPermissions.PRODUCTION_OUTPUT_CREATE_EDIT}}
+                                {{#userPermissions.PRODUCTION_OUTPUT_VIEW}}
+                                    <button type="button" id="searchBtn" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-search me-1"></i> Search</button>
+                                {{/userPermissions.PRODUCTION_OUTPUT_VIEW}}
+                                {{#userPermissions.PRODUCTION_OUTPUT_DELETE}}
+                                    <button type="button" id="deleteBtn" class="btn btn-delete-gradient rounded-pill px-4"><i class="bi bi-trash me-1"></i> Delete</button>
+                                {{/userPermissions.PRODUCTION_OUTPUT_DELETE}}
                             </div>
                         </div>
                     </form>

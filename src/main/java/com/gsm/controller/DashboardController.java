@@ -9,12 +9,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * A standard Spring Controller responsible for rendering the main dashboard page.
  */
 @Controller
 @RequestMapping("/dashboard")
+@PreAuthorize("hasRole('Admin') or hasAuthority('DASHBOARD_VIEW')")
 public class DashboardController {
 
     private final DashboardService dashboardService;

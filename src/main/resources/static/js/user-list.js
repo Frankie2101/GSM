@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const userTypeSelect = document.getElementById('userType');
+    const permissionSection = document.getElementById('permissionSection');
     const userModal = new bootstrap.Modal(document.getElementById('userModal'));
     const searchBtn = document.getElementById('searchBtn');
     const addNewBtn = document.getElementById('addNewBtn');
@@ -8,6 +10,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const keywordInput = document.getElementById('keyword');
 
     // --- FUNCTIONS ---
+
+    /**
+    *Function to show/hide the permissions block based on the selected User Type
+    */
+    function togglePermissionSection() {
+        permissionSection.style.display = userTypeSelect.value === 'Admin' ? 'none' : 'block';
+    }
+    userTypeSelect.addEventListener('change', togglePermissionSection);
 
     /**
      * Fetches users from the API based on the search keyword and renders them in the table.
@@ -28,13 +38,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 ? `<span class="badge bg-success">Active</span>`
                 : `<span class="badge bg-danger">Inactive</span>`;
 
-            const actionButtons = `
-                <a href="#" class="action-link me-3 edit-btn" data-id="${user.userId}">Edit</a>
-                ${user.activeFlag
-                ? `<a href="#" class="action-link text-danger deactivate-btn" data-id="${user.userId}">De-active</a>`
-                : `<a href="#" class="action-link text-success activate-btn" data-id="${user.userId}">Active</a>`
+            let actionButtons = '';
+            if (userPermissions.canEdit) {
+                actionButtons += `<a href="#" class="action-link me-3 edit-btn" data-id="${user.userId}">Edit</a>`;
             }
-            `;
+            if (userPermissions.canDelete) {
+                actionButtons += user.activeFlag
+                    ? `<a href="#" class="action-link text-danger deactivate-btn" data-id="${user.userId}">De-active</a>`
+                    : `<a href="#" class="action-link text-success activate-btn" data-id="${user.userId}">Active</a>`;
+            }
 
             const row = `
                 <tr>
@@ -71,6 +83,17 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('emailAddress').value = user.emailAddress || '';
         document.getElementById('userType').value = user.userType;
 
+        togglePermissionSection();
+        document.querySelectorAll('.permission-checkbox').forEach(cb => cb.checked = false);
+        if (user.permissions) {
+            user.permissions.forEach(permissionName => {
+                const checkbox = document.getElementById(`perm_${permissionName}`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+        }
+
         userModal.show();
     }
 
@@ -106,15 +129,30 @@ document.addEventListener('DOMContentLoaded', function() {
             userType: userType
         };
 
+        if (userType === 'Normal') {
+            const selectedPermissions = [];
+            document.querySelectorAll('.permission-checkbox:checked').forEach(checkbox => {
+                selectedPermissions.push(checkbox.value);
+            });
+            userData.permissions = selectedPermissions;
+        }
+
         if (password) {
             userData.password = password;
         }
 
+        // Prepare headers and add the CSRF token.
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        headers[csrfToken.headerName] = csrfToken.token;
+
         const response = await fetch('/api/users', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers, // Use the headers object with the token
             body: JSON.stringify(userData)
         });
+
 
         if (response.ok) {
             userModal.hide();
@@ -136,6 +174,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('userModalLabel').textContent = 'Add New User';
         userForm.reset();
         document.getElementById('userId').value = '';
+        userTypeSelect.value = 'Normal';
+        togglePermissionSection();
         userModal.show();
     });
 
@@ -147,6 +187,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const userId = target.dataset.id;
 
         if (!userId) return;
+
+        const headers = {};
+        headers[csrfToken.headerName] = csrfToken.token;
 
         if (target.classList.contains('edit-btn')) {
             openEditModal(userId);
@@ -161,11 +204,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 confirmButtonText: 'De-Active'
             });
             if (result.isConfirmed) {
-                await fetch(`/api/users/${userId}/deactivate`, { method: 'POST' });
+                await fetch(`/api/users/${userId}/deactivate`, { method: 'POST', headers: headers });
                 fetchUsers();
             }
         } else if (target.classList.contains('activate-btn')) {
-            await fetch(`/api/users/${userId}/activate`, { method: 'POST' });
+            await fetch(`/api/users/${userId}/activate`, { method: 'POST', headers: headers });
             fetchUsers();
         }
     });

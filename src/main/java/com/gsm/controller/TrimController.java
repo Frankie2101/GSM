@@ -8,6 +8,7 @@ import com.gsm.repository.SupplierRepository;
 import com.gsm.repository.UnitRepository;
 import com.gsm.service.TrimService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -39,6 +40,7 @@ public class TrimController {
      * <p><b>Use Case:</b> The main landing page for trim management.
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('TRIM_VIEW')")
     public String showTrimList(@RequestParam(required = false) String keyword, Model model, HttpServletRequest request) {
         List<TrimDto> trims;
         if (keyword != null && !keyword.isEmpty()) {
@@ -58,6 +60,7 @@ public class TrimController {
      * <p><b>Use Case:</b> Called when a user clicks "Create" or "Edit".
      */
     @GetMapping("/form")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('TRIM_VIEW')")
     public String showTrimForm(@RequestParam(required = false) Long id, Model model, HttpServletRequest request) {
         TrimDto trim;
         if (id != null) {
@@ -118,6 +121,7 @@ public class TrimController {
      * Processes the submission of the trim form.
      */
     @PostMapping("/save")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('TRIM_CREATE_EDIT')")
     public String saveTrim(@ModelAttribute TrimDto trimDto, RedirectAttributes redirectAttributes) {
         try {
             TrimDto savedTrim = trimService.save(trimDto);
@@ -138,6 +142,7 @@ public class TrimController {
      * <p><b>Use Case:</b> Called when the user clicks "Delete" on the list page.
      */
     @PostMapping("/delete")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('TRIM_DELETE')")
     public String deleteTrims(@RequestParam(value = "selectedIds", required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
         if (ids == null || ids.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Please select at least one trim to delete.");

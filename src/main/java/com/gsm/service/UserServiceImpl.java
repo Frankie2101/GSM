@@ -1,24 +1,27 @@
 package com.gsm.service;
 
 import com.gsm.dto.UserDto;
+import com.gsm.enums.UserType;
 import com.gsm.exception.DuplicateResourceException;
 import com.gsm.exception.ResourceNotFoundException;
 import com.gsm.model.User;
 import com.gsm.repository.UserRepository;
 import com.gsm.security.CustomUserDetails;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import org.springframework.security.core.userdetails.UserDetails; // THÊM IMPORT
+import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * The concrete implementation of the UserService interface.
@@ -98,6 +101,17 @@ public class UserServiceImpl implements UserService {
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
 
+        // If the user is an Admin, their permissions list should be empty.
+        if (dto.getUserType() == UserType.Admin) {
+            user.getPermissions().clear();
+        } else {
+            // For Normal users, update their permissions from the DTO.
+            user.getPermissions().clear();
+            if (dto.getPermissions() != null) {
+                user.getPermissions().addAll(dto.getPermissions());
+            }
+        }
+
     }
 
     private UserDto convertEntityToDto(User user) {
@@ -110,16 +124,20 @@ public class UserServiceImpl implements UserService {
         dto.setUserType(user.getUserType());
         dto.setEmailAddress(user.getEmailAddress());
         dto.setActiveFlag(user.isActiveFlag());
+
+        dto.setPermissions(user.getPermissions());
+
         return dto;
     }
 
     /**
      * This method is required by Spring Security's UserDetailsService.
      * It loads a user by their username and returns a UserDetails object.
-     * We return our CustomUserDetails to include the user's database ID.
+     * We return our CustomUserDetails to include the user's database ID and their granted authorities.
      * @param username The username to look for.
      * @return A CustomUserDetails object for Spring Security.
      * @throws UsernameNotFoundException if the user is not found.
+     * @throws DisabledException if the user's account is not active.
      */
     @Override
     @Transactional(readOnly = true)
@@ -131,11 +149,23 @@ public class UserServiceImpl implements UserService {
             throw new DisabledException("User account is disabled.");
         }
 
+        Set<GrantedAuthority> authorities = new HashSet<>();
+
+        // Step 1: Log the exact value read from the database for diagnostics.
+        if (user.getUserType() != null && "Admin".equalsIgnoreCase(user.getUserType().name())) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_Admin"));
+        } else {
+            user.getPermissions().forEach(permission -> {
+                authorities.add(new SimpleGrantedAuthority(permission));
+            });
+        }
+
+        // Return the CustomUserDetails object with the correct set of authorities.
         return new CustomUserDetails(
                 user.getUserId(),
                 user.getUserName(),
                 user.getPassword(),
-                new ArrayList<>()
+                authorities
         );
     }
 }

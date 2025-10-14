@@ -8,6 +8,7 @@ import com.gsm.repository.ProductCategoryRepository;
 import com.gsm.repository.UnitRepository;
 import com.gsm.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.web.csrf.CsrfToken;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
@@ -29,6 +30,7 @@ import java.util.Map;
  */
 @Controller
 @RequestMapping("/products")
+@PreAuthorize("hasRole('Admin') or hasAuthority('PRODUCT_MANAGEMENT')")
 public class ProductController {
 
     @Autowired private ProductService productService;
@@ -46,6 +48,7 @@ public class ProductController {
      * @return The path to the product form view template.
      */
     @GetMapping("/form")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('PRODUCT_VIEW')")
     public String showProductForm(@RequestParam(required = false) Long id, Model model, HttpServletRequest request) {
         ProductDto product;
         if (id != null) {
@@ -114,6 +117,7 @@ public class ProductController {
      * @return A redirect string to either the product form (on success) or back to the form (on error).
      */
     @PostMapping("/save")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('PRODUCT_CREATE_EDIT')")
     public String saveProduct(@ModelAttribute ProductDto productDto, RedirectAttributes redirectAttributes) {
         try {
             ProductDto savedProduct = productService.save(productDto);
@@ -137,6 +141,7 @@ public class ProductController {
      * @return The path to the product list view template.
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('PRODUCT_VIEW')")
     public String showProductList(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String category,
@@ -170,6 +175,7 @@ public class ProductController {
      * @return A redirect string back to the product list page.
      */
     @PostMapping("/delete")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('PRODUCT_DELETE')")
     public String deleteProducts(
             @RequestParam(value = "selectedIds", required = false) List<Long> ids,
             RedirectAttributes redirectAttributes) {

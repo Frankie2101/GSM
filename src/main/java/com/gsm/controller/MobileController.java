@@ -1,5 +1,6 @@
 package com.gsm.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,6 +24,7 @@ public class MobileController {
      * @return The name of the view template.
      */
     @GetMapping("/mobile-output")
+    @PreAuthorize("hasRole('Admin') or hasAuthority('PRODUCTION_OUTPUT_VIEW')")
     public String showMobileInputPage(Model model, HttpServletRequest request) {
         model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));
         return "mobile/mobile_output";

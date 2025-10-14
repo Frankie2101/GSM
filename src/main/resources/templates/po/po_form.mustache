@@ -159,6 +159,14 @@
     {{/materialGroups}}
 </template>
 
+<script>
+    // Pass user permissions to the JavaScript file
+    const userPermissions = {
+    canEdit: {{#userPermissions.PURCHASE_ORDER_CREATE_EDIT}}true{{/userPermissions.PURCHASE_ORDER_CREATE_EDIT}}{{^userPermissions.PURCHASE_ORDER_CREATE_EDIT}}false{{/userPermissions.PURCHASE_ORDER_CREATE_EDIT}},
+    canSubmit: {{#userPermissions.PURCHASE_ORDER_SUBMIT}}true{{/userPermissions.PURCHASE_ORDER_SUBMIT}}{{^userPermissions.PURCHASE_ORDER_SUBMIT}}false{{/userPermissions.PURCHASE_ORDER_SUBMIT}},
+    canPrint: {{#userPermissions.PURCHASE_ORDER_PRINT}}true{{/userPermissions.PURCHASE_ORDER_PRINT}}{{^userPermissions.PURCHASE_ORDER_PRINT}}false{{/userPermissions.PURCHASE_ORDER_PRINT}}
+    };
+</script>
 <script src="/js/po-form.js"></script>
 </body>
 </html>

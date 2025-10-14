@@ -9,6 +9,7 @@ import com.gsm.repository.SupplierRepository;
 import com.gsm.repository.UnitRepository;
 import com.gsm.service.FabricService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -46,6 +47,7 @@ public class FabricController {
      * @return The path to the fabric list view.
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('FABRIC_VIEW')")
     public String showFabricList(@RequestParam(required = false) String keyword, Model model, HttpServletRequest request) {
         List<FabricDto> fabrics;
         if (keyword != null && !keyword.isEmpty()) {
@@ -134,6 +136,7 @@ public class FabricController {
      * @return A redirect string to the appropriate page.
      */
     @PostMapping("/save")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('FABRIC_CREATE_EDIT')")
     public String saveFabric(@ModelAttribute FabricDto fabricDto, RedirectAttributes redirectAttributes) {
         try {
             FabricDto savedFabric = fabricService.save(fabricDto);
@@ -158,6 +161,7 @@ public class FabricController {
      * @return A redirect string back to the fabric list.
      */
     @PostMapping("/delete")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('FABRIC_DELETE')")
     public String deleteFabrics(@RequestParam(value = "selectedIds", required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
         if (ids == null || ids.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Please select at least one fabric to delete.");

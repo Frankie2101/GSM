@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import javax.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents a user of the application.
@@ -54,4 +56,13 @@ public class User extends AuditableEntity {
      */
     @Column(name = "ZaloUserId", unique = true)
     private String zaloUserId;
+
+    /**
+     * A collection of permissions assigned to this user.
+     * This is mapped to a separate table named "User_Permission".
+     */
+    @ElementCollection(fetch = FetchType.EAGER) // EAGER fetch is ok for a small set of permissions
+    @CollectionTable(name = "User_Permission", joinColumns = @JoinColumn(name = "UserId"))
+    @Column(name = "Permission")
+    private Set<String> permissions = new HashSet<>();
 }

@@ -40,9 +40,12 @@
                             </div>
                             <div class="col-md-5 d-flex justify-content-start justify-content-md-end">
                                 <button type="submit" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-search me-1"></i> Search</button>
-                                <a href="/sale-orders/form" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-plus-circle me-1"></i> Create</a>
-                                <button type="button" id="deleteBtn" class="btn btn-delete-gradient rounded-pill px-4"><i class="bi bi-trash me-1"></i> Delete</button>
-                            </div>
+                                {{#userPermissions.SALE_ORDER_CREATE_EDIT}}
+                                    <a href="/sale-orders/form" class="btn btn-custom-gradient rounded-pill px-4 me-2"><i class="bi bi-plus-circle me-1"></i> Create</a>
+                                {{/userPermissions.SALE_ORDER_CREATE_EDIT}}
+                                {{#userPermissions.SALE_ORDER_DELETE}}
+                                    <button type="button" id="deleteBtn" class="btn btn-delete-gradient rounded-pill px-4"><i class="bi bi-trash me-1"></i> Delete</button>
+                                {{/userPermissions.SALE_ORDER_DELETE}}                            </div>
                         </div>
                     </form>
                 </div>

@@ -1,5 +1,6 @@
 package com.gsm.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,6 +23,7 @@ public class ProductionOutputController {
      * @return The path to the production output list view template.
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('PRODUCTION_OUTPUT_VIEW')")
     public String showProductionOutputPage(Model model, HttpServletRequest request) {
         model.addAttribute("isProductionOutputPage", true);
         model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));

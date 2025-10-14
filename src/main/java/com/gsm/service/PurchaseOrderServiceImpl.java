@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -250,25 +251,55 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
         // Step 3: Create a Map to find the fields with ID
         Map<Long, PurchaseOrderDetail> existingDetailsMap = po.getDetails().stream()
-                .collect(Collectors.toMap(PurchaseOrderDetail::getPurchaseOrderDetailId, detail -> detail));
+                .collect(Collectors.toMap(PurchaseOrderDetail::getPurchaseOrderDetailId, Function.identity()));
 
-        // Step 4: Loop through the new detail DTOs from the form and create new detail entities.
+        List<PurchaseOrderDetail> detailsToKeep = new ArrayList<>();
+
+        // Step 4: Iterate through the details submitted from the form.
         if (dto.getDetails() != null) {
             for (PurchaseOrderDetailDto detailDto : dto.getDetails()) {
-                PurchaseOrderDetail existingDetail = existingDetailsMap.get(detailDto.getPurchaseOrderDetailId());
+                PurchaseOrderDetail detail;
+                Long detailId = detailDto.getPurchaseOrderDetailId();
 
-                if (existingDetail != null) {
-                    existingDetail.setPurchaseQuantity(detailDto.getPurchaseQuantity());
-                    existingDetail.setNetPrice(detailDto.getNetPrice());
-                    existingDetail.setTaxRate(detailDto.getTaxRate());
-                    existingDetail.setReceivedQuantity(detailDto.getReceivedQuantity() != null ? detailDto.getReceivedQuantity() : 0.0);
+                if (detailId != null) {
+                    // This is an existing detail. Update it.
+                    detail = existingDetailsMap.get(detailId);
+                    if (detail == null) {
+                        throw new ResourceNotFoundException("PurchaseOrderDetail not found with ID: " + detailId);
+                    }
+                } else {
+                    // This is a new detail. Create it.
+                    detail = new PurchaseOrderDetail();
+                    detail.setPurchaseOrder(po); // Link it to the parent PO
+
+                    // For new details, we must find the OrderBOMDetail reference.
+                    if (detailDto.getOrderBOMDetailId() != null) {
+                        OrderBOMDetail bomDetailRef = orderBOMDetailRepository.findById(detailDto.getOrderBOMDetailId())
+                                .orElseThrow(() -> new ResourceNotFoundException("OrderBOMDetail not found with ID: " + detailDto.getOrderBOMDetailId()));
+                        detail.setOrderBOMDetail(bomDetailRef);
+                    }
                 }
+
+                // Update properties for both new and existing details.
+                detail.setPurchaseQuantity(detailDto.getPurchaseQuantity());
+                detail.setNetPrice(detailDto.getNetPrice());
+                detail.setTaxRate(detailDto.getTaxRate());
+                detail.setReceivedQuantity(detailDto.getReceivedQuantity() != null ? detailDto.getReceivedQuantity() : 0.0);
+
+                detailsToKeep.add(detail);
             }
         }
 
-        // Step 5: Save the parent PO. JPA will automatically handle all INSERT, UPDATE, and DELETE.
+        // Step 5: Synchronize the collection. This is the crucial part.
+        // By clearing and re-adding, JPA with `orphanRemoval=true` will automatically
+        // delete any details that were in the original list but are not in `detailsToKeep`.
+        po.getDetails().clear();
+        po.getDetails().addAll(detailsToKeep);
+
+        // Step 6: Save the parent PO. All changes will be cascaded.
         PurchaseOrder savedPO = purchaseOrderRepository.save(po);
-        // Step 6: Convert the saved entity back to a DTO to return to the client.
+
+        // Step 7: Convert the saved entity back to a DTO to return to the client.
         return convertEntityToDto(savedPO);
     }
 

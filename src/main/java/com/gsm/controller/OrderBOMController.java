@@ -13,6 +13,7 @@ import com.gsm.service.OrderBOMService;
 import com.gsm.service.PurchaseOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.web.server.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,7 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
+/**OrderBOMController
  * Handles all web requests related to the Order Bill of Materials (BOM).
  * This includes displaying the BOM list, showing the creation/edit form, and saving data.
  */
@@ -58,6 +59,7 @@ public class OrderBOMController {
      * @return The name of the Order BOM list view template.
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('BOM_VIEW')")
     public String showOrderBomList(Model model) {
         List<OrderBOMDto> orderBOMs = orderBOMService.findAll();
         model.addAttribute("orderBOMs", orderBOMs);
@@ -76,6 +78,7 @@ public class OrderBOMController {
      * @throws JsonProcessingException If there is an error serializing the details list to JSON.
      */
     @GetMapping("/form")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('BOM_VIEW')")
     public String showOrderBomForm(@RequestParam Long saleOrderId, Model model, HttpServletRequest request) throws JsonProcessingException { // Thêm throws
         OrderBOMDto orderBOM = orderBOMService.findOrCreateBySaleOrderId(saleOrderId);
         List<BOMTemplateDto> bomTemplates = bomTemplateService.findAll();
@@ -130,6 +133,7 @@ public class OrderBOMController {
      * @return A redirect command to the Sale Order form.
      */
     @PostMapping("/save")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('BOM_VIEW')")
     public String saveOrderBom(@ModelAttribute OrderBOMDto orderBOMDto, RedirectAttributes redirectAttributes) {
         try {
             OrderBOMDto savedDto = orderBOMService.save(orderBOMDto);

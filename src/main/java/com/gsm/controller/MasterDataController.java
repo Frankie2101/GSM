@@ -3,6 +3,7 @@ package com.gsm.controller;
 import com.gsm.repository.CustomerRepository;
 import com.gsm.repository.SupplierRepository;
 import com.gsm.repository.UnitRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +30,7 @@ public class MasterDataController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('MASTER_DATA_VIEW')")
     public String showMasterDataPage(Model model) {
         model.addAttribute("customers", customerRepository.findAll());
         model.addAttribute("suppliers", supplierRepository.findAll());
@@ -46,6 +48,7 @@ public class MasterDataController {
      * @return A ResponseEntity containing the file resource for the browser to download.
      */
     @GetMapping("/download-template/{fileName:.+}")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('MASTER_DATA_VIEW')")
     public ResponseEntity<Resource> downloadTemplate(@PathVariable String fileName) {
         try {
             Resource resource = new ClassPathResource("static/templates/" + fileName);

@@ -52,7 +52,9 @@
                         <h1 class="h5 mb-0 text-gradient-custom">Create BOM</h1>
                         <div>
                             <a href="/sale-orders/form?id={{saleOrderId}}" class="btn btn-link-custom">Back to SO</a>
-                            <button type="button" id="generatePoBtn" class="btn btn-custom-gradient rounded-pill px-4 py-2">Generate PO</button>
+                            {{#userPermissions.BOM_GENERATE_PO}}
+                                <button type="button" id="generatePoBtn" class="btn btn-custom-gradient rounded-pill px-4 py-2">Generate PO</button>
+                            {{/userPermissions.BOM_GENERATE_PO}}
                         </div>
                     </div>
 
@@ -127,6 +129,7 @@
                                 <button type="button" id="deleteSelectedBtn" class="btn btn-delete-gradient rounded-pill px-3 py-2 btn-sm">
                                     <i class="bi bi-trash me-1"></i> Delete
                                 </button>
+
                             </div>
                         </div>
                     </div>

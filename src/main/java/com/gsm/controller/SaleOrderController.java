@@ -9,6 +9,7 @@ import com.gsm.model.Customer;
 import com.gsm.repository.CustomerRepository;
 import com.gsm.service.SaleOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -43,6 +44,7 @@ public class SaleOrderController {
      * @return The path to the sale order list view.
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('SALE_ORDER_VIEW')")
     public String showSaleOrderList(@RequestParam(required = false) String keyword, Model model, HttpServletRequest request) {
         List<SaleOrderDto> orders;
         if (keyword != null && !keyword.isEmpty()) {
@@ -67,6 +69,7 @@ public class SaleOrderController {
      * @throws JsonProcessingException if there's an error converting the details list to JSON.
      */
     @GetMapping("/form")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('SALE_ORDER_VIEW')")
     public String showSaleOrderForm(@RequestParam(required = false) Long id, Model model, HttpServletRequest request) throws JsonProcessingException {
         SaleOrderDto order;
         if (id != null) {
@@ -130,6 +133,7 @@ public class SaleOrderController {
      * @return A redirect string to the appropriate page.
      */
     @PostMapping("/save")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('SALE_ORDER_CREATE_EDIT')")
     public String saveSaleOrder(@ModelAttribute SaleOrderDto saleOrderDto, RedirectAttributes redirectAttributes) {
         try {
             SaleOrderDto savedOrder = saleOrderService.save(saleOrderDto);
@@ -154,6 +158,7 @@ public class SaleOrderController {
      * @return A redirect string back to the sale order list.
      */
     @PostMapping("/delete")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('SALE_ORDER_DELETE')")
     public String deleteSaleOrders(@RequestParam(value = "selectedIds", required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
         if (ids == null || ids.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Please select at least one order to delete.");

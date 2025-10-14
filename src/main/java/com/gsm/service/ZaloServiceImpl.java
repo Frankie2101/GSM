@@ -4,6 +4,8 @@ import com.gsm.dto.ProductionOutputDto;
 import com.gsm.dto.UserDto;
 import com.gsm.dto.ZaloLinkRequestDto;
 import com.gsm.dto.ZaloStyleColorDto;
+import com.gsm.enums.Permission;
+import com.gsm.enums.UserType;
 import com.gsm.exception.ResourceNotFoundException;
 import com.gsm.model.ProductionOutput;
 import com.gsm.model.SaleOrder;
@@ -20,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -64,35 +67,33 @@ public class ZaloServiceImpl implements ZaloService {
     @Override
     @Transactional(readOnly = true)
     public UserDto loginByZaloId(String zaloUserId) {
-        log.info("--- Starting loginByZaloId ---");
         log.info("Attempting to find user with Zalo User ID: [{}]", zaloUserId);
 
-        // Use JDBC to query the DB directly for verification.
-        try {
-            String sql = "SELECT UserId, UserName, zaloUserId FROM Users WHERE zaloUserId = ?";
-            List<Map<String, Object>> users = jdbcTemplate.queryForList(sql, zaloUserId);
+        User user = userRepository.findByZaloUserId(zaloUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Zalo user ID not linked to any account: " + zaloUserId));
 
-            log.info("Direct JDBC query found {} user(s) with this Zalo ID.", users.size());
+        log.info("Found user '{}'. Now checking permissions.", user.getUserName());
 
-            if (!users.isEmpty()) {
-                users.forEach(user -> log.info("Found user via JDBC: {}", user.toString()));
+        boolean hasPermission = false;
+        if (user.getUserType() == UserType.Admin) {
+            hasPermission = true;
+            log.info("User is Admin. Granting access.");
+        } else if (user.getPermissions().contains(Permission.PRODUCTION_OUTPUT_VIEW.name())) {
+            hasPermission = true;
+            log.info("User has required permission 'PRODUCTION_OUTPUT_VIEW'. Granting access.");
+        }
+
+        if (!hasPermission) {
+            log.warn("User '{}' does not have permission to access the production output function.", user.getUserName());
+            try {
+                throw new AccessDeniedException("User does not have permission to access this function.");
+            } catch (AccessDeniedException e) {
+                throw new RuntimeException(e);
             }
-        } catch (Exception e) {
-            log.error("Error during direct JDBC query test", e);
         }
 
-        log.info("Now attempting to find user with Spring Data JPA...");
-        try {
-            User user = userRepository.findByZaloUserId(zaloUserId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Zalo user ID not linked to any account: " + zaloUserId));
-
-            log.info("Successfully found unique user via Spring Data JPA: {}", user.getUserName());
-            return mapUserToDto(user);
-
-        } catch (Exception e) {
-            log.error("!!! EXCEPTION CAUGHT during userRepository.findByZaloUserId !!!", e);
-            throw e;
-        }
+        log.info("Permission check passed. Returning user data.");
+        return mapUserToDto(user);
     }
 
     /**

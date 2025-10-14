@@ -6,7 +6,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.gsm.dto.PurchaseOrderDto;
 import com.gsm.service.PurchaseOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.web.server.csrf.CsrfToken;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.web.csrf.CsrfToken;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
 import com.samskivert.mustache.Mustache;
 import com.gsm.repository.MaterialGroupRepository;
+
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.DecimalFormat;
@@ -30,7 +33,6 @@ public class PurchaseOrderController {
 
     @Autowired
     private PurchaseOrderService purchaseOrderService;
-
     @Autowired
     private MaterialGroupRepository materialGroupRepository;
 
@@ -39,9 +41,12 @@ public class PurchaseOrderController {
      * The actual data loading is handled by JavaScript via API calls.
      */
     @GetMapping
-    public String showPoListPage(Model model) {
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('PURCHASE_ORDER_VIEW')")
+    public String showPoListPage(Model model, HttpServletRequest request) {
         model.addAttribute("isPurchaseOrderPage", true);
         model.addAttribute("materialGroups", materialGroupRepository.findAll());
+
+        model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));
         return "po/po_list";
     }
 
@@ -53,6 +58,7 @@ public class PurchaseOrderController {
      * @return The path to the PO form view.
      */
     @GetMapping("/form")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('PURCHASE_ORDER_VIEW')")
     public String showPoForm(@RequestParam(required = false) Long id, Model model, HttpServletRequest request) throws JsonProcessingException {
         PurchaseOrderDto poDto = (id != null) ? purchaseOrderService.findById(id) : new PurchaseOrderDto();
 
@@ -68,6 +74,7 @@ public class PurchaseOrderController {
      * Displays the page for approving POs ("Pending Approval").
      */
     @GetMapping("/pending-approval")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('PURCHASE_ORDER_APPROVE')")
     public String showPendingApprovalPage(Model model) {
         model.addAttribute("isPurchaseOrderPage", true);
         return "po/pending_approval_list";
@@ -101,12 +108,12 @@ public class PurchaseOrderController {
      * @return The path to the printable PO view.
      */
     @GetMapping("/print/{id}")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('PURCHASE_ORDER_VIEW') or hasAuthority('PURCHASE_ORDER_APPROVE')")
     public String showPrintPoPage(@PathVariable Long id, Model model, HttpServletRequest request) {
         PurchaseOrderDto poDto = purchaseOrderService.findById(id);
 
         model.addAttribute("_csrf", request.getAttribute(CsrfToken.class.getName()));
         model.addAttribute("po", poDto);
-        // THÊM DÒNG NÀY
         model.addAttribute("FormatNumber", formatNumberLambda());
 
         model.addAttribute("isPurchaseOrderPage", true);
@@ -119,10 +126,12 @@ public class PurchaseOrderController {
      * @return The path to the print preview template.
      */
     @GetMapping("/print-preview/{id}")
+    @PreAuthorize("hasAuthority('ROLE_Admin') or hasAuthority('PURCHASE_ORDER_PRINT')")
     public String showPrintPreviewPage(@PathVariable Long id, Model model) {
         PurchaseOrderDto poDto = purchaseOrderService.findById(id);
         model.addAttribute("po", poDto);
         model.addAttribute("FormatNumber", formatNumberLambda());
         return "po/po_print_preview";
     }
+
 }

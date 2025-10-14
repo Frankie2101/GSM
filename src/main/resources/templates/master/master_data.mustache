@@ -40,11 +40,13 @@
                 {{! ----- CUSTOMERS TAB ----- }}
                 <div class="tab-pane fade show active" id="customers" role="tabpanel" aria-labelledby="customers-tab">
                     <div class="card card-body border-top-0 rounded-bottom">
-                        <div class="d-flex justify-content-end mb-3">
-                            <button type="button" class="btn btn-success rounded-pill px-3 py-2" data-bs-toggle="modal" data-bs-target="#customerImportModal">
-                                <i class="bi bi-file-earmark-excel me-1"></i> Import Customers
-                            </button>
-                        </div>
+                        {{#userPermissions.MASTER_DATA_EDIT}}
+                            <div class="d-flex justify-content-end mb-3">
+                                <button type="button" class="btn btn-success rounded-pill px-3 py-2" data-bs-toggle="modal" data-bs-target="#customerImportModal">
+                                    <i class="bi bi-file-earmark-excel me-1"></i> Import Customers
+                                </button>
+                            </div>
+                        {{/userPermissions.MASTER_DATA_EDIT}}
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
@@ -83,11 +85,13 @@
                 {{! ----- SUPPLIERS TAB ----- }}
                 <div class="tab-pane fade" id="suppliers" role="tabpanel" aria-labelledby="suppliers-tab">
                     <div class="card card-body border-top-0 rounded-bottom">
-                        <div class="d-flex justify-content-end mb-3">
-                            <button type="button" class="btn btn-success rounded-pill px-3 py-2" data-bs-toggle="modal" data-bs-target="#supplierImportModal">
-                                <i class="bi bi-file-earmark-excel me-1"></i> Import Suppliers
-                            </button>
-                        </div>
+                        {{#userPermissions.MASTER_DATA_EDIT}}
+                            <div class="d-flex justify-content-end mb-3">
+                                <button type="button" class="btn btn-success rounded-pill px-3 py-2" data-bs-toggle="modal" data-bs-target="#supplierImportModal">
+                                    <i class="bi bi-file-earmark-excel me-1"></i> Import Suppliers
+                                </button>
+                            </div>
+                        {{/userPermissions.MASTER_DATA_EDIT}}
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
@@ -128,11 +132,13 @@
                 {{! ----- UNITS TAB ----- }}
                 <div class="tab-pane fade" id="units" role="tabpanel" aria-labelledby="units-tab">
                     <div class="card card-body border-top-0 rounded-bottom">
-                        <div class="d-flex justify-content-end mb-3">
-                            <button type="button" class="btn btn-success rounded-pill px-3 py-2" data-bs-toggle="modal" data-bs-target="#unitImportModal">
-                                <i class="bi bi-file-earmark-excel me-1"></i> Import Units
-                            </button>
-                        </div>
+                        {{#userPermissions.MASTER_DATA_EDIT}}
+                            <div class="d-flex justify-content-end mb-3">
+                                <button type="button" class="btn btn-success rounded-pill px-3 py-2" data-bs-toggle="modal" data-bs-target="#unitImportModal">
+                                    <i class="bi bi-file-earmark-excel me-1"></i> Import Units
+                                </button>
+                            </div>
+                        {{/userPermissions.MASTER_DATA_EDIT}}
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
