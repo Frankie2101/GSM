@@ -17,15 +17,16 @@ import java.util.Optional;
 /**
  * The concrete implementation of the {@link CustomerService} interface.
  * This class orchestrates all business logic for the Customer feature,
- * including the import functionality from Excel files.
+ * including parsing and saving data from Excel files.
  */
 @Service
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
+
     /**
      * DataFormatter is a utility from Apache POI to safely retrieve the formatted
-     * string value of a cell, regardless of its underlying data type (e.g., numeric, string, date).
+     * string value of a cell, regardless of its underlying data type.
      */
     private final DataFormatter dataFormatter = new DataFormatter();
 
@@ -36,38 +37,23 @@ public class CustomerServiceImpl implements CustomerService {
 
     /**
      * {@inheritDoc}
-     * This implementation uses Apache POI to stream and process the Excel file.
-     * It iterates through each row, performs an upsert logic, and saves all
-     * changes in a single transaction for efficiency.
      */
     @Override
-    @Transactional
-    public void importFromExcel(InputStream inputStream) throws IOException {
-        List<Customer> customersToSave = new ArrayList<>();
+    public List<Customer> parseExcelForPreview(InputStream inputStream) throws IOException {
+        List<Customer> customers = new ArrayList<>();
         try (Workbook workbook = new XSSFWorkbook(inputStream)) {
             Sheet sheet = workbook.getSheetAt(0);
+
+            // Iterate through each row, skipping the header (row 0)
             for (Row row : sheet) {
-                // Skip the header row (first row, index 0)
                 if (row.getRowNum() == 0) continue;
 
-                // Read the unique business key (customerCode) from the first column.
                 String customerCode = getCellValueAsString(row.getCell(0));
+                if (customerCode.isEmpty()) continue; // Skip empty rows
 
-                // Skip rows that do not have a customer code to avoid validation errors.
-                if (customerCode.isEmpty()) continue;
-
-                // --- UPSERT LOGIC ---
-                // Attempt to find an existing customer by their unique code.
-                Optional<Customer> existingOpt = customerRepository.findByCustomerCode(customerCode);
-
-                // If a customer is found, use that instance; otherwise, create a new one.
-                Customer customer = existingOpt.orElseGet(() -> {
-                    Customer newCustomer = new Customer();
-                    newCustomer.setCustomerCode(customerCode);
-                    return newCustomer;
-                });
-
-                // Update the entity's fields with data from the other columns.
+                // Create a transient Customer object for preview purposes
+                Customer customer = new Customer();
+                customer.setCustomerCode(customerCode);
                 customer.setCustomerName(getCellValueAsString(row.getCell(1)));
                 customer.setAddress(getCellValueAsString(row.getCell(2)));
                 customer.setContactPhone(getCellValueAsString(row.getCell(3)));
@@ -77,13 +63,43 @@ public class CustomerServiceImpl implements CustomerService {
                 customer.setCurrencyCode(getCellValueAsString(row.getCell(7)));
                 customer.setCountryCode(getCellValueAsString(row.getCell(8)));
 
-                customersToSave.add(customer);
+                customers.add(customer);
             }
+        }
+        return customers;
+    }
 
-            // Save all new or updated entities in a single batch operation for better performance.
-            if (!customersToSave.isEmpty()) {
-                customerRepository.saveAll(customersToSave);
-            }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional
+    public void saveAll(List<Customer> customers) {
+        List<Customer> customersToSave = new ArrayList<>();
+        for (Customer previewCustomer : customers) {
+            // Find existing customer or create a new instance (upsert logic)
+            Optional<Customer> existingOpt = customerRepository.findByCustomerCode(previewCustomer.getCustomerCode());
+            Customer customer = existingOpt.orElseGet(() -> {
+                Customer newCustomer = new Customer();
+                newCustomer.setCustomerCode(previewCustomer.getCustomerCode());
+                return newCustomer;
+            });
+
+            // Copy properties from the preview object to the persistent object
+            customer.setCustomerName(previewCustomer.getCustomerName());
+            customer.setAddress(previewCustomer.getAddress());
+            customer.setContactPhone(previewCustomer.getContactPhone());
+            customer.setContactEmail(previewCustomer.getContactEmail());
+            customer.setDeliveryTerm(previewCustomer.getDeliveryTerm());
+            customer.setPaymentTerm(previewCustomer.getPaymentTerm());
+            customer.setCurrencyCode(previewCustomer.getCurrencyCode());
+            customer.setCountryCode(previewCustomer.getCountryCode());
+
+            customersToSave.add(customer);
+        }
+
+        if (!customersToSave.isEmpty()) {
+            customerRepository.saveAll(customersToSave);
         }
     }
 

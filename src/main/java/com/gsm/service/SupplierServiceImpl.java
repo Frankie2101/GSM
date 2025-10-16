@@ -32,24 +32,20 @@ public class SupplierServiceImpl implements SupplierService {
      * {@inheritDoc}
      */
     @Override
-    @Transactional
-    public void importFromExcel(InputStream inputStream) throws IOException {
-        List<Supplier> suppliersToSave = new ArrayList<>();
+    public List<Supplier> parseExcelForPreview(InputStream inputStream) throws IOException {
+        List<Supplier> suppliers = new ArrayList<>();
         try (Workbook workbook = new XSSFWorkbook(inputStream)) {
             Sheet sheet = workbook.getSheetAt(0);
+
             for (Row row : sheet) {
-                if (row.getRowNum() == 0) continue;
+                if (row.getRowNum() == 0) continue; // Skip header row
 
                 String supplierCode = getCellValueAsString(row.getCell(0));
-                if (supplierCode.isEmpty()) continue;
+                if (supplierCode.isEmpty()) continue; // Skip empty rows
 
-                Optional<Supplier> existingOpt = supplierRepository.findBySupplierCode(supplierCode);
-                Supplier supplier = existingOpt.orElseGet(() -> {
-                    Supplier newSupplier = new Supplier();
-                    newSupplier.setSupplierCode(supplierCode);
-                    return newSupplier;
-                });
-
+                // Create a transient Supplier object just for preview
+                Supplier supplier = new Supplier();
+                supplier.setSupplierCode(supplierCode);
                 supplier.setSupplierName(getCellValueAsString(row.getCell(1)));
                 supplier.setAddress(getCellValueAsString(row.getCell(2)));
                 supplier.setContactPhone(getCellValueAsString(row.getCell(3)));
@@ -57,29 +53,56 @@ public class SupplierServiceImpl implements SupplierService {
                 supplier.setDeliveryTerm(getCellValueAsString(row.getCell(5)));
                 supplier.setPaymentTerm(getCellValueAsString(row.getCell(6)));
                 supplier.setCurrencyCode(getCellValueAsString(row.getCell(7)));
-
                 try {
                     String taxRateStr = getCellValueAsString(row.getCell(8));
                     if (!taxRateStr.isEmpty()) {
                         supplier.setTaxRate(Double.parseDouble(taxRateStr));
                     }
-                } catch (NumberFormatException e) {
-                    System.err.println("Invalid TaxRate format for supplier code: " + supplierCode);
-                }
-
+                } catch (NumberFormatException ignored) {}
                 supplier.setCountryCode(getCellValueAsString(row.getCell(9)));
 
-                suppliersToSave.add(supplier);
+                suppliers.add(supplier);
             }
-            if (!suppliersToSave.isEmpty()) {
-                supplierRepository.saveAll(suppliersToSave);
-            }
+        }
+        return suppliers;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional
+    public void saveAll(List<Supplier> suppliers) {
+        List<Supplier> suppliersToSave = new ArrayList<>();
+        for (Supplier previewSupplier : suppliers) {
+            // Find existing supplier by code or create a new one
+            Optional<Supplier> existingOpt = supplierRepository.findBySupplierCode(previewSupplier.getSupplierCode());
+            Supplier supplier = existingOpt.orElseGet(() -> {
+                Supplier newSupplier = new Supplier();
+                newSupplier.setSupplierCode(previewSupplier.getSupplierCode());
+                return newSupplier;
+            });
+
+            // Map properties from the preview object to the persistent object
+            supplier.setSupplierName(previewSupplier.getSupplierName());
+            supplier.setAddress(previewSupplier.getAddress());
+            supplier.setContactPhone(previewSupplier.getContactPhone());
+            supplier.setContactEmail(previewSupplier.getContactEmail());
+            supplier.setDeliveryTerm(previewSupplier.getDeliveryTerm());
+            supplier.setPaymentTerm(previewSupplier.getPaymentTerm());
+            supplier.setCurrencyCode(previewSupplier.getCurrencyCode());
+            supplier.setTaxRate(previewSupplier.getTaxRate());
+            supplier.setCountryCode(previewSupplier.getCountryCode());
+
+            suppliersToSave.add(supplier);
+        }
+        if (!suppliersToSave.isEmpty()) {
+            supplierRepository.saveAll(suppliersToSave);
         }
     }
 
     /**
      * Safely reads a cell's value and returns it as a String, regardless of the cell type.
-     * This prevents "Cannot get a STRING value from a NUMERIC cell" errors.
      *
      * @param cell The Excel cell to read from. Can be null.
      * @return The cell's content as a trimmed String. Returns an empty string if the cell is null.

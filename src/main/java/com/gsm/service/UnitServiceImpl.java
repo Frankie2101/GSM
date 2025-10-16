@@ -32,9 +32,8 @@ public class UnitServiceImpl implements UnitService {
      * {@inheritDoc}
      */
     @Override
-    @Transactional
-    public void importFromExcel(InputStream inputStream) throws IOException {
-        List<Unit> unitsToSave = new ArrayList<>();
+    public List<Unit> parseExcelForPreview(InputStream inputStream) throws IOException {
+        List<Unit> units = new ArrayList<>();
         try (Workbook workbook = new XSSFWorkbook(inputStream)) {
             Sheet sheet = workbook.getSheetAt(0);
             for (Row row : sheet) {
@@ -43,27 +42,42 @@ public class UnitServiceImpl implements UnitService {
                 String unitCode = getCellValueAsString(row.getCell(0));
                 if (unitCode.isEmpty()) continue;
 
-                Optional<Unit> existingOpt = unitRepository.findByUnitCode(unitCode);
-                Unit unit = existingOpt.orElseGet(() -> {
-                    Unit newUnit = new Unit();
-                    newUnit.setUnitCode(unitCode);
-                    return newUnit;
-                });
-
+                Unit unit = new Unit();
+                unit.setUnitCode(unitCode);
                 unit.setUnitName(getCellValueAsString(row.getCell(1)));
+                units.add(unit);
+            }
+        }
+        return units;
+    }
 
-                unitsToSave.add(unit);
-            }
-            if (!unitsToSave.isEmpty()) {
-                unitRepository.saveAll(unitsToSave);
-            }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional
+    public void saveAll(List<Unit> units) {
+        List<Unit> unitsToSave = new ArrayList<>();
+        for (Unit previewUnit : units) {
+            Optional<Unit> existingOpt = unitRepository.findByUnitCode(previewUnit.getUnitCode());
+            Unit unit = existingOpt.orElseGet(() -> {
+                Unit newUnit = new Unit();
+                newUnit.setUnitCode(previewUnit.getUnitCode());
+                return newUnit;
+            });
+            unit.setUnitName(previewUnit.getUnitName());
+            unitsToSave.add(unit);
+        }
+        if (!unitsToSave.isEmpty()) {
+            unitRepository.saveAll(unitsToSave);
         }
     }
 
     /**
-     * Safely reads a cell's value and returns it as a String.
-     * @param cell The Excel cell to read from.
-     * @return The cell's content as a trimmed String.
+     * Safely reads a cell's value and returns it as a String, regardless of the cell type.
+     *
+     * @param cell The Excel cell to read from. Can be null.
+     * @return The cell's content as a trimmed String. Returns an empty string if the cell is null.
      */
     private String getCellValueAsString(Cell cell) {
         if (cell == null) {

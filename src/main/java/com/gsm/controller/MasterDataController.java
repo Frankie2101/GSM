@@ -35,9 +35,7 @@ public class MasterDataController {
         model.addAttribute("customers", customerRepository.findAll());
         model.addAttribute("suppliers", supplierRepository.findAll());
         model.addAttribute("units", unitRepository.findAll());
-
         model.addAttribute("isMasterDataPage", true);
-
         return "master/master_data";
     }
 
