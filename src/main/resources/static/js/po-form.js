@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Buttons
     const saveBtn = document.getElementById('savePoBtn');
     const submitBtn = document.getElementById('submitPoBtn');
-    const addDetailBtn = document.getElementById('addDetailBtn');
     const deleteSelectedDetailsBtn = document.getElementById('deleteSelectedDetailsBtn');
     const printBtn = document.getElementById('printPoBtn');
 
@@ -223,7 +222,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Hide/Show table action buttons
         const displayStyle = readOnly ? 'none' : 'inline-block';
-        addDetailBtn.style.display = displayStyle;
         deleteSelectedDetailsBtn.style.display = displayStyle;
 
         // Hide/Show individual row action elements
@@ -285,7 +283,6 @@ document.addEventListener('DOMContentLoaded', function() {
         saveBtn.style.display = 'none';
         submitBtn.style.display = 'none';
         printBtn.style.display = 'none';
-        addDetailBtn.style.display = 'none';
         deleteSelectedDetailsBtn.style.display = 'none';
 
         // Set the entire form to read-only by default.
@@ -364,8 +361,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-
-    addDetailBtn.addEventListener('click', () => createAndAppendRow());
 
     deleteSelectedDetailsBtn.addEventListener('click', function() {
         const checkedBoxes = tableBody.querySelectorAll('.row-checkbox:checked');
