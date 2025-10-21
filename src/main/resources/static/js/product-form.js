@@ -77,7 +77,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 return;
             }
-            // Remove each selected row from the DOM.
+            // Remove each
+            //
+            // selected row from the DOM.
             checkedBoxes.forEach(checkbox => {
                 checkbox.closest('tr').remove();
             });
@@ -108,19 +110,42 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    document.addEventListener('input', function(event) {
-
-        const isPriceInput = event.target.matches('input[data-name="price"]')
-
-        if (isPriceInput) {
+    /**
+     * Provides simple real-time validation for the price input field using keydown.
+     * Allows digits, a single decimal point, and necessary control keys.
+     */
+    document.addEventListener('keydown', function(event) {
+        // Target only the price input
+        if (event.target.matches('input[data-name="price"]')) {
             const input = event.target;
+            const key = event.key;
+            const currentValue = input.value;
 
-            input.value = input.value.replace(/[^0-9.]/g, '');
+            // Allow: backspace, delete, tab, escape, enter, arrows, home, end
+            // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X, Cmd+A (for Mac)
+            // Allow: function keys (F1-F12)
+            if (key.length > 1 || event.ctrlKey || event.metaKey) {
+                return; // Don't interfere
+            }
 
-            let value = parseFloat(input.value);
+            // Prevent typing a second decimal point if one already exists
+            if (key === '.' && currentValue.includes('.')) {
+                event.preventDefault();
+                return;
+            }
 
-            if (value < 0) {
-                input.value = '';
+            // Allow only digits (0-9) OR the first decimal point
+            const isDigit = /[0-9]/.test(key);
+            const isFirstDecimalPoint = key === '.' && !currentValue.includes('.');
+
+            if (!isDigit && !isFirstDecimalPoint) {
+                event.preventDefault(); // Block any other characters
+            }
+
+            // Basic check for negative sign - although min="0" should handle this too
+            // Note: This prevents typing '-' but doesn't handle pasting negative numbers perfectly.
+            if (key === '-' ) {
+                event.preventDefault();
             }
         }
     });

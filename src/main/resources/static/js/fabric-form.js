@@ -109,28 +109,46 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /**
-     * Provides real-time validation for numeric input fields to ensure only valid numbers are entered.
-     *
-     * This listener uses event delegation on the entire document to catch `input` events.
-     * It targets fields with `data-name="netPrice"` or `data-name="taxPercent"`.
-     * For these fields, it automatically removes any non-numeric characters (except for the decimal point)
-     * and clears the input if a negative value is entered.
+     * Provides simple real-time validation for numeric input fields using keydown.
+     * Allows digits, a single decimal point, and necessary control keys.
      */
-    document.addEventListener('input', function(event) {
+    document.addEventListener('keydown', function(event) {
+        // Target only the Net Price and Tax Percent inputs
         const isNumericInput = event.target.matches('input[data-name="netPrice"]') ||
             event.target.matches('input[data-name="taxPercent"]');
 
         if (isNumericInput) {
             const input = event.target;
+            const key = event.key;
+            const currentValue = input.value;
 
-            input.value = input.value.replace(/[^0-9.]/g, '');
+            // Allow: backspace, delete, tab, escape, enter, arrows, home, end
+            // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X, Cmd+A (for Mac)
+            // Allow: function keys (F1-F12)
+            if (key.length > 1 || event.ctrlKey || event.metaKey) {
+                return; // Don't interfere
+            }
 
-            if (parseFloat(input.value) < 0) {
-                input.value = '';
+            // Prevent typing a second decimal point if one already exists
+            if (key === '.' && currentValue.includes('.')) {
+                event.preventDefault();
+                return;
+            }
+
+            // Allow only digits (0-9) OR the first decimal point
+            const isDigit = /[0-9]/.test(key);
+            const isFirstDecimalPoint = key === '.' && !currentValue.includes('.');
+
+            if (!isDigit && !isFirstDecimalPoint) {
+                event.preventDefault(); // Block any other characters
+            }
+
+            // Prevent typing the minus sign
+            if (key === '-' ) {
+                event.preventDefault();
             }
         }
     });
-
 
     /**
      * Event listener for the main form's `submit` event to validate for duplicate color codes.
