@@ -6,6 +6,7 @@ import com.gsm.exception.DuplicateResourceException;
 import com.gsm.exception.ResourceNotFoundException;
 import com.gsm.model.*;
 import com.gsm.repository.*;
+import com.gsm.service.impl.TrimServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

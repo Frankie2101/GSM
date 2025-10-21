@@ -2,7 +2,6 @@ package com.gsm.controller.advice;
 
 import com.gsm.model.User;
 import com.gsm.repository.UserRepository;
-import com.gsm.service.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import com.gsm.enums.Permission;
 import java.util.HashMap;
 import java.util.Map;
-import com.gsm.enums.UserType;
 
 
 /**

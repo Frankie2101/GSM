@@ -12,6 +12,7 @@ import com.gsm.repository.ProductRepository;
 import com.gsm.repository.ProductVariantRepository;
 import com.gsm.repository.SaleOrderDetailRepository;
 import com.gsm.repository.UnitRepository;
+import com.gsm.service.impl.ProductServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +21,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
