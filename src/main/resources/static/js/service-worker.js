@@ -15,7 +15,7 @@ const CACHE_NAME = 'gsm-prod-input-cache-v1';
  */
 const urlsToCache = [
     '/mobile-login',
-    '/mobile-input'
+    '/mobile-output'
 ];
 
 /**

@@ -73,31 +73,31 @@
                                     <select class="form-select" id="customerId" name="customerId" required>
                                         <option value="">-- Select Customer --</option>
                                         {{#customers}}
-                                            <option value="{{id}}" data-code="{{code}}" data-currency="{{currency}}" {{#selected}}selected{{/selected}}>{{name}}</option>
+                                            <option value="{{id}}" data-code="{{code}}" data-currency="{{currency}}" {{#selected}}selected{{/selected}}>{{name}} required</option>
                                         {{/customers}}
                                     </select>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="saleOrderNo" class="form-label">Order No <span class="text-danger">*</span></label>
+                                    <label for="saleOrderNo" class="form-label">Order No</label>
                                     <input type="text" class="form-control" id="saleOrderNo" name="saleOrderNo" value="{{#saleOrderNo}}{{.}}{{/saleOrderNo}}" required readonly>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="customerPO" class="form-label">Customer PO</label>
-                                    <input type="text" class="form-control" id="customerPO" name="customerPO" value="{{#customerPO}}{{.}}{{/customerPO}}">
+                                    <label for="customerPO" class="form-label">Customer PO <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="customerPO" name="customerPO" value="{{#customerPO}}{{.}}{{/customerPO}}" required>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label for="shipDate" class="form-label">Ship Date</label>
-                                    <input type="date" class="form-control" id="shipDate" name="shipDate" value="{{#shipDate}}{{.}}{{/shipDate}}">
+                                    <label for="shipDate" class="form-label">Ship Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="shipDate" name="shipDate" value="{{#shipDate}}{{.}}{{/shipDate}}" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="productionStartDate" class="form-label">Production Start</label>
-                                    <input type="date" class="form-control" id="productionStartDate" name="productionStartDate" value="{{#productionStartDate}}{{.}}{{/productionStartDate}}">
+                                    <label for="productionStartDate" class="form-label">Production Start <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="productionStartDate" name="productionStartDate" value="{{#productionStartDate}}{{.}}{{/productionStartDate}}" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="productionEndDate" class="form-label">Production End</label>
-                                    <input type="date" class="form-control" id="productionEndDate" name="productionEndDate" value="{{#productionEndDate}}{{.}}{{/productionEndDate}}">
+                                    <label for="productionEndDate" class="form-label">Production End <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="productionEndDate" name="productionEndDate" value="{{#productionEndDate}}{{.}}{{/productionEndDate}}" required>
                                 </div>
                             </div>
                             <div class="row">
@@ -106,8 +106,8 @@
                                     <input type="date" class="form-control" id="orderDate" name="orderDate" value="{{#orderDate}}{{.}}{{/orderDate}}" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="currencyCode" class="form-label">Currency</label>
-                                    <input type="text" class="form-control" id="currencyCode" name="currencyCode" value="{{#currencyCode}}{{.}}{{/currencyCode}}" maxlength="3">
+                                    <label for="currencyCode" class="form-label">Currency <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="currencyCode" name="currencyCode" value="{{#currencyCode}}{{.}}{{/currencyCode}}" maxlength="3" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="status" class="form-label">Status <span class="text-danger">*</span></label>

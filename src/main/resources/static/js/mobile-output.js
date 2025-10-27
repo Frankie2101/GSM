@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`/api/sale-orders/${soNo}/details`);
             if (!response.ok) throw new Error('Sale Order not found or invalid.');
 
-            const details = await response.json(); // Day la luc loi JSON.parse co the xay ra
+            const details = await response.json();
             saleOrderDetailsCache = details;
 
             const styles = [...new Set(details.map(d => d.style))];

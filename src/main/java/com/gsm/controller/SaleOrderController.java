@@ -140,7 +140,6 @@ public class SaleOrderController {
             redirectAttributes.addFlashAttribute("successMessage", "Saved Successfully!");
             return "redirect:/sale-orders/form?id=" + savedOrder.getSaleOrderId();
         } catch (Exception e) {
-            // SUGGESTION: Catch specific exceptions
             redirectAttributes.addFlashAttribute("errorMessage", "Error: " + e.getMessage());
             redirectAttributes.addFlashAttribute("order", saleOrderDto);
             if (saleOrderDto.getSaleOrderId() == null) {

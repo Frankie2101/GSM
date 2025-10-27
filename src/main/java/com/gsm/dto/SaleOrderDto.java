@@ -29,15 +29,20 @@ public class SaleOrderDto {
     private LocalDate orderDate;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    @NotBlank(message = "Ship Date cannot be blank")
     private LocalDate shipDate;
 
     private String customerPO;
+
+    @NotBlank(message = "Currency Code cannot be blank")
     private String currencyCode;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    @NotBlank(message = "Production Start Date cannot be blank")
     private LocalDate productionStartDate;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    @NotBlank(message = "Production End Date cannot be blank")
     private LocalDate productionEndDate;
 
     private SaleOrderStatus status;

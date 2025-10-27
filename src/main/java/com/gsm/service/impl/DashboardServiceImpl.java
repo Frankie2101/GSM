@@ -228,7 +228,7 @@ public class DashboardServiceImpl implements DashboardService {
      */
     private DailyThroughputChartDto calculateDailyThroughput() {
         LocalDate endDate = LocalDate.now();
-        LocalDate startDate = endDate.minusDays(6); // Lấy đủ 30 ngày kể cả hôm nay
+        LocalDate startDate = endDate.minusDays(6);
 
         // 1. Call the repository method to get grouped daily data.
         List<ProductionOutputRepository.DailyThroughputByDeptResult> results =

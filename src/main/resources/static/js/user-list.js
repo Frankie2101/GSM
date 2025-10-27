@@ -118,6 +118,21 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        if (userType === 'Normal') {
+            const dashboardViewCheckbox = document.getElementById('perm_DASHBOARD_VIEW');
+            if (dashboardViewCheckbox && !dashboardViewCheckbox.checked) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'A "Normal" user must have the "Dashboard: View" permission.',
+                    confirmButtonColor: '#384295'
+                });
+                return;
+            }
+        }
+
+
+
         const password = document.getElementById('password').value;
         const userData = {
             userId: document.getElementById('userId').value || null,

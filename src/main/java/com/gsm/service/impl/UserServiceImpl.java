@@ -41,6 +41,14 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto save(UserDto dto) {
+        final String REQUIRED_PERMISSION = "DASHBOARD_VIEW";
+
+        if (dto.getUserType() == UserType.Normal) {
+            if (dto.getPermissions() == null || !dto.getPermissions().contains(REQUIRED_PERMISSION)) {
+                throw new IllegalArgumentException("A 'Normal' user must have the 'Dashboard: View' permission.");
+            }
+        }
+
         userRepository.findByPhoneNumber(dto.getPhoneNumber()).ifPresent(existing -> {
             if (dto.getUserId() == null || !existing.getUserId().equals(dto.getUserId())) {
                 throw new DuplicateResourceException("Phone number '" + dto.getPhoneNumber() + "' already exists.");
