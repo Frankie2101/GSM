@@ -180,7 +180,8 @@ public class ProductServiceImpl implements ProductService {
         }
 
         // Synchronize with the database: clear the old list and add the new one.
-        product.setVariants(variantsToSave);
+        product.getVariants().clear();
+        product.getVariants().addAll(variantsToSave);
 
         Product savedProduct = productRepository.save(product);
         return convertEntityToDto(savedProduct);
